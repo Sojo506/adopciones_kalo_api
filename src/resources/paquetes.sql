@@ -1032,3 +1032,125 @@ CREATE OR REPLACE PACKAGE FIDE_DELETE_PKG AS
 END FIDE_DELETE_PKG;
 /
 
+CREATE OR REPLACE PACKAGE FIDE_PERRITOS_PKG AS
+    /*
+        1. Llama a los perritos qque estan disponibles para adopcion
+    */
+    FUNCTION FIDE_OBTENER_PERRO_DISPONIBLES_FN RETURN SYS_REFCURSOR;
+
+    /*
+        2. Busca al perrito y muestra su historial medico
+    */
+    FUNCTION FIDE_HISTORIAL_MEDICO_PERRITO_FN(
+        P_ID_PERRITO IN FIDE_PERRITO_TB.ID_PERRITO%TYPE)
+    RETURN VARCHAR2;
+
+    /*
+        3. Busca todos los gastos que ha generado el perrito
+    */
+    FUNCTION FIDE_GASTOS_POR_PERRO_FN(
+        P_ID_PERRITO IN FIDE_PERRITO_TB.ID_PERRITO%TYPE)
+    RETURN NUMBER;
+
+    /*
+        4. Busca perritos por filtros
+    */
+    FUNCTION FIDE_BUSCAR_PERROS_FILTROS_FN(
+        P_EDAD_MAX IN NUMBER,
+        P_PESO_MAX IN NUMBER,
+        P_ID_SEXO  IN NUMBER)
+    RETURN SYS_REFCURSOR;
+
+    /*
+        5. Da cuantos dias de albergue tiene el perrito
+    */
+    FUNCTION FIDE_CALCULAR_DIAS_ALBERGUE_FN(
+        P_ID_PERRITO IN FIDE_PERRITO_TB.ID_PERRITO%TYPE)
+    RETURN NUMBER;
+
+    /*
+        11. DA cuantos perritos tiene actualmente una casa cuna
+    */
+    FUNCTION FIDE_PERRITOS_EN_CASA_CUNA_FN(
+        P_IDENTIFICACION IN FIDE_USUARIO_TB.IDENTIFICACION%TYPE)
+    RETURN SYS_REFCURSOR;
+END FIDE_PERRITOS_PKG;
+/
+
+CREATE OR REPLACE PACKAGE FIDE_ADOPCIONES_PKG AS
+    /*
+        6. Informa su un adoptante es elegible
+    */
+    FUNCTION FIDE_ELEGIBILIDAD_ADOPTANTE_FN(
+        P_IDENTIFICACION IN FIDE_USUARIO_TB.IDENTIFICACION%TYPE)
+    RETURN BOOLEAN;
+
+    /*
+        10. Alerta para dar seguimiento a un perrito
+    */
+    FUNCTION FIDE_ALERTAS_SEGUIMIENTO_FN RETURN SYS_REFCURSOR;
+
+    /*
+        13. Da un reporte de adopciones por aÃ±o
+    */
+    FUNCTION FIDE_ESTADISTICAS_ADOPCION_ANUAL_FN(
+        P_YEAR IN NUMBER)
+    RETURN SYS_REFCURSOR;
+END FIDE_ADOPCIONES_PKG;
+/
+
+CREATE OR REPLACE PACKAGE FIDE_FINANZAS_PKG AS
+    /*
+        7. Da el total de donaciones de un mes
+    */
+    FUNCTION FIDE_TOTAL_DONACIONES_MES_FN(
+        P_MES IN NUMBER,
+        P_YEAR IN NUMBER)
+    RETURN NUMBER;
+
+    /*
+        8. Da el total recaudado de una campaÃ±a
+    */
+    FUNCTION FIDE_TOTAL_RECAUDADO_CAMPANIA_FN(
+        P_ID_CAMPANIA IN FIDE_CAMPANIA_TB.ID_CAMPANIA%TYPE
+    )
+    RETURN NUMBER;
+
+    /*
+        9. Verifica si hay stock suficiente de un producto
+    */
+    FUNCTION FIDE_VERIFICAR_STOCK_TIENDA_FN(
+        P_ID_PRODUCTO IN FIDE_INVENTARIO_TB.ID_PRODUCTO%TYPE,
+        P_CANTIDAD_REQUERIDA IN NUMBER
+    )
+    RETURN BOOLEAN;
+
+    /*
+        15. Da un reporte financiero mensual
+    */
+    FUNCTION FIDE_BALANCE_FINANCIERO_MENSUAL_FN(
+        P_MES IN NUMBER,
+        P_YEAR IN NUMBER
+    )
+    RETURN NUMBER;
+END FIDE_FINANZAS_PKG;
+/
+
+CREATE OR REPLACE PACKAGE FIDE_ADMINISTRACION_PKG AS
+    /*
+        12. Verifica si el usuario es administrador o no
+    */
+    FUNCTION FIDE_VERIFICAR_PERMISO_ADMIN_FN(
+        P_IDENTIFICACION IN FIDE_USUARIO_TB.IDENTIFICACION%TYPE)
+    RETURN BOOLEAN;
+
+    /*
+        14. Da un reporte de quien modifico un registro
+    */
+    FUNCTION FIDE_ULTIMO_EDITOR_REGISTRO_FN(
+        P_ENTIDAD IN FIDE_AUDITORIA_TB.ENTIDAD%TYPE
+    )
+    RETURN VARCHAR2;
+END FIDE_ADMINISTRACION_PKG;
+/
+
