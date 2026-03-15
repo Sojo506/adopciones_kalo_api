@@ -1,7 +1,7 @@
 /* PROCEDURE FIDE_ESTADO_TB INSERT */
 CREATE OR REPLACE PROCEDURE FIDE_ESTADO_INSERT_SP(
     P_ID_ESTADO IN FIDE_ESTADO_TB.ID_ESTADO%TYPE,
-    P_NOMBRE    IN FIDE_ESTADO_TB.NOMBRE_ESTADO%TYPE
+    P_NOMBRE_ESTADO IN FIDE_ESTADO_TB.NOMBRE_ESTADO%TYPE
 )
 IS
 BEGIN
@@ -18,12 +18,16 @@ BEGIN
     
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El ID ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -31,7 +35,7 @@ END;
 /* PROCEDURE FIDE_ESTADO_TB UPDATE */
 CREATE OR REPLACE PROCEDURE FIDE_ESTADO_UPDATE_SP(
     P_ID_ESTADO IN FIDE_ESTADO_TB.ID_ESTADO%TYPE,
-    P_NOMBRE    IN FIDE_ESTADO_TB.NOMBRE%TYPE
+    P_NOMBRE_ESTADO IN FIDE_ESTADO_TB.NOMBRE_ESTADO%TYPE
 )
 IS
     V_HAY_UPDATE NUMBER;
@@ -51,10 +55,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -62,7 +69,7 @@ END;
 /* PROCEDURE FIDE_TIPO_USUARIO_TB INSERT */
 CREATE OR REPLACE PROCEDURE FIDE_TIPO_USUARIO_INSERT_SP(
     P_ID_TIPO_USUARIO IN FIDE_TIPO_USUARIO_TB.ID_TIPO_USUARIO%TYPE,
-    P_NOMBRE          IN FIDE_TIPO_USUARIO_TB.NOMBRE%TYPE,
+    P_NOMBRE_ESTADO   IN FIDE_TIPO_USUARIO_TB.NOMBRE%TYPE,
     P_ID_ESTADO       IN FIDE_TIPO_USUARIO_TB.ID_ESTADO%TYPE
 )
 IS
@@ -82,12 +89,16 @@ BEGIN
     
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El ID ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -117,10 +128,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -148,12 +162,16 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
+/
 
 /* PROCEDURE FIDE_USUARIO_TB INSERT */
 CREATE OR REPLACE PROCEDURE FIDE_USUARIO_INSERT_SP(
@@ -190,12 +208,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La identificación ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -234,10 +256,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -266,10 +291,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -298,12 +326,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El correo ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -333,10 +365,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -367,10 +402,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -399,12 +437,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El teléfono ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -434,10 +476,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -468,10 +513,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -505,12 +553,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La cuenta ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -545,10 +597,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -577,10 +632,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -609,12 +667,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El tipo OTP ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -645,10 +707,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -677,10 +742,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -727,12 +795,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El código OTP ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -775,10 +847,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -807,10 +882,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -857,12 +935,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El refresh token ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -905,10 +987,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -937,10 +1022,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -968,12 +1056,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El país ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1004,10 +1096,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1036,10 +1131,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1070,12 +1168,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La provincia ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1108,10 +1210,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1140,10 +1245,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1174,12 +1282,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El cantón ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1212,10 +1324,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1244,10 +1359,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1279,12 +1397,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El distrito ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1317,10 +1439,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1349,10 +1474,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1387,12 +1515,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La dirección ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1427,10 +1559,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1459,10 +1594,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1491,12 +1629,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La categoría ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1527,10 +1669,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1559,10 +1704,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1600,12 +1748,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El producto ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1642,10 +1794,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1674,10 +1829,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1712,12 +1870,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La venta ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1752,10 +1914,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1784,10 +1949,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1825,12 +1993,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El detalle de venta ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1867,10 +2039,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1901,10 +2076,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1936,12 +2114,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El inventario ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -1974,10 +2156,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2006,10 +2191,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2038,12 +2226,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El tipo de movimiento ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2074,10 +2266,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2106,10 +2301,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2147,12 +2345,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El movimiento de inventario ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2189,10 +2391,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2221,10 +2426,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2255,12 +2463,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La moneda ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2293,10 +2505,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2325,10 +2540,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2363,12 +2581,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La factura ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2403,10 +2625,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2435,10 +2660,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2467,12 +2695,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La relación venta-factura ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2503,10 +2735,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2537,10 +2772,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2569,12 +2807,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La relación donación-factura ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2605,10 +2847,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2639,10 +2884,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2680,12 +2928,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El pago ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2722,13 +2974,17 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
+
 /* PROCEDURE FIDE_PAGO_PAYPAL_TB DELETE LOGICO */
 CREATE OR REPLACE PROCEDURE FIDE_PAGO_PAYPAL_DELETE_SP(
     P_ID_PAGO IN FIDE_PAGO_PAYPAL_TB.ID_PAGO%TYPE
@@ -2753,10 +3009,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2784,12 +3043,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La raza ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2819,10 +3082,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2850,10 +3116,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2881,12 +3150,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El sexo ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2916,10 +3189,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2947,10 +3223,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -2996,12 +3275,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El perrito ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3041,10 +3324,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3072,10 +3358,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3107,12 +3396,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La imagen del perrito ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3145,10 +3438,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3177,10 +3473,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3209,12 +3508,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El tipo de solicitud ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3245,10 +3548,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3277,10 +3583,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3315,12 +3624,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La solicitud ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3355,10 +3668,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3387,10 +3703,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3419,12 +3738,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El tipo de respuesta ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3455,10 +3778,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3487,10 +3813,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3522,12 +3851,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La pregunta ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3560,10 +3893,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3592,10 +3928,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3630,12 +3969,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La respuesta ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3670,10 +4013,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3702,10 +4048,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3743,12 +4092,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La casa cuna ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3785,10 +4138,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3817,10 +4173,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3849,12 +4208,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La relación casa-perrito ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3885,10 +4248,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3919,10 +4285,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3957,12 +4326,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La adopción ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -3997,10 +4370,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4029,10 +4405,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4061,12 +4440,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El tipo de seguimiento ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4097,10 +4480,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4129,10 +4515,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4173,12 +4562,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El seguimiento ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4217,10 +4610,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4249,10 +4645,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4290,12 +4689,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La evidencia ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4332,10 +4735,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4364,10 +4770,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4405,12 +4814,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La campaña ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4447,10 +4860,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4479,10 +4895,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4523,12 +4942,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'La donación ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4567,10 +4990,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4599,20 +5025,22 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
-
 /* PROCEDURE FIDE_TIPO_EVENTO_TB INSERT */
-CREATE OR REPLACE PROCEDURE FIDE_TIPO_EVENTO_INSERT_SP(
+CREATE OR REPLACE PROCEDURE FIDE_TIPO_EVENTO_INSERT_SP( 
     P_ID_TIPO_EVENTO IN FIDE_TIPO_EVENTO_TB.ID_TIPO_EVENTO%TYPE,
     P_NOMBRE         IN FIDE_TIPO_EVENTO_TB.NOMBRE%TYPE,
     P_ID_ESTADO      IN FIDE_TIPO_EVENTO_TB.ID_ESTADO%TYPE
-)
+)   
 IS
 BEGIN
     INSERT INTO FIDE_TIPO_EVENTO_TB(
@@ -4626,16 +5054,19 @@ BEGIN
         P_ID_ESTADO
     );
 
-    COMMIT;
-
+    COMMIT; 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El tipo de evento ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4665,10 +5096,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4696,10 +5130,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4739,12 +5176,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El evento ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4782,10 +5223,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4813,10 +5257,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4853,12 +5300,16 @@ BEGIN
 
 EXCEPTION
     WHEN DUP_VAL_ON_INDEX THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'El detalle del evento ya existe.');
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4894,10 +5345,13 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
 END;
 /
@@ -4925,10 +5379,12 @@ BEGIN
 
 EXCEPTION
     WHEN VALUE_ERROR THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
     WHEN INVALID_NUMBER THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
     WHEN OTHERS THEN
+        ROLLBACK;
         RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
-END;
-/
+END;/
