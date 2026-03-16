@@ -90,7 +90,7 @@ async function signUp(userData) {
         ...userData,
         idDireccion: address.idDireccion,
         idEstado: 1, // Active
-        idTipoUsuario: 1 // ADMIN DE MOMENTO
+        idTipoUsuario: 11 // Cliente
     };
 
     const userResult = await userRepository.createUser(newUser);
