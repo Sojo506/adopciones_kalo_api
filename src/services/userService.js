@@ -40,7 +40,18 @@ async function generateAndSendVerificationOtp(account, { failOnEmailError = fals
 }
 
 async function getUsers() {
-    return userRepository.findAllUsers();
+    const users = await userRepository.findAllUsers();
+    return users.map(formatDashboardUser);
+}
+
+async function getUserByIdentification(identificacion) {
+    const user = await userRepository.findUserDetailsByIdentification(identificacion);
+
+    if (!user) {
+        throw createHttpError('User not found', 404);
+    }
+
+    return formatDashboardUser(user);
 }
 
 async function getCurrentUser(idCuenta) {
@@ -128,6 +139,175 @@ async function signUp(userData) {
     };
 }
 
+function ensureActiveAdminIsNotEditingSelf(actorAccount, targetUser) {
+    if (
+        actorAccount &&
+        actorAccount.ID_TIPO_USUARIO === 1 &&
+        targetUser &&
+        targetUser.ID_CUENTA === actorAccount.ID_CUENTA
+    ) {
+        throw createHttpError('The active admin user cannot be modified or deleted', 403);
+    }
+}
+
+function hasDifferentIdentification(left, right) {
+    return String(left).trim() !== String(right).trim();
+}
+
+function formatDashboardUser(user) {
+    return {
+        identificacion: user.IDENTIFICACION,
+        nombre: user.NOMBRE,
+        apellidoPaterno: user.APELLIDO_PATERNO,
+        apellidoMaterno: user.APELLIDO_MATERNO,
+        fechaRegistro: user.FECHA_REGISTRO,
+        idTipoUsuario: user.ID_TIPO_USUARIO,
+        tipoUsuario: user.TIPO_USUARIO,
+        idEstado: user.ID_ESTADO,
+        estado: user.ESTADO_USUARIO,
+        cuenta: user.ID_CUENTA ? {
+            idCuenta: user.ID_CUENTA,
+            correo: user.CORREO,
+            idEstado: user.ID_ESTADO_CUENTA,
+            estado: user.ESTADO_CUENTA
+        } : null,
+        direccion: user.ID_DIRECCION ? {
+            idDireccion: user.ID_DIRECCION,
+            idPais: user.ID_PAIS,
+            pais: user.PAIS,
+            idProvincia: user.ID_PROVINCIA,
+            provincia: user.PROVINCIA,
+            idCanton: user.ID_CANTON,
+            canton: user.CANTON,
+            idDistrito: user.ID_DISTRITO,
+            distrito: user.DISTRITO,
+            calle: user.CALLE,
+            numero: user.NUMERO
+        } : null
+    };
+}
+
+async function createDashboardUser(userData) {
+    const existingAccount = await userRepository.findAccountByUsuario(userData.correo);
+    if (existingAccount) {
+        throw createHttpError('Account already exists', 409);
+    }
+
+    const existingUser = await userRepository.findByIdentification(userData.identificacion);
+    if (existingUser) {
+        throw createHttpError('User already exists', 409);
+    }
+
+    const districtHierarchy = await locationRepository.findDistrictHierarchy({
+        idPais: userData.idPais,
+        idProvincia: userData.idProvincia,
+        idCanton: userData.idCanton,
+        idDistrito: userData.idDistrito
+    });
+
+    if (!districtHierarchy) {
+        throw createHttpError('The selected country, province, canton, and district combination is invalid', 400);
+    }
+
+    const address = await addressService.createAddress({
+        idDistrito: userData.idDistrito,
+        calle: userData.calle,
+        numero: userData.numero
+    });
+
+    await userRepository.createUser({
+        identificacion: userData.identificacion,
+        nombre: userData.nombre,
+        apellidoPaterno: userData.apellidoPaterno,
+        apellidoMaterno: userData.apellidoMaterno,
+        idDireccion: address.idDireccion,
+        idTipoUsuario: userData.idTipoUsuario,
+        idEstado: userData.idEstado
+    });
+
+    const passwordHash = await bcrypt.hash(userData.password, 10);
+
+    await userRepository.createAccount({
+        identificacion: userData.identificacion,
+        usuario: userData.correo,
+        passwordHash,
+        idEstado: userData.idEstado
+    });
+
+    return getUserByIdentification(userData.identificacion);
+}
+
+async function updateDashboardUser(identificacion, userData, actorAccount) {
+    const existingUser = await userRepository.findUserDetailsByIdentification(identificacion);
+    if (!existingUser) {
+        throw createHttpError('User not found', 404);
+    }
+
+    ensureActiveAdminIsNotEditingSelf(actorAccount, existingUser);
+
+    const accountWithSameEmail = await userRepository.findAccountByUsuario(userData.correo.trim());
+    if (accountWithSameEmail && hasDifferentIdentification(accountWithSameEmail.IDENTIFICACION, identificacion)) {
+        throw createHttpError('Account already exists', 409);
+    }
+
+    const districtHierarchy = await locationRepository.findDistrictHierarchy({
+        idPais: userData.idPais,
+        idProvincia: userData.idProvincia,
+        idCanton: userData.idCanton,
+        idDistrito: userData.idDistrito
+    });
+
+    if (!districtHierarchy) {
+        throw createHttpError('The selected country, province, canton, and district combination is invalid', 400);
+    }
+
+    await userRepository.updateAddress({
+        idDireccion: existingUser.ID_DIRECCION,
+        idDistrito: userData.idDistrito,
+        calle: userData.calle,
+        numero: userData.numero,
+        idEstado: userData.idEstado
+    });
+
+    await userRepository.updateUser({
+        identificacion,
+        nombre: userData.nombre,
+        apellidoPaterno: userData.apellidoPaterno,
+        apellidoMaterno: userData.apellidoMaterno,
+        idDireccion: existingUser.ID_DIRECCION,
+        idTipoUsuario: userData.idTipoUsuario,
+        idEstado: userData.idEstado
+    });
+
+    await userRepository.updateAccount({
+        idCuenta: existingUser.ID_CUENTA,
+        identificacion,
+        usuario: userData.correo,
+        passwordHash: userData.password
+            ? await bcrypt.hash(userData.password, 10)
+            : existingUser.PASSWORD_HASH,
+        idEstado: userData.idEstado
+    });
+
+    return getUserByIdentification(identificacion);
+}
+
+async function deleteDashboardUser(identificacion, actorAccount) {
+    const existingUser = await userRepository.findUserDetailsByIdentification(identificacion);
+    if (!existingUser) {
+        throw createHttpError('User not found', 404);
+    }
+
+    ensureActiveAdminIsNotEditingSelf(actorAccount, existingUser);
+
+    await userRepository.deleteAccount(existingUser.ID_CUENTA);
+    await userRepository.deleteUser(identificacion);
+
+    if (existingUser.ID_DIRECCION) {
+        await userRepository.deleteAddress(existingUser.ID_DIRECCION);
+    }
+}
+
 async function signIn(correo, password) {
     const account = await userRepository.findAccountByUsuario(correo);
     if (!account) {
@@ -198,4 +378,15 @@ async function resendVerificationEmail(correo) {
     };
 }
 
-module.exports = { getUsers, getCurrentUser, signUp, signIn, verifyEmail, resendVerificationEmail };
+module.exports = {
+    getUsers,
+    getUserByIdentification,
+    getCurrentUser,
+    signUp,
+    signIn,
+    verifyEmail,
+    resendVerificationEmail,
+    createDashboardUser,
+    updateDashboardUser,
+    deleteDashboardUser
+};
