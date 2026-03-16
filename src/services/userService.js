@@ -54,7 +54,9 @@ async function getCurrentUser(idCuenta) {
         nombre: account.NOMBRE,
         apellidoPaterno: account.APELLIDO_PATERNO,
         apellidoMaterno: account.APELLIDO_MATERNO,
-        correo: account.USUARIO
+        correo: account.USUARIO,
+        idTipoUsuario: account.ID_TIPO_USUARIO,
+        tipoUsuario: account.TIPO_USUARIO
     };
 }
 
@@ -151,7 +153,9 @@ async function signIn(correo, password) {
             nombre: account.NOMBRE,
             apellidoPaterno: account.APELLIDO_PATERNO,
             apellidoMaterno: account.APELLIDO_MATERNO,
-            correo: account.USUARIO
+            correo: account.USUARIO,
+            idTipoUsuario: account.ID_TIPO_USUARIO,
+            tipoUsuario: account.TIPO_USUARIO
         },
         accessToken,
         refreshToken
