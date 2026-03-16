@@ -1,14 +1,18 @@
 const express = require('express');
 const userController = require('../controllers/userController');
-const { authenticateToken } = require('../middlewares/auth');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();
 
-router.get('/', userController.getUsers);
 router.get('/me', authenticateToken, userController.getMe);
+router.get('/', authenticateToken, requireAdmin, userController.getUsers);
+router.get('/:identificacion', authenticateToken, requireAdmin, userController.getUserByIdentification);
+router.post('/', authenticateToken, requireAdmin, userController.dashboardUserValidation, userController.createDashboardUser);
 router.post('/register', userController.signUpValidation, userController.signUp);
 router.post('/login', userController.signInValidation, userController.signIn);
 router.post('/verify-email', userController.verifyEmailValidation, userController.verifyEmail);
 router.post('/resend-verification-email', userController.resendVerificationEmailValidation, userController.resendVerificationEmail);
+router.put('/:identificacion', authenticateToken, requireAdmin, userController.dashboardUserUpdateValidation, userController.updateDashboardUser);
+router.delete('/:identificacion', authenticateToken, requireAdmin, userController.deleteDashboardUser);
 
 module.exports = router;

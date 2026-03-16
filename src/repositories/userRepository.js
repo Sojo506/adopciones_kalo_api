@@ -9,16 +9,42 @@ async function findAllUsers() {
 
         const sql = `
       SELECT
-        IDENTIFICACION,
-        NOMBRE,
-        APELLIDO_PATERNO,
-        APELLIDO_MATERNO,
-        FECHA_REGISTRO,
-        ID_DIRECCION,
-        ID_TIPO_USUARIO,
-        ID_ESTADO
+        U.IDENTIFICACION,
+        U.NOMBRE,
+        U.APELLIDO_PATERNO,
+        U.APELLIDO_MATERNO,
+        U.FECHA_REGISTRO,
+        U.ID_DIRECCION,
+        U.ID_TIPO_USUARIO,
+        TU.NOMBRE AS TIPO_USUARIO,
+        U.ID_ESTADO,
+        EU.NOMBRE_ESTADO AS ESTADO_USUARIO,
+        C.ID_CUENTA,
+        C.USUARIO AS CORREO,
+        C.ID_ESTADO AS ID_ESTADO_CUENTA,
+        EC.NOMBRE_ESTADO AS ESTADO_CUENTA,
+        DIR.ID_DISTRITO,
+        DIR.CALLE,
+        DIR.NUMERO,
+        DIS.NOMBRE AS DISTRITO,
+        CAN.ID_CANTON,
+        CAN.NOMBRE AS CANTON,
+        PRO.ID_PROVINCIA,
+        PRO.NOMBRE AS PROVINCIA,
+        PA.ID_PAIS,
+        PA.NOMBRE AS PAIS
       FROM KALO.FIDE_USUARIO_TB
-      ORDER BY IDENTIFICACION
+      U
+      LEFT JOIN KALO.FIDE_CUENTA_TB C ON U.IDENTIFICACION = C.IDENTIFICACION
+      LEFT JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
+      LEFT JOIN KALO.FIDE_ESTADO_TB EU ON U.ID_ESTADO = EU.ID_ESTADO
+      LEFT JOIN KALO.FIDE_ESTADO_TB EC ON C.ID_ESTADO = EC.ID_ESTADO
+      LEFT JOIN KALO.FIDE_DIRECCION_TB DIR ON U.ID_DIRECCION = DIR.ID_DIRECCION
+      LEFT JOIN KALO.FIDE_DISTRITO_TB DIS ON DIR.ID_DISTRITO = DIS.ID_DISTRITO
+      LEFT JOIN KALO.FIDE_CANTON_TB CAN ON DIS.ID_CANTON = CAN.ID_CANTON
+      LEFT JOIN KALO.FIDE_PROVINCIA_TB PRO ON CAN.ID_PROVINCIA = PRO.ID_PROVINCIA
+      LEFT JOIN KALO.FIDE_PAIS_TB PA ON PRO.ID_PAIS = PA.ID_PAIS
+      ORDER BY U.IDENTIFICACION
     `;
 
         const result = await connection.execute(sql, [], {
@@ -26,6 +52,64 @@ async function findAllUsers() {
         });
 
         return result.rows || [];
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
+async function findUserDetailsByIdentification(identificacion) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      SELECT
+        U.IDENTIFICACION,
+        U.NOMBRE,
+        U.APELLIDO_PATERNO,
+        U.APELLIDO_MATERNO,
+        U.FECHA_REGISTRO,
+        U.ID_DIRECCION,
+        U.ID_TIPO_USUARIO,
+        TU.NOMBRE AS TIPO_USUARIO,
+        U.ID_ESTADO,
+        EU.NOMBRE_ESTADO AS ESTADO_USUARIO,
+        C.ID_CUENTA,
+        C.USUARIO AS CORREO,
+        C.PASSWORD_HASH,
+        C.ID_ESTADO AS ID_ESTADO_CUENTA,
+        EC.NOMBRE_ESTADO AS ESTADO_CUENTA,
+        DIR.ID_DISTRITO,
+        DIR.CALLE,
+        DIR.NUMERO,
+        DIS.NOMBRE AS DISTRITO,
+        CAN.ID_CANTON,
+        CAN.NOMBRE AS CANTON,
+        PRO.ID_PROVINCIA,
+        PRO.NOMBRE AS PROVINCIA,
+        PA.ID_PAIS,
+        PA.NOMBRE AS PAIS
+      FROM KALO.FIDE_USUARIO_TB U
+      LEFT JOIN KALO.FIDE_CUENTA_TB C ON U.IDENTIFICACION = C.IDENTIFICACION
+      LEFT JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
+      LEFT JOIN KALO.FIDE_ESTADO_TB EU ON U.ID_ESTADO = EU.ID_ESTADO
+      LEFT JOIN KALO.FIDE_ESTADO_TB EC ON C.ID_ESTADO = EC.ID_ESTADO
+      LEFT JOIN KALO.FIDE_DIRECCION_TB DIR ON U.ID_DIRECCION = DIR.ID_DIRECCION
+      LEFT JOIN KALO.FIDE_DISTRITO_TB DIS ON DIR.ID_DISTRITO = DIS.ID_DISTRITO
+      LEFT JOIN KALO.FIDE_CANTON_TB CAN ON DIS.ID_CANTON = CAN.ID_CANTON
+      LEFT JOIN KALO.FIDE_PROVINCIA_TB PRO ON CAN.ID_PROVINCIA = PRO.ID_PROVINCIA
+      LEFT JOIN KALO.FIDE_PAIS_TB PA ON PRO.ID_PAIS = PA.ID_PAIS
+      WHERE U.IDENTIFICACION = :identificacion
+    `;
+
+        const result = await connection.execute(sql, { identificacion }, {
+            outFormat: oracledb.OUT_FORMAT_OBJECT
+        });
+
+        return result.rows[0] || null;
     } finally {
         if (connection) {
             await connection.close();
@@ -179,6 +263,43 @@ async function findAccountByIdCuenta(idCuenta) {
     }
 }
 
+async function findAccountByIdentification(identificacion) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      SELECT
+        C.ID_CUENTA,
+        C.IDENTIFICACION,
+        C.USUARIO,
+        C.PASSWORD_HASH,
+        C.FECHA_REGISTRO,
+        C.ID_ESTADO,
+        U.NOMBRE,
+        U.APELLIDO_PATERNO,
+        U.APELLIDO_MATERNO,
+        U.ID_TIPO_USUARIO,
+        TU.NOMBRE AS TIPO_USUARIO
+      FROM KALO.FIDE_CUENTA_TB C
+      JOIN KALO.FIDE_USUARIO_TB U ON C.IDENTIFICACION = U.IDENTIFICACION
+      JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
+      WHERE C.IDENTIFICACION = :identificacion
+    `;
+
+        const result = await connection.execute(sql, { identificacion }, {
+            outFormat: oracledb.OUT_FORMAT_OBJECT
+        });
+
+        return result.rows[0] || null;
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
 async function createAccount(accountData) {
     let connection;
 
@@ -262,6 +383,172 @@ async function createOTP(otpData) {
         await connection.execute(sql, binds, { autoCommit: true });
 
         return { idCodigoOtp: nextId, codigo: otpData.codigo };
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
+async function updateUser(userData) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      BEGIN
+        KALO.FIDE_UPDATE_PKG.FIDE_USUARIO_UPDATE_SP(
+          :identificacion,
+          :nombre,
+          :apellidoPaterno,
+          :apellidoMaterno,
+          :idDireccion,
+          :idTipoUsuario,
+          :idEstado
+        );
+      END;
+    `;
+
+        await connection.execute(sql, {
+            identificacion: userData.identificacion,
+            nombre: userData.nombre,
+            apellidoPaterno: userData.apellidoPaterno,
+            apellidoMaterno: userData.apellidoMaterno,
+            idDireccion: userData.idDireccion,
+            idTipoUsuario: userData.idTipoUsuario,
+            idEstado: userData.idEstado
+        }, { autoCommit: true });
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
+async function updateAccount(accountData) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      BEGIN
+        KALO.FIDE_UPDATE_PKG.FIDE_CUENTA_UPDATE_SP(
+          :idCuenta,
+          :identificacion,
+          :usuario,
+          :passwordHash,
+          :idEstado
+        );
+      END;
+    `;
+
+        await connection.execute(sql, {
+            idCuenta: accountData.idCuenta,
+            identificacion: accountData.identificacion,
+            usuario: accountData.usuario,
+            passwordHash: accountData.passwordHash,
+            idEstado: accountData.idEstado
+        }, { autoCommit: true });
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
+async function updateAddress(addressData) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      BEGIN
+        KALO.FIDE_UPDATE_PKG.FIDE_DIRECCION_UPDATE_SP(
+          :idDireccion,
+          :idDistrito,
+          :calle,
+          :numero,
+          :idEstado
+        );
+      END;
+    `;
+
+        await connection.execute(sql, {
+            idDireccion: addressData.idDireccion,
+            idDistrito: addressData.idDistrito,
+            calle: addressData.calle || null,
+            numero: addressData.numero || null,
+            idEstado: addressData.idEstado
+        }, { autoCommit: true });
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
+async function deleteUser(identificacion) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      BEGIN
+        KALO.FIDE_DELETE_PKG.FIDE_USUARIO_DELETE_SP(
+          :identificacion
+        );
+      END;
+    `;
+
+        await connection.execute(sql, { identificacion }, { autoCommit: true });
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
+async function deleteAccount(idCuenta) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      BEGIN
+        KALO.FIDE_DELETE_PKG.FIDE_CUENTA_DELETE_SP(
+          :idCuenta
+        );
+      END;
+    `;
+
+        await connection.execute(sql, { idCuenta }, { autoCommit: true });
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
+async function deleteAddress(idDireccion) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      BEGIN
+        KALO.FIDE_DELETE_PKG.FIDE_DIRECCION_DELETE_SP(
+          :idDireccion
+        );
+      END;
+    `;
+
+        await connection.execute(sql, { idDireccion }, { autoCommit: true });
     } finally {
         if (connection) {
             await connection.close();
@@ -389,14 +676,22 @@ async function updateAccountStatus(idCuenta, idEstado) {
 
 module.exports = {
     findAllUsers,
+    findUserDetailsByIdentification,
     findByIdentification,
     createUser,
     findAccountByUsuario,
     findAccountByIdCuenta,
+    findAccountByIdentification,
     createAccount,
     createOTP,
     findOTPByCodeAndCuenta,
     markOTPAsUsed,
     deactivateActiveOtpsByCuenta,
-    updateAccountStatus
+    updateAccountStatus,
+    updateUser,
+    updateAccount,
+    updateAddress,
+    deleteUser,
+    deleteAccount,
+    deleteAddress
 };
