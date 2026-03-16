@@ -23,10 +23,9 @@ app.get("/", (req, res) => {
 app.use((err, req, res, next) => {
     console.error(err);
 
-    res.status(500).json({
+    res.status(err.statusCode || 500).json({
         ok: false,
-        message: "Error interno del servidor",
-        error: err.message
+        message: err.message || "Error interno del servidor"
     });
 });
 
