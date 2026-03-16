@@ -32,6 +32,7 @@ BEGIN
     FIDE_TIPO_USUARIO_INSERT_SP(8, 'Médico General',  1);
     FIDE_TIPO_USUARIO_INSERT_SP(9, 'Colaborador',     1);
     FIDE_TIPO_USUARIO_INSERT_SP(10,'Patrocinador',    1);
+    FIDE_TIPO_USUARIO_INSERT_SP(11,'Cliente',         1);
 
     -- ============================================================
     -- FIDE_PAIS_TB
