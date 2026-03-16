@@ -2,6 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 
-router.use('/users', require('./userRoutes'));
+router.use('/auth', require('./userRoutes'));
+router.use('/locations', require('./locationRoutes'));
 
 module.exports = router;
