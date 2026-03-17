@@ -23,16 +23,9 @@ BEGIN
     -- FIDE_TIPO_USUARIO_TB 
     -- ============================================================
     FIDE_TIPO_USUARIO_INSERT_SP( 'Administrador',   1);
+    FIDE_TIPO_USUARIO_INSERT_SP( 'Cliente',         1);
     FIDE_TIPO_USUARIO_INSERT_SP( 'Adoptante',       1);
     FIDE_TIPO_USUARIO_INSERT_SP( 'Voluntario',      1);
-    FIDE_TIPO_USUARIO_INSERT_SP( 'Veterinario',     1);
-    FIDE_TIPO_USUARIO_INSERT_SP( 'Casa Cuna',       1);
-    FIDE_TIPO_USUARIO_INSERT_SP( 'Donante',         1);
-    FIDE_TIPO_USUARIO_INSERT_SP( 'Transportista',   1);
-    FIDE_TIPO_USUARIO_INSERT_SP( 'Médico General',  1);
-    FIDE_TIPO_USUARIO_INSERT_SP( 'Colaborador',     1);
-    FIDE_TIPO_USUARIO_INSERT_SP('Patrocinador',    1);
-    FIDE_TIPO_USUARIO_INSERT_SP('Cliente',         1);
 
     -- ============================================================
     -- FIDE_PAIS_TB
