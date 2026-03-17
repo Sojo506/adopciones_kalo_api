@@ -1,24 +1,33 @@
 const oracledb = require('oracledb');
 const { getConnection } = require('../config/db');
+const { OUT_CURSOR_BIND_NAME, fetchRowsFromCursor } = require('./repositoryUtils');
 
 async function findUserTypes() {
     let connection;
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_TIPOS_USUARIO_FN();
+      END;
+    `;
 
         const result = await connection.execute(
-            `
-              SELECT ID_TIPO_USUARIO, NOMBRE, ID_ESTADO
-              FROM KALO.FIDE_TIPO_USUARIO_TB
-              WHERE ID_ESTADO = 1
-              ORDER BY ID_TIPO_USUARIO
-            `,
-            [],
+            sql,
+            {
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return result.rows || [];
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -31,18 +40,27 @@ async function findStates() {
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_ESTADOS_FN();
+      END;
+    `;
 
         const result = await connection.execute(
-            `
-              SELECT ID_ESTADO, NOMBRE_ESTADO
-              FROM KALO.FIDE_ESTADO_TB
-              ORDER BY ID_ESTADO
-            `,
-            [],
+            sql,
+            {
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return result.rows || [];
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();

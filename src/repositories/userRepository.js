@@ -1,5 +1,41 @@
+const bcrypt = require('bcrypt');
 const oracledb = require('oracledb');
 const { getConnection } = require('../config/db');
+const {
+    OUT_CURSOR_BIND_NAME,
+    fetchRowsFromCursor,
+    getCurrentSequenceValue
+} = require('./repositoryUtils');
+
+function normalizeOptionalText(value) {
+    return value === undefined || value === null || value === '' ? null : value;
+}
+
+function buildOtpUpdateBinds(otp, overrides = {}) {
+    return {
+        idCodigoOtp: otp.ID_CODIGO_OTP,
+        idCuenta: otp.ID_CUENTA,
+        idTipoOtp: otp.ID_TIPO_OTP,
+        codigoHash: otp.CODIGO_HASH,
+        fechaExpiracion: otp.FECHA_EXPIRACION,
+        fechaUso: otp.FECHA_USO,
+        intentos: otp.INTENTOS,
+        fechaCreacion: otp.FECHA_CREACION,
+        idEstado: otp.ID_ESTADO,
+        ...overrides
+    };
+}
+
+function buildAccountUpdateBinds(account, overrides = {}) {
+    return {
+        idCuenta: account.ID_CUENTA,
+        identificacion: account.IDENTIFICACION,
+        usuario: account.USUARIO,
+        passwordHash: account.PASSWORD_HASH,
+        idEstado: account.ID_ESTADO,
+        ...overrides
+    };
+}
 
 async function findAllUsers() {
     let connection;
@@ -8,50 +44,26 @@ async function findAllUsers() {
         connection = await getConnection();
 
         const sql = `
-      SELECT
-        U.IDENTIFICACION,
-        U.NOMBRE,
-        U.APELLIDO_PATERNO,
-        U.APELLIDO_MATERNO,
-        U.FECHA_REGISTRO,
-        U.ID_DIRECCION,
-        U.ID_TIPO_USUARIO,
-        TU.NOMBRE AS TIPO_USUARIO,
-        U.ID_ESTADO,
-        EU.NOMBRE_ESTADO AS ESTADO_USUARIO,
-        C.ID_CUENTA,
-        C.USUARIO AS CORREO,
-        C.ID_ESTADO AS ID_ESTADO_CUENTA,
-        EC.NOMBRE_ESTADO AS ESTADO_CUENTA,
-        DIR.ID_DISTRITO,
-        DIR.CALLE,
-        DIR.NUMERO,
-        DIS.NOMBRE AS DISTRITO,
-        CAN.ID_CANTON,
-        CAN.NOMBRE AS CANTON,
-        PRO.ID_PROVINCIA,
-        PRO.NOMBRE AS PROVINCIA,
-        PA.ID_PAIS,
-        PA.NOMBRE AS PAIS
-      FROM KALO.FIDE_USUARIO_TB
-      U
-      LEFT JOIN KALO.FIDE_CUENTA_TB C ON U.IDENTIFICACION = C.IDENTIFICACION
-      LEFT JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
-      LEFT JOIN KALO.FIDE_ESTADO_TB EU ON U.ID_ESTADO = EU.ID_ESTADO
-      LEFT JOIN KALO.FIDE_ESTADO_TB EC ON C.ID_ESTADO = EC.ID_ESTADO
-      LEFT JOIN KALO.FIDE_DIRECCION_TB DIR ON U.ID_DIRECCION = DIR.ID_DIRECCION
-      LEFT JOIN KALO.FIDE_DISTRITO_TB DIS ON DIR.ID_DISTRITO = DIS.ID_DISTRITO
-      LEFT JOIN KALO.FIDE_CANTON_TB CAN ON DIS.ID_CANTON = CAN.ID_CANTON
-      LEFT JOIN KALO.FIDE_PROVINCIA_TB PRO ON CAN.ID_PROVINCIA = PRO.ID_PROVINCIA
-      LEFT JOIN KALO.FIDE_PAIS_TB PA ON PRO.ID_PAIS = PA.ID_PAIS
-      ORDER BY U.IDENTIFICACION
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_USUARIOS_FN();
+      END;
     `;
 
-        const result = await connection.execute(sql, [], {
-            outFormat: oracledb.OUT_FORMAT_OBJECT
-        });
+        const result = await connection.execute(
+            sql,
+            {
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-        return result.rows || [];
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -66,50 +78,30 @@ async function findUserDetailsByIdentification(identificacion) {
         connection = await getConnection();
 
         const sql = `
-      SELECT
-        U.IDENTIFICACION,
-        U.NOMBRE,
-        U.APELLIDO_PATERNO,
-        U.APELLIDO_MATERNO,
-        U.FECHA_REGISTRO,
-        U.ID_DIRECCION,
-        U.ID_TIPO_USUARIO,
-        TU.NOMBRE AS TIPO_USUARIO,
-        U.ID_ESTADO,
-        EU.NOMBRE_ESTADO AS ESTADO_USUARIO,
-        C.ID_CUENTA,
-        C.USUARIO AS CORREO,
-        C.PASSWORD_HASH,
-        C.ID_ESTADO AS ID_ESTADO_CUENTA,
-        EC.NOMBRE_ESTADO AS ESTADO_CUENTA,
-        DIR.ID_DISTRITO,
-        DIR.CALLE,
-        DIR.NUMERO,
-        DIS.NOMBRE AS DISTRITO,
-        CAN.ID_CANTON,
-        CAN.NOMBRE AS CANTON,
-        PRO.ID_PROVINCIA,
-        PRO.NOMBRE AS PROVINCIA,
-        PA.ID_PAIS,
-        PA.NOMBRE AS PAIS
-      FROM KALO.FIDE_USUARIO_TB U
-      LEFT JOIN KALO.FIDE_CUENTA_TB C ON U.IDENTIFICACION = C.IDENTIFICACION
-      LEFT JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
-      LEFT JOIN KALO.FIDE_ESTADO_TB EU ON U.ID_ESTADO = EU.ID_ESTADO
-      LEFT JOIN KALO.FIDE_ESTADO_TB EC ON C.ID_ESTADO = EC.ID_ESTADO
-      LEFT JOIN KALO.FIDE_DIRECCION_TB DIR ON U.ID_DIRECCION = DIR.ID_DIRECCION
-      LEFT JOIN KALO.FIDE_DISTRITO_TB DIS ON DIR.ID_DISTRITO = DIS.ID_DISTRITO
-      LEFT JOIN KALO.FIDE_CANTON_TB CAN ON DIS.ID_CANTON = CAN.ID_CANTON
-      LEFT JOIN KALO.FIDE_PROVINCIA_TB PRO ON CAN.ID_PROVINCIA = PRO.ID_PROVINCIA
-      LEFT JOIN KALO.FIDE_PAIS_TB PA ON PRO.ID_PAIS = PA.ID_PAIS
-      WHERE U.IDENTIFICACION = :identificacion
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_USUARIO_POR_IDENTIFICACION_FN(
+          :identificacion
+        );
+      END;
     `;
 
-        const result = await connection.execute(sql, { identificacion }, {
-            outFormat: oracledb.OUT_FORMAT_OBJECT
-        });
+        const result = await connection.execute(
+            sql,
+            {
+                identificacion,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-        return result.rows[0] || null;
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            const rows = await fetchRowsFromCursor(resultSet);
+            return rows[0] || null;
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -124,24 +116,30 @@ async function findByIdentification(identificacion) {
         connection = await getConnection();
 
         const sql = `
-      SELECT
-        IDENTIFICACION,
-        NOMBRE,
-        APELLIDO_PATERNO,
-        APELLIDO_MATERNO,
-        FECHA_REGISTRO,
-        ID_DIRECCION,
-        ID_TIPO_USUARIO,
-        ID_ESTADO
-      FROM KALO.FIDE_USUARIO_TB
-      WHERE IDENTIFICACION = :identificacion
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_USUARIO_POR_IDENTIFICACION_FN(
+          :identificacion
+        );
+      END;
     `;
 
-        const result = await connection.execute(sql, [identificacion], {
-            outFormat: oracledb.OUT_FORMAT_OBJECT
-        });
+        const result = await connection.execute(
+            sql,
+            {
+                identificacion,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-        return result.rows[0] || null;
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            const rows = await fetchRowsFromCursor(resultSet);
+            return rows[0] || null;
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -157,7 +155,7 @@ async function createUser(userData) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_INSERT_PKG.FIDE_USUARIO_INSERT_SP(
+        KALO.FIDE_KALO_PKG.FIDE_USUARIO_INSERT_SP(
           :identificacion,
           :nombre,
           :apellidoPaterno,
@@ -169,17 +167,19 @@ async function createUser(userData) {
       END;
     `;
 
-        const binds = {
-            identificacion: userData.identificacion,
-            nombre: userData.nombre,
-            apellidoPaterno: userData.apellidoPaterno,
-            apellidoMaterno: userData.apellidoMaterno,
-            idDireccion: userData.idDireccion,
-            idTipoUsuario: userData.idTipoUsuario,
-            idEstado: userData.idEstado
-        };
-
-        await connection.execute(sql, binds, { autoCommit: true });
+        await connection.execute(
+            sql,
+            {
+                identificacion: userData.identificacion,
+                nombre: userData.nombre,
+                apellidoPaterno: userData.apellidoPaterno,
+                apellidoMaterno: userData.apellidoMaterno,
+                idDireccion: userData.idDireccion,
+                idTipoUsuario: userData.idTipoUsuario,
+                idEstado: userData.idEstado
+            },
+            { autoCommit: true }
+        );
 
         return { identificacion: userData.identificacion };
     } finally {
@@ -196,29 +196,30 @@ async function findAccountByUsuario(usuario) {
         connection = await getConnection();
 
         const sql = `
-      SELECT
-        C.ID_CUENTA,
-        C.IDENTIFICACION,
-        C.USUARIO,
-        C.PASSWORD_HASH,
-        C.FECHA_REGISTRO,
-        C.ID_ESTADO,
-        U.NOMBRE,
-        U.APELLIDO_PATERNO,
-        U.APELLIDO_MATERNO,
-        U.ID_TIPO_USUARIO,
-        TU.NOMBRE AS TIPO_USUARIO
-      FROM KALO.FIDE_CUENTA_TB C
-      JOIN KALO.FIDE_USUARIO_TB U ON C.IDENTIFICACION = U.IDENTIFICACION
-      JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
-      WHERE C.USUARIO = :usuario
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_CUENTA_POR_CORREO_FN(
+          :usuario
+        );
+      END;
     `;
 
-        const result = await connection.execute(sql, [usuario], {
-            outFormat: oracledb.OUT_FORMAT_OBJECT
-        });
+        const result = await connection.execute(
+            sql,
+            {
+                usuario,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-        return result.rows[0] || null;
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            const rows = await fetchRowsFromCursor(resultSet);
+            return rows[0] || null;
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -233,29 +234,30 @@ async function findAccountByIdCuenta(idCuenta) {
         connection = await getConnection();
 
         const sql = `
-      SELECT
-        C.ID_CUENTA,
-        C.IDENTIFICACION,
-        C.USUARIO,
-        C.PASSWORD_HASH,
-        C.FECHA_REGISTRO,
-        C.ID_ESTADO,
-        U.NOMBRE,
-        U.APELLIDO_PATERNO,
-        U.APELLIDO_MATERNO,
-        U.ID_TIPO_USUARIO,
-        TU.NOMBRE AS TIPO_USUARIO
-      FROM KALO.FIDE_CUENTA_TB C
-      JOIN KALO.FIDE_USUARIO_TB U ON C.IDENTIFICACION = U.IDENTIFICACION
-      JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
-      WHERE C.ID_CUENTA = :idCuenta
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_CUENTA_POR_ID_CUENTA_FN(
+          :idCuenta
+        );
+      END;
     `;
 
-        const result = await connection.execute(sql, [idCuenta], {
-            outFormat: oracledb.OUT_FORMAT_OBJECT
-        });
+        const result = await connection.execute(
+            sql,
+            {
+                idCuenta,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-        return result.rows[0] || null;
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            const rows = await fetchRowsFromCursor(resultSet);
+            return rows[0] || null;
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -270,29 +272,30 @@ async function findAccountByIdentification(identificacion) {
         connection = await getConnection();
 
         const sql = `
-      SELECT
-        C.ID_CUENTA,
-        C.IDENTIFICACION,
-        C.USUARIO,
-        C.PASSWORD_HASH,
-        C.FECHA_REGISTRO,
-        C.ID_ESTADO,
-        U.NOMBRE,
-        U.APELLIDO_PATERNO,
-        U.APELLIDO_MATERNO,
-        U.ID_TIPO_USUARIO,
-        TU.NOMBRE AS TIPO_USUARIO
-      FROM KALO.FIDE_CUENTA_TB C
-      JOIN KALO.FIDE_USUARIO_TB U ON C.IDENTIFICACION = U.IDENTIFICACION
-      JOIN KALO.FIDE_TIPO_USUARIO_TB TU ON U.ID_TIPO_USUARIO = TU.ID_TIPO_USUARIO
-      WHERE C.IDENTIFICACION = :identificacion
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_CUENTA_POR_IDENTIFICACION_FN(
+          :identificacion
+        );
+      END;
     `;
 
-        const result = await connection.execute(sql, { identificacion }, {
-            outFormat: oracledb.OUT_FORMAT_OBJECT
-        });
+        const result = await connection.execute(
+            sql,
+            {
+                identificacion,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-        return result.rows[0] || null;
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            const rows = await fetchRowsFromCursor(resultSet);
+            return rows[0] || null;
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -306,9 +309,9 @@ async function createAccount(accountData) {
     try {
         connection = await getConnection();
 
-        const sql = `
+        const insertSql = `
       BEGIN
-        KALO.FIDE_INSERT_PKG.FIDE_CUENTA_INSERT_SP(
+        KALO.FIDE_KALO_PKG.FIDE_CUENTA_INSERT_SP(
           :identificacion,
           :usuario,
           :passwordHash,
@@ -317,22 +320,23 @@ async function createAccount(accountData) {
       END;
     `;
 
-        const binds = {
-            identificacion: accountData.identificacion,
-            usuario: accountData.usuario,
-            passwordHash: accountData.passwordHash,
-            idEstado: accountData.idEstado
-        };
-
-        await connection.execute(sql, binds, { autoCommit: true });
-
-        const idResult = await connection.execute(
-            `SELECT KALO.FIDE_CUENTA_SEQ.CURRVAL AS ID_CUENTA FROM DUAL`,
-            [],
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        await connection.execute(
+            insertSql,
+            {
+                identificacion: accountData.identificacion,
+                usuario: accountData.usuario,
+                passwordHash: accountData.passwordHash,
+                idEstado: accountData.idEstado
+            },
+            { autoCommit: true }
         );
 
-        return { idCuenta: idResult.rows[0].ID_CUENTA };
+        const idCuenta = await getCurrentSequenceValue(connection, 'FIDE_CUENTA_SEQ');
+        if (!idCuenta) {
+            throw new Error('No fue posible obtener la cuenta creada desde el package.');
+        }
+
+        return { idCuenta };
     } finally {
         if (connection) {
             await connection.close();
@@ -346,9 +350,9 @@ async function createOTP(otpData) {
     try {
         connection = await getConnection();
 
-        const sql = `
+        const insertSql = `
       BEGIN
-        KALO.FIDE_INSERT_PKG.FIDE_CODIGO_OTP_INSERT_SP(
+        KALO.FIDE_KALO_PKG.FIDE_CODIGO_OTP_INSERT_SP(
           :idCuenta,
           :idTipoOtp,
           :codigoHash,
@@ -361,26 +365,27 @@ async function createOTP(otpData) {
       END;
     `;
 
-        const binds = {
-            idCuenta: otpData.idCuenta,
-            idTipoOtp: otpData.idTipoOtp,
-            codigoHash: otpData.codigoHash,
-            fechaExpiracion: otpData.fechaExpiracion,
-            fechaUso: otpData.fechaUso ?? null,
-            intentos: otpData.intentos,
-            fechaCreacion: otpData.fechaCreacion,
-            idEstado: otpData.idEstado
-        };
-
-        await connection.execute(sql, binds, { autoCommit: true });
-
-        const idResult = await connection.execute(
-            `SELECT KALO.FIDE_CODIGO_OTP_SEQ.CURRVAL AS ID_CODIGO_OTP FROM DUAL`,
-            [],
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        await connection.execute(
+            insertSql,
+            {
+                idCuenta: otpData.idCuenta,
+                idTipoOtp: otpData.idTipoOtp,
+                codigoHash: otpData.codigoHash,
+                fechaExpiracion: otpData.fechaExpiracion,
+                fechaUso: otpData.fechaUso ?? null,
+                intentos: otpData.intentos,
+                fechaCreacion: otpData.fechaCreacion,
+                idEstado: otpData.idEstado
+            },
+            { autoCommit: true }
         );
 
-        return { idCodigoOtp: idResult.rows[0].ID_CODIGO_OTP, codigo: otpData.codigo };
+        const idCodigoOtp = await getCurrentSequenceValue(connection, 'FIDE_CODIGO_OTP_SEQ');
+        if (!idCodigoOtp) {
+            throw new Error('No fue posible obtener el OTP creado desde el package.');
+        }
+
+        return { idCodigoOtp };
     } finally {
         if (connection) {
             await connection.close();
@@ -396,7 +401,7 @@ async function updateUser(userData) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_UPDATE_PKG.FIDE_USUARIO_UPDATE_SP(
+        KALO.FIDE_KALO_PKG.FIDE_USUARIO_UPDATE_SP(
           :identificacion,
           :nombre,
           :apellidoPaterno,
@@ -408,15 +413,19 @@ async function updateUser(userData) {
       END;
     `;
 
-        await connection.execute(sql, {
-            identificacion: userData.identificacion,
-            nombre: userData.nombre,
-            apellidoPaterno: userData.apellidoPaterno,
-            apellidoMaterno: userData.apellidoMaterno,
-            idDireccion: userData.idDireccion,
-            idTipoUsuario: userData.idTipoUsuario,
-            idEstado: userData.idEstado
-        }, { autoCommit: true });
+        await connection.execute(
+            sql,
+            {
+                identificacion: userData.identificacion,
+                nombre: userData.nombre,
+                apellidoPaterno: userData.apellidoPaterno,
+                apellidoMaterno: userData.apellidoMaterno,
+                idDireccion: userData.idDireccion,
+                idTipoUsuario: userData.idTipoUsuario,
+                idEstado: userData.idEstado
+            },
+            { autoCommit: true }
+        );
     } finally {
         if (connection) {
             await connection.close();
@@ -432,7 +441,7 @@ async function updateAccount(accountData) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_UPDATE_PKG.FIDE_CUENTA_UPDATE_SP(
+        KALO.FIDE_KALO_PKG.FIDE_CUENTA_UPDATE_SP(
           :idCuenta,
           :identificacion,
           :usuario,
@@ -442,13 +451,17 @@ async function updateAccount(accountData) {
       END;
     `;
 
-        await connection.execute(sql, {
-            idCuenta: accountData.idCuenta,
-            identificacion: accountData.identificacion,
-            usuario: accountData.usuario,
-            passwordHash: accountData.passwordHash,
-            idEstado: accountData.idEstado
-        }, { autoCommit: true });
+        await connection.execute(
+            sql,
+            {
+                idCuenta: accountData.idCuenta,
+                identificacion: accountData.identificacion,
+                usuario: accountData.usuario,
+                passwordHash: accountData.passwordHash,
+                idEstado: accountData.idEstado
+            },
+            { autoCommit: true }
+        );
     } finally {
         if (connection) {
             await connection.close();
@@ -464,7 +477,7 @@ async function updateAddress(addressData) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_UPDATE_PKG.FIDE_DIRECCION_UPDATE_SP(
+        KALO.FIDE_KALO_PKG.FIDE_DIRECCION_UPDATE_SP(
           :idDireccion,
           :idDistrito,
           :calle,
@@ -474,13 +487,17 @@ async function updateAddress(addressData) {
       END;
     `;
 
-        await connection.execute(sql, {
-            idDireccion: addressData.idDireccion,
-            idDistrito: addressData.idDistrito,
-            calle: addressData.calle || null,
-            numero: addressData.numero || null,
-            idEstado: addressData.idEstado
-        }, { autoCommit: true });
+        await connection.execute(
+            sql,
+            {
+                idDireccion: addressData.idDireccion,
+                idDistrito: addressData.idDistrito,
+                calle: normalizeOptionalText(addressData.calle),
+                numero: normalizeOptionalText(addressData.numero),
+                idEstado: addressData.idEstado
+            },
+            { autoCommit: true }
+        );
     } finally {
         if (connection) {
             await connection.close();
@@ -496,7 +513,7 @@ async function deleteUser(identificacion) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_DELETE_PKG.FIDE_USUARIO_DELETE_SP(
+        KALO.FIDE_KALO_PKG.FIDE_USUARIO_DELETE_SP(
           :identificacion
         );
       END;
@@ -518,7 +535,7 @@ async function deleteAccount(idCuenta) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_DELETE_PKG.FIDE_CUENTA_DELETE_SP(
+        KALO.FIDE_KALO_PKG.FIDE_CUENTA_DELETE_SP(
           :idCuenta
         );
       END;
@@ -540,7 +557,7 @@ async function deleteAddress(idDireccion) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_DELETE_PKG.FIDE_DIRECCION_DELETE_SP(
+        KALO.FIDE_KALO_PKG.FIDE_DIRECCION_DELETE_SP(
           :idDireccion
         );
       END;
@@ -560,44 +577,63 @@ async function findOTPByCodeAndCuenta(codigo, idCuenta) {
     try {
         connection = await getConnection();
 
-        const sql = `
-      SELECT
-        ID_CODIGO_OTP,
-        ID_CUENTA,
-        ID_TIPO_OTP,
-        CODIGO_HASH,
-        FECHA_EXPIRACION,
-        FECHA_USO,
-        INTENTOS,
-        FECHA_CREACION,
-        ID_ESTADO
-      FROM KALO.FIDE_CODIGO_OTP_TB
-      WHERE ID_CUENTA = :idCuenta
-        AND ID_TIPO_OTP = 1
-        AND ID_ESTADO = 1
-        AND FECHA_EXPIRACION > SYSDATE
-        AND INTENTOS < 5
-      ORDER BY FECHA_CREACION DESC
-      FETCH FIRST 1 ROWS ONLY
+        const readSql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_OTPS_ACTIVOS_POR_CUENTA_FN(
+          :idCuenta,
+          :idTipoOtp
+        );
+      END;
     `;
 
-        const result = await connection.execute(sql, [idCuenta], {
-            outFormat: oracledb.OUT_FORMAT_OBJECT
-        });
+        const readResult = await connection.execute(
+            readSql,
+            {
+                idCuenta,
+                idTipoOtp: 1,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-        const otp = result.rows[0];
-        if (!otp) return null;
+        const readResultSet = readResult.outBinds[OUT_CURSOR_BIND_NAME];
+        const otps = await (async () => {
+            try {
+                return await fetchRowsFromCursor(readResultSet);
+            } finally {
+                await readResultSet.close();
+            }
+        })();
 
-        // Verify code
-        const bcrypt = require('bcrypt');
+        const otp = otps[0];
+        if (!otp) {
+            return null;
+        }
+
         const isValid = await bcrypt.compare(codigo, otp.CODIGO_HASH);
         if (!isValid) {
-            // Increment attempts
+            const updateSql = `
+        BEGIN
+          KALO.FIDE_KALO_PKG.FIDE_CODIGO_OTP_UPDATE_SP(
+            :idCodigoOtp,
+            :idCuenta,
+            :idTipoOtp,
+            :codigoHash,
+            :fechaExpiracion,
+            :fechaUso,
+            :intentos,
+            :fechaCreacion,
+            :idEstado
+          );
+        END;
+      `;
+
             await connection.execute(
-                `UPDATE KALO.FIDE_CODIGO_OTP_TB SET INTENTOS = INTENTOS + 1 WHERE ID_CODIGO_OTP = :id`,
-                [otp.ID_CODIGO_OTP],
+                updateSql,
+                buildOtpUpdateBinds(otp, { intentos: otp.INTENTOS + 1 }),
                 { autoCommit: true }
             );
+
             return null;
         }
 
@@ -615,14 +651,61 @@ async function markOTPAsUsed(idCodigoOtp) {
     try {
         connection = await getConnection();
 
-        const sql = `
-      UPDATE KALO.FIDE_CODIGO_OTP_TB
-      SET FECHA_USO = SYSDATE,
-          ID_ESTADO = 2
-      WHERE ID_CODIGO_OTP = :idCodigoOtp
+        const readSql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_OTP_POR_ID_FN(
+          :idCodigoOtp
+        );
+      END;
     `;
 
-        await connection.execute(sql, [idCodigoOtp], { autoCommit: true });
+        const readResult = await connection.execute(
+            readSql,
+            {
+                idCodigoOtp,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        const readResultSet = readResult.outBinds[OUT_CURSOR_BIND_NAME];
+        const otp = await (async () => {
+            try {
+                const rows = await fetchRowsFromCursor(readResultSet);
+                return rows[0] || null;
+            } finally {
+                await readResultSet.close();
+            }
+        })();
+
+        if (!otp) {
+            return;
+        }
+
+        const updateSql = `
+      BEGIN
+        KALO.FIDE_KALO_PKG.FIDE_CODIGO_OTP_UPDATE_SP(
+          :idCodigoOtp,
+          :idCuenta,
+          :idTipoOtp,
+          :codigoHash,
+          :fechaExpiracion,
+          :fechaUso,
+          :intentos,
+          :fechaCreacion,
+          :idEstado
+        );
+      END;
+    `;
+
+        await connection.execute(
+            updateSql,
+            buildOtpUpdateBinds(otp, {
+                fechaUso: new Date(),
+                idEstado: 2
+            }),
+            { autoCommit: true }
+        );
     } finally {
         if (connection) {
             await connection.close();
@@ -636,15 +719,49 @@ async function deactivateActiveOtpsByCuenta(idCuenta) {
     try {
         connection = await getConnection();
 
-        const sql = `
-      UPDATE KALO.FIDE_CODIGO_OTP_TB
-      SET ID_ESTADO = 2
-      WHERE ID_CUENTA = :idCuenta
-        AND ID_TIPO_OTP = 1
-        AND ID_ESTADO = 1
+        const readSql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_OTPS_ACTIVOS_POR_CUENTA_FN(
+          :idCuenta,
+          :idTipoOtp
+        );
+      END;
     `;
 
-        await connection.execute(sql, [idCuenta], { autoCommit: true });
+        const readResult = await connection.execute(
+            readSql,
+            {
+                idCuenta,
+                idTipoOtp: 1,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        const readResultSet = readResult.outBinds[OUT_CURSOR_BIND_NAME];
+        const otps = await (async () => {
+            try {
+                return await fetchRowsFromCursor(readResultSet);
+            } finally {
+                await readResultSet.close();
+            }
+        })();
+
+        const deleteSql = `
+      BEGIN
+        KALO.FIDE_KALO_PKG.FIDE_CODIGO_OTP_DELETE_SP(
+          :idCodigoOtp
+        );
+      END;
+    `;
+
+        for (const otp of otps) {
+            await connection.execute(
+                deleteSql,
+                { idCodigoOtp: otp.ID_CODIGO_OTP },
+                { autoCommit: true }
+            );
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -658,13 +775,54 @@ async function updateAccountStatus(idCuenta, idEstado) {
     try {
         connection = await getConnection();
 
-        const sql = `
-      UPDATE KALO.FIDE_CUENTA_TB
-      SET ID_ESTADO = :idEstado
-      WHERE ID_CUENTA = :idCuenta
+        const readSql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_CUENTA_POR_ID_CUENTA_FN(
+          :idCuenta
+        );
+      END;
     `;
 
-        await connection.execute(sql, { idCuenta, idEstado }, { autoCommit: true });
+        const readResult = await connection.execute(
+            readSql,
+            {
+                idCuenta,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        const readResultSet = readResult.outBinds[OUT_CURSOR_BIND_NAME];
+        const account = await (async () => {
+            try {
+                const rows = await fetchRowsFromCursor(readResultSet);
+                return rows[0] || null;
+            } finally {
+                await readResultSet.close();
+            }
+        })();
+
+        if (!account) {
+            return;
+        }
+
+        const updateSql = `
+      BEGIN
+        KALO.FIDE_KALO_PKG.FIDE_CUENTA_UPDATE_SP(
+          :idCuenta,
+          :identificacion,
+          :usuario,
+          :passwordHash,
+          :idEstado
+        );
+      END;
+    `;
+
+        await connection.execute(
+            updateSql,
+            buildAccountUpdateBinds(account, { idEstado }),
+            { autoCommit: true }
+        );
     } finally {
         if (connection) {
             await connection.close();

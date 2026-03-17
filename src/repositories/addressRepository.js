@@ -1,15 +1,21 @@
-const oracledb = require('oracledb');
 const { getConnection } = require('../config/db');
+const { getCurrentSequenceValue } = require('./repositoryUtils');
+
+function normalizeOptionalText(value) {
+    return value === undefined || value === null || value === '' ? null : value;
+}
 
 async function createAddress(addressData) {
     let connection;
 
     try {
         connection = await getConnection();
+        const calle = normalizeOptionalText(addressData.calle);
+        const numero = normalizeOptionalText(addressData.numero);
 
-        const sql = `
+        const insertSql = `
       BEGIN
-        KALO.FIDE_INSERT_PKG.FIDE_DIRECCION_INSERT_SP(
+        KALO.FIDE_KALO_PKG.FIDE_DIRECCION_INSERT_SP(
           :idDistrito,
           :calle,
           :numero,
@@ -19,23 +25,22 @@ async function createAddress(addressData) {
     `;
 
         await connection.execute(
-            sql,
+            insertSql,
             {
                 idDistrito: addressData.idDistrito,
-                calle: addressData.calle || null,
-                numero: addressData.numero || null,
+                calle,
+                numero,
                 idEstado: 1
             },
             { autoCommit: true }
         );
 
-        const idResult = await connection.execute(
-            `SELECT KALO.FIDE_DIRECCION_SEQ.CURRVAL AS ID_DIRECCION FROM DUAL`,
-            [],
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
-        );
+        const idDireccion = await getCurrentSequenceValue(connection, 'FIDE_DIRECCION_SEQ');
+        if (!idDireccion) {
+            throw new Error('No fue posible obtener el ID de la direccion creada desde el package.');
+        }
 
-        return { idDireccion: idResult.rows[0].ID_DIRECCION };
+        return { idDireccion };
     } finally {
         if (connection) {
             await connection.close();
