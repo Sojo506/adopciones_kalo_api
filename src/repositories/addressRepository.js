@@ -7,14 +7,9 @@ async function createAddress(addressData) {
     try {
         connection = await getConnection();
 
-        const idSql = `SELECT NVL(MAX(ID_DIRECCION), 0) + 1 AS NEXT_ID FROM KALO.FIDE_DIRECCION_TB`;
-        const idResult = await connection.execute(idSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
-        const nextId = idResult.rows[0].NEXT_ID;
-
         const sql = `
       BEGIN
         KALO.FIDE_INSERT_PKG.FIDE_DIRECCION_INSERT_SP(
-          :idDireccion,
           :idDistrito,
           :calle,
           :numero,
@@ -26,7 +21,6 @@ async function createAddress(addressData) {
         await connection.execute(
             sql,
             {
-                idDireccion: nextId,
                 idDistrito: addressData.idDistrito,
                 calle: addressData.calle || null,
                 numero: addressData.numero || null,
@@ -35,7 +29,13 @@ async function createAddress(addressData) {
             { autoCommit: true }
         );
 
-        return { idDireccion: nextId };
+        const idResult = await connection.execute(
+            `SELECT KALO.FIDE_DIRECCION_SEQ.CURRVAL AS ID_DIRECCION FROM DUAL`,
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        return { idDireccion: idResult.rows[0].ID_DIRECCION };
     } finally {
         if (connection) {
             await connection.close();
