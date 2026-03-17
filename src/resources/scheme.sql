@@ -1,5 +1,5 @@
 /* ESQUEMA */
-
+/*
 -- CREACION DE USUARIO Y ASIGNACION DE PRIVILEGIOS
 CREATE USER KALO IDENTIFIED BY "Adopciones_fidelitas$2026";
 /
@@ -12,6 +12,8 @@ GRANT RESOURCE TO KALO;
 
 ALTER USER KALO QUOTA 500M ON USERS;
 /
+
+*/
 
 -- ============================================================
 -- TABLAS BASE (SOLO DEPENDEN DE FIDE_ESTADO_TB)
