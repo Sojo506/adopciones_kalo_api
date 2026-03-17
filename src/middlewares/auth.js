@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { accessSecret } = require('../config/jwt');
+const userRepository = require('../repositories/userRepository');
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -18,4 +19,22 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-module.exports = { authenticateToken };
+const requireAdmin = async (req, res, next) => {
+    try {
+        const account = await userRepository.findAccountByIdCuenta(req.user.idCuenta);
+
+        if (!account || account.ID_TIPO_USUARIO !== 1) {
+            return res.status(403).json({
+                ok: false,
+                message: 'Administrator access required'
+            });
+        }
+
+        req.authenticatedAccount = account;
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = { authenticateToken, requireAdmin };
