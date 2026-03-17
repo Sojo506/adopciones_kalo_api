@@ -306,15 +306,9 @@ async function createAccount(accountData) {
     try {
         connection = await getConnection();
 
-        // Get next ID_CUENTA
-        const idSql = `SELECT NVL(MAX(ID_CUENTA), 0) + 1 AS NEXT_ID FROM KALO.FIDE_CUENTA_TB`;
-        const idResult = await connection.execute(idSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
-        const nextId = idResult.rows[0].NEXT_ID;
-
         const sql = `
       BEGIN
         KALO.FIDE_INSERT_PKG.FIDE_CUENTA_INSERT_SP(
-          :idCuenta,
           :identificacion,
           :usuario,
           :passwordHash,
@@ -324,7 +318,6 @@ async function createAccount(accountData) {
     `;
 
         const binds = {
-            idCuenta: nextId,
             identificacion: accountData.identificacion,
             usuario: accountData.usuario,
             passwordHash: accountData.passwordHash,
@@ -333,7 +326,13 @@ async function createAccount(accountData) {
 
         await connection.execute(sql, binds, { autoCommit: true });
 
-        return { idCuenta: nextId };
+        const idResult = await connection.execute(
+            `SELECT KALO.FIDE_CUENTA_SEQ.CURRVAL AS ID_CUENTA FROM DUAL`,
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        return { idCuenta: idResult.rows[0].ID_CUENTA };
     } finally {
         if (connection) {
             await connection.close();
@@ -347,15 +346,9 @@ async function createOTP(otpData) {
     try {
         connection = await getConnection();
 
-        // Get next ID_CODIGO_OTP
-        const idSql = `SELECT NVL(MAX(ID_CODIGO_OTP), 0) + 1 AS NEXT_ID FROM KALO.FIDE_CODIGO_OTP_TB`;
-        const idResult = await connection.execute(idSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
-        const nextId = idResult.rows[0].NEXT_ID;
-
         const sql = `
       BEGIN
         KALO.FIDE_INSERT_PKG.FIDE_CODIGO_OTP_INSERT_SP(
-          :idCodigoOtp,
           :idCuenta,
           :idTipoOtp,
           :codigoHash,
@@ -369,7 +362,6 @@ async function createOTP(otpData) {
     `;
 
         const binds = {
-            idCodigoOtp: nextId,
             idCuenta: otpData.idCuenta,
             idTipoOtp: otpData.idTipoOtp,
             codigoHash: otpData.codigoHash,
@@ -382,7 +374,13 @@ async function createOTP(otpData) {
 
         await connection.execute(sql, binds, { autoCommit: true });
 
-        return { idCodigoOtp: nextId, codigo: otpData.codigo };
+        const idResult = await connection.execute(
+            `SELECT KALO.FIDE_CODIGO_OTP_SEQ.CURRVAL AS ID_CODIGO_OTP FROM DUAL`,
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        return { idCodigoOtp: idResult.rows[0].ID_CODIGO_OTP, codigo: otpData.codigo };
     } finally {
         if (connection) {
             await connection.close();
