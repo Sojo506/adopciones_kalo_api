@@ -1051,32 +1051,52 @@ CREATE OR REPLACE FUNCTION FIDE_OBTENER_PRODUCTOS_FN
 RETURN SYS_REFCURSOR
 IS
     V_CURSOR_RESULTADO SYS_REFCURSOR;
+    V_SQL              VARCHAR2(4000);
+    V_TIENE_ID_MARCA   NUMBER;
 BEGIN
-    OPEN V_CURSOR_RESULTADO FOR
-        SELECT  P.ID_PRODUCTO,
-                P.NOMBRE,
-                P.DESCRIPCION,
-                P.PRECIO,
-                P.ID_CATEGORIA,
-                C.NOMBRE AS CATEGORIA,
-                P.ID_MARCA,
-                M.NOMBRE AS MARCA,
-                NVL(I.CANTIDAD, 0) AS STOCK,
-                P.ID_ESTADO,
-                E.NOMBRE_ESTADO AS ESTADO
-        FROM FIDE_PRODUCTO_TB P
-        JOIN FIDE_CATEGORIA_TB C ON P.ID_CATEGORIA = C.ID_CATEGORIA
-        JOIN FIDE_MARCA_TB M ON P.ID_MARCA = M.ID_MARCA
-        JOIN FIDE_ESTADO_TB E ON P.ID_ESTADO = E.ID_ESTADO
-        LEFT JOIN (
-            SELECT  ID_PRODUCTO,
-                    SUM(CANTIDAD) AS CANTIDAD
-            FROM FIDE_INVENTARIO_TB
-            WHERE ID_ESTADO = 1
-            GROUP BY ID_PRODUCTO
-        ) I ON P.ID_PRODUCTO = I.ID_PRODUCTO
-        WHERE P.ID_ESTADO = 1
-        ORDER BY P.ID_PRODUCTO;
+    SELECT COUNT(*)
+    INTO V_TIENE_ID_MARCA
+    FROM USER_TAB_COLUMNS
+    WHERE TABLE_NAME = 'FIDE_PRODUCTO_TB'
+      AND COLUMN_NAME = 'ID_MARCA';
+
+    V_SQL := 'SELECT  P.ID_PRODUCTO,
+                      P.NOMBRE,
+                      P.DESCRIPCION,
+                      P.PRECIO,
+                      P.ID_CATEGORIA,
+                      C.NOMBRE AS CATEGORIA, ';
+
+    IF V_TIENE_ID_MARCA > 0 THEN
+        V_SQL := V_SQL || 'P.ID_MARCA,
+                           M.NOMBRE AS MARCA, ';
+    ELSE
+        V_SQL := V_SQL || 'CAST(NULL AS NUMBER) AS ID_MARCA,
+                           CAST(NULL AS VARCHAR2(100)) AS MARCA, ';
+    END IF;
+
+    V_SQL := V_SQL || 'NVL(I.CANTIDAD, 0) AS STOCK,
+                       P.ID_ESTADO,
+                       E.NOMBRE_ESTADO AS ESTADO
+                FROM FIDE_PRODUCTO_TB P
+                JOIN FIDE_CATEGORIA_TB C ON P.ID_CATEGORIA = C.ID_CATEGORIA ';
+
+    IF V_TIENE_ID_MARCA > 0 THEN
+        V_SQL := V_SQL || 'JOIN FIDE_MARCA_TB M ON P.ID_MARCA = M.ID_MARCA ';
+    END IF;
+
+    V_SQL := V_SQL || 'JOIN FIDE_ESTADO_TB E ON P.ID_ESTADO = E.ID_ESTADO
+                       LEFT JOIN (
+                           SELECT  ID_PRODUCTO,
+                                   SUM(CANTIDAD) AS CANTIDAD
+                           FROM FIDE_INVENTARIO_TB
+                           WHERE ID_ESTADO = 1
+                           GROUP BY ID_PRODUCTO
+                       ) I ON P.ID_PRODUCTO = I.ID_PRODUCTO
+                       WHERE P.ID_ESTADO = 1
+                       ORDER BY P.ID_PRODUCTO';
+
+    OPEN V_CURSOR_RESULTADO FOR V_SQL;
 
     RETURN V_CURSOR_RESULTADO;
 EXCEPTION
@@ -1098,31 +1118,51 @@ CREATE OR REPLACE FUNCTION FIDE_OBTENER_PRODUCTO_POR_ID_FN(
 RETURN SYS_REFCURSOR
 IS
     V_CURSOR_RESULTADO SYS_REFCURSOR;
+    V_SQL              VARCHAR2(4000);
+    V_TIENE_ID_MARCA   NUMBER;
 BEGIN
-    OPEN V_CURSOR_RESULTADO FOR
-        SELECT  P.ID_PRODUCTO,
-                P.NOMBRE,
-                P.DESCRIPCION,
-                P.PRECIO,
-                P.ID_CATEGORIA,
-                C.NOMBRE AS CATEGORIA,
-                P.ID_MARCA,
-                M.NOMBRE AS MARCA,
-                NVL(I.CANTIDAD, 0) AS STOCK,
-                P.ID_ESTADO,
-                E.NOMBRE_ESTADO AS ESTADO
-        FROM FIDE_PRODUCTO_TB P
-        JOIN FIDE_CATEGORIA_TB C ON P.ID_CATEGORIA = C.ID_CATEGORIA
-        JOIN FIDE_MARCA_TB M ON P.ID_MARCA = M.ID_MARCA
-        JOIN FIDE_ESTADO_TB E ON P.ID_ESTADO = E.ID_ESTADO
-        LEFT JOIN (
-            SELECT  ID_PRODUCTO,
-                    SUM(CANTIDAD) AS CANTIDAD
-            FROM FIDE_INVENTARIO_TB
-            WHERE ID_ESTADO = 1
-            GROUP BY ID_PRODUCTO
-        ) I ON P.ID_PRODUCTO = I.ID_PRODUCTO
-        WHERE P.ID_PRODUCTO = P_ID_PRODUCTO;
+    SELECT COUNT(*)
+    INTO V_TIENE_ID_MARCA
+    FROM USER_TAB_COLUMNS
+    WHERE TABLE_NAME = 'FIDE_PRODUCTO_TB'
+      AND COLUMN_NAME = 'ID_MARCA';
+
+    V_SQL := 'SELECT  P.ID_PRODUCTO,
+                      P.NOMBRE,
+                      P.DESCRIPCION,
+                      P.PRECIO,
+                      P.ID_CATEGORIA,
+                      C.NOMBRE AS CATEGORIA, ';
+
+    IF V_TIENE_ID_MARCA > 0 THEN
+        V_SQL := V_SQL || 'P.ID_MARCA,
+                           M.NOMBRE AS MARCA, ';
+    ELSE
+        V_SQL := V_SQL || 'CAST(NULL AS NUMBER) AS ID_MARCA,
+                           CAST(NULL AS VARCHAR2(100)) AS MARCA, ';
+    END IF;
+
+    V_SQL := V_SQL || 'NVL(I.CANTIDAD, 0) AS STOCK,
+                       P.ID_ESTADO,
+                       E.NOMBRE_ESTADO AS ESTADO
+                FROM FIDE_PRODUCTO_TB P
+                JOIN FIDE_CATEGORIA_TB C ON P.ID_CATEGORIA = C.ID_CATEGORIA ';
+
+    IF V_TIENE_ID_MARCA > 0 THEN
+        V_SQL := V_SQL || 'JOIN FIDE_MARCA_TB M ON P.ID_MARCA = M.ID_MARCA ';
+    END IF;
+
+    V_SQL := V_SQL || 'JOIN FIDE_ESTADO_TB E ON P.ID_ESTADO = E.ID_ESTADO
+                       LEFT JOIN (
+                           SELECT  ID_PRODUCTO,
+                                   SUM(CANTIDAD) AS CANTIDAD
+                           FROM FIDE_INVENTARIO_TB
+                           WHERE ID_ESTADO = 1
+                           GROUP BY ID_PRODUCTO
+                       ) I ON P.ID_PRODUCTO = I.ID_PRODUCTO
+                       WHERE P.ID_PRODUCTO = :P_ID_PRODUCTO';
+
+    OPEN V_CURSOR_RESULTADO FOR V_SQL USING P_ID_PRODUCTO;
 
     RETURN V_CURSOR_RESULTADO;
 EXCEPTION
@@ -2640,17 +2680,32 @@ CREATE OR REPLACE FUNCTION FIDE_OBTENER_ESTADO_POR_ID_FN(
 RETURN SYS_REFCURSOR
 IS
     V_CURSOR_RESULTADO SYS_REFCURSOR;
+    V_SQL              VARCHAR2(2000);
+    V_TIENE_ACCION     NUMBER;
 BEGIN
-    OPEN V_CURSOR_RESULTADO FOR
-        SELECT  ID_ESTADO,
-                NOMBRE_ESTADO,
-                FECHA_CREACION,
-                FECHA_MODIFICACION,
-                CREADO_POR,
-                MODIFICADO_POR,
-                ACCION
-        FROM FIDE_ESTADO_TB
-        WHERE ID_ESTADO = P_ID_ESTADO;
+    SELECT COUNT(*)
+    INTO V_TIENE_ACCION
+    FROM USER_TAB_COLUMNS
+    WHERE TABLE_NAME = 'FIDE_ESTADO_TB'
+      AND COLUMN_NAME = 'ACCION';
+
+    V_SQL := 'SELECT  ID_ESTADO,
+                      NOMBRE_ESTADO,
+                      FECHA_CREACION,
+                      FECHA_MODIFICACION,
+                      CREADO_POR,
+                      MODIFICADO_POR, ';
+
+    IF V_TIENE_ACCION > 0 THEN
+        V_SQL := V_SQL || 'ACCION ';
+    ELSE
+        V_SQL := V_SQL || 'CAST(NULL AS VARCHAR2(100)) AS ACCION ';
+    END IF;
+
+    V_SQL := V_SQL || 'FROM FIDE_ESTADO_TB
+                       WHERE ID_ESTADO = :P_ID_ESTADO';
+
+    OPEN V_CURSOR_RESULTADO FOR V_SQL USING P_ID_ESTADO;
 
     RETURN V_CURSOR_RESULTADO;
 EXCEPTION
