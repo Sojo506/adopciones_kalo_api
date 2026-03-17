@@ -1,24 +1,33 @@
 const oracledb = require('oracledb');
 const { getConnection } = require('../config/db');
+const { OUT_CURSOR_BIND_NAME, fetchRowsFromCursor } = require('./repositoryUtils');
 
 async function findCountries() {
     let connection;
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_PAISES_FN();
+      END;
+    `;
 
         const result = await connection.execute(
-            `
-              SELECT ID_PAIS, NOMBRE
-              FROM KALO.FIDE_PAIS_TB
-              WHERE ID_ESTADO = 1
-              ORDER BY NOMBRE
-            `,
-            [],
+            sql,
+            {
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return result.rows || [];
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -31,20 +40,30 @@ async function findProvincesByCountry(idPais) {
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_PROVINCIAS_POR_PAIS_FN(
+          :idPais
+        );
+      END;
+    `;
 
         const result = await connection.execute(
-            `
-              SELECT ID_PROVINCIA, NOMBRE, ID_PAIS
-              FROM KALO.FIDE_PROVINCIA_TB
-              WHERE ID_ESTADO = 1
-                AND ID_PAIS = :idPais
-              ORDER BY NOMBRE
-            `,
-            [idPais],
+            sql,
+            {
+                idPais,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return result.rows || [];
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -57,20 +76,30 @@ async function findCantonsByProvince(idProvincia) {
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_CANTONES_POR_PROVINCIA_FN(
+          :idProvincia
+        );
+      END;
+    `;
 
         const result = await connection.execute(
-            `
-              SELECT ID_CANTON, NOMBRE, ID_PROVINCIA
-              FROM KALO.FIDE_CANTON_TB
-              WHERE ID_ESTADO = 1
-                AND ID_PROVINCIA = :idProvincia
-              ORDER BY NOMBRE
-            `,
-            [idProvincia],
+            sql,
+            {
+                idProvincia,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return result.rows || [];
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -83,20 +112,30 @@ async function findDistrictsByCanton(idCanton) {
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_DISTRITOS_POR_CANTON_FN(
+          :idCanton
+        );
+      END;
+    `;
 
         const result = await connection.execute(
-            `
-              SELECT ID_DISTRITO, NOMBRE, ID_CANTON
-              FROM KALO.FIDE_DISTRITO_TB
-              WHERE ID_ESTADO = 1
-                AND ID_CANTON = :idCanton
-              ORDER BY NOMBRE
-            `,
-            [idCanton],
+            sql,
+            {
+                idCanton,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return result.rows || [];
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
@@ -109,36 +148,37 @@ async function findDistrictHierarchy({ idPais, idProvincia, idCanton, idDistrito
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_JERARQUIA_DISTRITO_FN(
+          :idPais,
+          :idProvincia,
+          :idCanton,
+          :idDistrito
+        );
+      END;
+    `;
 
         const result = await connection.execute(
-            `
-              SELECT
-                PA.ID_PAIS,
-                PA.NOMBRE AS PAIS,
-                PRO.ID_PROVINCIA,
-                PRO.NOMBRE AS PROVINCIA,
-                CAN.ID_CANTON,
-                CAN.NOMBRE AS CANTON,
-                DIS.ID_DISTRITO,
-                DIS.NOMBRE AS DISTRITO
-              FROM KALO.FIDE_DISTRITO_TB DIS
-              JOIN KALO.FIDE_CANTON_TB CAN ON DIS.ID_CANTON = CAN.ID_CANTON
-              JOIN KALO.FIDE_PROVINCIA_TB PRO ON CAN.ID_PROVINCIA = PRO.ID_PROVINCIA
-              JOIN KALO.FIDE_PAIS_TB PA ON PRO.ID_PAIS = PA.ID_PAIS
-              WHERE PA.ID_ESTADO = 1
-                AND PRO.ID_ESTADO = 1
-                AND CAN.ID_ESTADO = 1
-                AND DIS.ID_ESTADO = 1
-                AND PA.ID_PAIS = :idPais
-                AND PRO.ID_PROVINCIA = :idProvincia
-                AND CAN.ID_CANTON = :idCanton
-                AND DIS.ID_DISTRITO = :idDistrito
-            `,
-            { idPais, idProvincia, idCanton, idDistrito },
+            sql,
+            {
+                idPais,
+                idProvincia,
+                idCanton,
+                idDistrito,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return result.rows[0] || null;
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            const rows = await fetchRowsFromCursor(resultSet);
+            return rows[0] || null;
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();

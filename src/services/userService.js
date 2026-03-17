@@ -1,15 +1,74 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const addressService = require('./addressService');
+const catalogService = require('./catalogService');
 const locationRepository = require('../repositories/locationRepository');
 const userRepository = require('../repositories/userRepository');
 const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
 const { sendVerificationEmail } = require('../config/email');
+const MemoryCache = require('../utils/memoryCache');
+
+const USER_LIST_CACHE_KEY = 'user:list';
+const USER_DETAIL_CACHE_PREFIX = 'user:detail:';
+const USER_CACHE_TTL_MS = Number(process.env.USER_CACHE_TTL_MS || 15000);
+const userQueryCache = new MemoryCache({ defaultTtlMs: USER_CACHE_TTL_MS });
 
 function createHttpError(message, statusCode) {
     const error = new Error(message);
     error.statusCode = statusCode;
     return error;
+}
+
+function isBcryptHash(value) {
+    return typeof value === 'string' && /^\$2[aby]\$\d{2}\$/.test(value);
+}
+
+async function verifyStoredPassword(candidatePassword, storedPassword) {
+    if (typeof storedPassword !== 'string' || !storedPassword) {
+        return { isValid: false, needsMigration: false };
+    }
+
+    if (!isBcryptHash(storedPassword)) {
+        return {
+            isValid: storedPassword === candidatePassword,
+            needsMigration: storedPassword === candidatePassword
+        };
+    }
+
+    try {
+        return {
+            isValid: await bcrypt.compare(candidatePassword, storedPassword),
+            needsMigration: false
+        };
+    } catch (error) {
+        return { isValid: false, needsMigration: false };
+    }
+}
+
+function getUserDetailCacheKey(identificacion) {
+    return `${USER_DETAIL_CACHE_PREFIX}${String(identificacion).trim()}`;
+}
+
+function invalidateUserCache(identificacion) {
+    userQueryCache.delete(USER_LIST_CACHE_KEY);
+
+    if (identificacion !== undefined && identificacion !== null) {
+        userQueryCache.delete(getUserDetailCacheKey(identificacion));
+    }
+}
+
+async function getUserTypeIdByName(expectedName) {
+    const normalizedExpectedName = String(expectedName || '').trim().toLowerCase();
+    const userTypes = await catalogService.getUserTypes();
+    const matchingUserType = userTypes.find(
+        (userType) => String(userType.nombre || '').trim().toLowerCase() === normalizedExpectedName
+    );
+
+    if (!matchingUserType) {
+        throw createHttpError(`User type "${expectedName}" is not configured`, 500);
+    }
+
+    return matchingUserType.idTipoUsuario;
 }
 
 async function generateAndSendVerificationOtp(account, { failOnEmailError = false } = {}) {
@@ -40,18 +99,22 @@ async function generateAndSendVerificationOtp(account, { failOnEmailError = fals
 }
 
 async function getUsers() {
-    const users = await userRepository.findAllUsers();
-    return users.map(formatDashboardUser);
+    return userQueryCache.getOrSet(USER_LIST_CACHE_KEY, async () => {
+        const users = await userRepository.findAllUsers();
+        return users.map(formatDashboardUser);
+    });
 }
 
 async function getUserByIdentification(identificacion) {
-    const user = await userRepository.findUserDetailsByIdentification(identificacion);
+    return userQueryCache.getOrSet(getUserDetailCacheKey(identificacion), async () => {
+        const user = await userRepository.findUserDetailsByIdentification(identificacion);
 
-    if (!user) {
-        throw createHttpError('User not found', 404);
-    }
+        if (!user) {
+            throw createHttpError('User not found', 404);
+        }
 
-    return formatDashboardUser(user);
+        return formatDashboardUser(user);
+    });
 }
 
 async function getCurrentUser(idCuenta) {
@@ -93,6 +156,8 @@ async function signUp(userData) {
         throw createHttpError('The selected country, province, canton, and district combination is invalid', 400);
     }
 
+    const clientUserTypeId = await getUserTypeIdByName('Cliente');
+
     const address = await addressService.createAddress({
         idDistrito: userData.idDistrito,
         calle: userData.calle,
@@ -103,7 +168,7 @@ async function signUp(userData) {
         ...userData,
         idDireccion: address.idDireccion,
         idEstado: 1, // Active
-        idTipoUsuario: 11 // Cliente
+        idTipoUsuario: clientUserTypeId
     };
 
     const userResult = await userRepository.createUser(newUser);
@@ -123,6 +188,7 @@ async function signUp(userData) {
         USUARIO: userData.correo
     };
     const emailSent = await generateAndSendVerificationOtp(account);
+    invalidateUserCache(userResult.identificacion);
 
     return {
         user: {
@@ -234,6 +300,7 @@ async function createDashboardUser(userData) {
         idEstado: userData.idEstado
     });
 
+    invalidateUserCache(userData.identificacion);
     return getUserByIdentification(userData.identificacion);
 }
 
@@ -279,16 +346,30 @@ async function updateDashboardUser(identificacion, userData, actorAccount) {
         idEstado: userData.idEstado
     });
 
-    await userRepository.updateAccount({
-        idCuenta: existingUser.ID_CUENTA,
-        identificacion,
-        usuario: userData.correo,
-        passwordHash: userData.password
-            ? await bcrypt.hash(userData.password, 10)
-            : existingUser.PASSWORD_HASH,
-        idEstado: userData.idEstado
-    });
+    if (existingUser.ID_CUENTA) {
+        await userRepository.updateAccount({
+            idCuenta: existingUser.ID_CUENTA,
+            identificacion,
+            usuario: userData.correo,
+            passwordHash: userData.password
+                ? await bcrypt.hash(userData.password, 10)
+                : existingUser.PASSWORD_HASH,
+            idEstado: userData.idEstado
+        });
+    } else {
+        if (!userData.password) {
+            throw createHttpError('Password is required to create the missing account for this user', 400);
+        }
 
+        await userRepository.createAccount({
+            identificacion,
+            usuario: userData.correo,
+            passwordHash: await bcrypt.hash(userData.password, 10),
+            idEstado: userData.idEstado
+        });
+    }
+
+    invalidateUserCache(identificacion);
     return getUserByIdentification(identificacion);
 }
 
@@ -306,6 +387,8 @@ async function deleteDashboardUser(identificacion, actorAccount) {
     if (existingUser.ID_DIRECCION) {
         await userRepository.deleteAddress(existingUser.ID_DIRECCION);
     }
+
+    invalidateUserCache(identificacion);
 }
 
 async function signIn(correo, password) {
@@ -318,9 +401,19 @@ async function signIn(correo, password) {
         throw createHttpError('Account not verified. Please check your email for verification code.', 403);
     }
 
-    const isValidPassword = await bcrypt.compare(password, account.PASSWORD_HASH);
-    if (!isValidPassword) {
+    const passwordValidation = await verifyStoredPassword(password, account.PASSWORD_HASH);
+    if (!passwordValidation.isValid) {
         throw createHttpError('Invalid credentials', 401);
+    }
+
+    if (passwordValidation.needsMigration) {
+        await userRepository.updateAccount({
+            idCuenta: account.ID_CUENTA,
+            identificacion: account.IDENTIFICACION,
+            usuario: account.USUARIO,
+            passwordHash: await bcrypt.hash(password, 10),
+            idEstado: account.ID_ESTADO
+        });
     }
 
     const payload = { identificacion: account.IDENTIFICACION, idCuenta: account.ID_CUENTA };
@@ -356,6 +449,7 @@ async function verifyEmail(correo, code) {
     await userRepository.markOTPAsUsed(otp.ID_CODIGO_OTP);
 
     await userRepository.updateAccountStatus(account.ID_CUENTA, 1); // Active
+    invalidateUserCache(account.IDENTIFICACION);
 
     return { message: 'Email verified successfully' };
 }
