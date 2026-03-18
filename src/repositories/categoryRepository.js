@@ -83,18 +83,31 @@ async function countActiveProductsByCategory(idCategoria) {
 
     try {
         connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_PRODUCTOS_FN();
+      END;
+    `;
+
         const result = await connection.execute(
-            `
-                SELECT COUNT(*) AS TOTAL
-                FROM FIDE_PRODUCTO_TB
-                WHERE ID_CATEGORIA = :idCategoria
-                  AND ID_ESTADO = 1
-            `,
-            { idCategoria },
+            sql,
+            {
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        return Number(result.rows?.[0]?.TOTAL || 0);
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            const products = await fetchRowsFromCursor(resultSet);
+
+            return products.filter(
+                (product) => Number(product.ID_CATEGORIA) === Number(idCategoria)
+            ).length;
+        } finally {
+            await resultSet.close();
+        }
     } finally {
         if (connection) {
             await connection.close();
