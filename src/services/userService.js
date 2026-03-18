@@ -13,6 +13,8 @@ const MemoryCache = require('../utils/memoryCache');
 const USER_LIST_CACHE_KEY = 'user:list';
 const USER_DETAIL_CACHE_PREFIX = 'user:detail:';
 const USER_CACHE_TTL_MS = Number(process.env.USER_CACHE_TTL_MS || 15000);
+const ACTIVE_STATE_ID = 1;
+const PENDING_STATE_ID = 3;
 const CLIENT_USER_TYPE_ID = 2;
 const EMAIL_VERIFICATION_OTP_TYPE_ID = 1;
 const EMAIL_VERIFICATION_OTP_NAME = 'Verificación de correo';
@@ -169,19 +171,57 @@ function hasSameEmail(left, right) {
     return String(left || '').trim().toLowerCase() === String(right || '').trim().toLowerCase();
 }
 
+function isActiveState(idEstado) {
+    return Number(idEstado) === ACTIVE_STATE_ID;
+}
+
+function isPendingState(idEstado) {
+    return Number(idEstado) === PENDING_STATE_ID;
+}
+
+function isAvailableEmailState(idEstado) {
+    return isActiveState(idEstado) || isPendingState(idEstado);
+}
+
+function formatSessionUser(account, primaryEmail) {
+    const idEstadoCorreo = primaryEmail ? Number(primaryEmail.ID_ESTADO) : null;
+
+    return {
+        identificacion: account.IDENTIFICACION,
+        nombre: account.NOMBRE,
+        apellidoPaterno: account.APELLIDO_PATERNO,
+        apellidoMaterno: account.APELLIDO_MATERNO,
+        usuario: account.USUARIO,
+        correo: primaryEmail?.CORREO || null,
+        idTipoUsuario: account.ID_TIPO_USUARIO,
+        tipoUsuario: account.TIPO_USUARIO,
+        idEstadoCuenta: Number(account.ID_ESTADO),
+        idEstadoCorreo,
+        emailVerified: isActiveState(idEstadoCorreo)
+    };
+}
+
 async function getPrimaryEmailByIdentification(identificacion) {
     const emails = await emailRepository.findEmailsByIdentification(identificacion);
     return pickPrimaryEmail(emails);
 }
 
-async function findAccountByEmail(correo) {
+async function findAccountContextByEmail(correo) {
     const emailRecord = await emailRepository.findEmailByAddress(correo);
 
-    if (!emailRecord || Number(emailRecord.ID_ESTADO) !== 1) {
-        return null;
+    if (!emailRecord || !isAvailableEmailState(emailRecord.ID_ESTADO)) {
+        return { account: null, emailRecord: null };
     }
 
-    return userRepository.findAccountByIdentification(emailRecord.IDENTIFICACION);
+    return {
+        account: await userRepository.findAccountByIdentification(emailRecord.IDENTIFICACION),
+        emailRecord
+    };
+}
+
+async function findAccountByEmail(correo) {
+    const { account } = await findAccountContextByEmail(correo);
+    return account;
 }
 
 async function findAccountByLoginIdentifier(identifier) {
@@ -221,17 +261,7 @@ async function getCurrentUser(idCuenta) {
     }
 
     const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
-
-    return {
-        identificacion: account.IDENTIFICACION,
-        nombre: account.NOMBRE,
-        apellidoPaterno: account.APELLIDO_PATERNO,
-        apellidoMaterno: account.APELLIDO_MATERNO,
-        usuario: account.USUARIO,
-        correo: primaryEmail?.CORREO || null,
-        idTipoUsuario: account.ID_TIPO_USUARIO,
-        tipoUsuario: account.TIPO_USUARIO
-    };
+    return formatSessionUser(account, primaryEmail);
 }
 
 async function signUp(userData) {
@@ -295,14 +325,14 @@ async function signUp(userData) {
         identificacion: userResult.identificacion,
         usuario: normalizedUsername,
         passwordHash: hashedPassword,
-        idEstado: 3 // Pending verification
+        idEstado: PENDING_STATE_ID
     };
 
     const accountResult = await userRepository.createAccount(accountData);
     await emailRepository.createEmail({
         identificacion: userResult.identificacion,
         correo: normalizedEmail,
-        idEstado: 1
+        idEstado: PENDING_STATE_ID
     });
     await phoneRepository.createPhone({
         identificacion: userResult.identificacion,
@@ -562,8 +592,8 @@ async function signIn(identifier, password) {
         throw createHttpError('Invalid credentials', 401);
     }
 
-    if (account.ID_ESTADO !== 1) {
-        throw createHttpError('Account not verified. Please check your email for verification code.', 403);
+    if (!isActiveState(account.ID_ESTADO) && !isPendingState(account.ID_ESTADO)) {
+        throw createHttpError('Account is not available', 403);
     }
 
     const passwordValidation = await verifyStoredPassword(password, account.PASSWORD_HASH);
@@ -587,16 +617,7 @@ async function signIn(identifier, password) {
     const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
 
     return {
-        user: {
-            identificacion: account.IDENTIFICACION,
-            nombre: account.NOMBRE,
-            apellidoPaterno: account.APELLIDO_PATERNO,
-            apellidoMaterno: account.APELLIDO_MATERNO,
-            usuario: account.USUARIO,
-            correo: primaryEmail?.CORREO || null,
-            idTipoUsuario: account.ID_TIPO_USUARIO,
-            tipoUsuario: account.TIPO_USUARIO
-        },
+        user: formatSessionUser(account, primaryEmail),
         accessToken,
         refreshToken
     };
@@ -604,7 +625,7 @@ async function signIn(identifier, password) {
 
 async function verifyEmail(correo, code) {
     const normalizedEmail = String(correo || '').trim();
-    const account = await findAccountByEmail(normalizedEmail);
+    const { account, emailRecord } = await findAccountContextByEmail(normalizedEmail);
     if (!account) {
         throw createHttpError('Account not found', 404);
     }
@@ -621,7 +642,15 @@ async function verifyEmail(correo, code) {
 
     await userRepository.markOTPAsUsed(otp.ID_CODIGO_OTP);
 
-    await userRepository.updateAccountStatus(account.ID_CUENTA, 1); // Active
+    if (emailRecord && !isActiveState(emailRecord.ID_ESTADO)) {
+        await emailRepository.updateEmail({
+            identificacion: emailRecord.IDENTIFICACION,
+            correo: emailRecord.CORREO,
+            idEstado: ACTIVE_STATE_ID
+        });
+    }
+
+    await userRepository.updateAccountStatus(account.ID_CUENTA, ACTIVE_STATE_ID);
     invalidateUserCache(account.IDENTIFICACION);
 
     return { message: 'Email verified successfully' };
@@ -629,12 +658,12 @@ async function verifyEmail(correo, code) {
 
 async function resendVerificationEmail(correo) {
     const normalizedEmail = String(correo || '').trim();
-    const account = await findAccountByEmail(normalizedEmail);
+    const { account, emailRecord } = await findAccountContextByEmail(normalizedEmail);
     if (!account) {
         throw createHttpError('Account not found', 404);
     }
 
-    if (account.ID_ESTADO === 1) {
+    if (isActiveState(emailRecord?.ID_ESTADO)) {
         throw createHttpError('Account is already verified', 409);
     }
 
