@@ -52,4 +52,21 @@ async function getBrands(req, res, next) {
     }
 }
 
-module.exports = { getUserTypes, getStates, getOtpTypes, getCategories, getBrands };
+async function getCurrencies(req, res, next) {
+    try {
+        const currencies = await catalogService.getCurrencies();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: currencies });
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = {
+    getUserTypes,
+    getStates,
+    getOtpTypes,
+    getCategories,
+    getBrands,
+    getCurrencies
+};
