@@ -13,5 +13,6 @@ router.get('/breeds', catalogController.getBreeds);
 router.get('/sexes', catalogController.getSexes);
 router.get('/request-types', catalogController.getRequestTypes);
 router.get('/response-types', catalogController.getResponseTypes);
+router.get('/tracking-types', catalogController.getTrackingTypes);
 
 module.exports = router;
