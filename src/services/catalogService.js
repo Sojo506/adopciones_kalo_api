@@ -51,6 +51,17 @@ async function getOtpTypeById(idTipoOtp) {
     };
 }
 
+async function getCategories() {
+    return catalogCache.getOrSet('catalog:categories', async () => {
+        const categories = await catalogRepository.findCategories();
+        return categories.map((category) => ({
+            idCategoria: category.ID_CATEGORIA,
+            nombre: category.NOMBRE,
+            idEstado: category.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -63,12 +74,18 @@ function invalidateOtpTypesCache() {
     catalogCache.delete('catalog:otp-types');
 }
 
+function invalidateCategoriesCache() {
+    catalogCache.delete('catalog:categories');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
     getOtpTypes,
     getOtpTypeById,
+    getCategories,
     invalidateUserTypesCache,
     invalidateStatesCache,
-    invalidateOtpTypesCache
+    invalidateOtpTypesCache,
+    invalidateCategoriesCache
 };
