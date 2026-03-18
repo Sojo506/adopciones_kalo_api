@@ -2659,6 +2659,30 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             RAISE_APPLICATION_ERROR(-20003, 'ERROR ' || SQLERRM);
     END FIDE_OBTENER_CATEGORIAS_ADMIN_FN;
 
+    FUNCTION FIDE_OBTENER_MARCAS_ADMIN_FN
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  M.ID_MARCA,
+                    M.NOMBRE,
+                    M.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_MARCA_TB M
+            JOIN FIDE_ESTADO_TB E ON M.ID_ESTADO = E.ID_ESTADO
+            ORDER BY M.NOMBRE;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20001, 'NO SE ENCONTRO DATOS CON EL ID INDICADO');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20002, 'DATOS DUPLICADOS');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20003, 'ERROR ' || SQLERRM);
+    END FIDE_OBTENER_MARCAS_ADMIN_FN;
+
     FUNCTION FIDE_OBTENER_TIPO_OTP_POR_ID_FN(
         P_ID_TIPO_OTP IN FIDE_TIPO_OTP_TB.ID_TIPO_OTP%TYPE
     )
@@ -5996,6 +6020,113 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
 
         IF V_FILAS = 0 THEN
             RAISE_APPLICATION_ERROR(-20004, 'No existe la categoría o ya está eliminada.');
+        END IF;
+
+        COMMIT;
+
+    EXCEPTION
+        WHEN VALUE_ERROR THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
+        WHEN INVALID_NUMBER THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
+        WHEN OTHERS THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END;
+
+    /* PROCEDURE FIDE_MARCA_TB INSERT */
+
+    PROCEDURE FIDE_MARCA_INSERT_SP(
+        P_NOMBRE       IN FIDE_MARCA_TB.NOMBRE%TYPE,
+        P_ID_ESTADO    IN FIDE_MARCA_TB.ID_ESTADO%TYPE
+    )
+    IS
+    BEGIN
+
+        INSERT INTO FIDE_MARCA_TB(
+            NOMBRE,
+            ID_ESTADO
+        )
+        VALUES(
+            P_NOMBRE,
+            P_ID_ESTADO
+        );
+
+        COMMIT;
+
+    EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20002, 'La marca ya existe.');
+        WHEN VALUE_ERROR THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20003, 'Error en tipo o tamaño de dato.');
+        WHEN INVALID_NUMBER THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
+        WHEN OTHERS THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END;
+
+    /* PROCEDURE FIDE_MARCA_TB UPDATE */
+
+    PROCEDURE FIDE_MARCA_UPDATE_SP(
+        P_ID_MARCA     IN FIDE_MARCA_TB.ID_MARCA%TYPE,
+        P_NOMBRE       IN FIDE_MARCA_TB.NOMBRE%TYPE,
+        P_ID_ESTADO    IN FIDE_MARCA_TB.ID_ESTADO%TYPE
+    )
+    IS
+        V_HAY_UPDATE NUMBER;
+    BEGIN
+
+        UPDATE FIDE_MARCA_TB
+        SET
+            NOMBRE = P_NOMBRE,
+            ID_ESTADO = P_ID_ESTADO
+        WHERE ID_MARCA = P_ID_MARCA;
+
+        V_HAY_UPDATE := SQL%ROWCOUNT;
+
+        IF V_HAY_UPDATE = 0 THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No existe la marca.');
+        END IF;
+
+        COMMIT;
+
+    EXCEPTION
+        WHEN VALUE_ERROR THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
+        WHEN INVALID_NUMBER THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
+        WHEN OTHERS THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END;
+
+    /* PROCEDURE FIDE_MARCA_TB DELETE LOGICO */
+
+    PROCEDURE FIDE_MARCA_DELETE_SP(
+        P_ID_MARCA IN FIDE_MARCA_TB.ID_MARCA%TYPE
+    )
+    IS
+        V_ESTADO NUMBER := 2;
+        V_FILAS NUMBER;
+    BEGIN
+
+        UPDATE FIDE_MARCA_TB
+        SET ID_ESTADO = V_ESTADO
+        WHERE ID_MARCA = P_ID_MARCA
+        AND ID_ESTADO != 0;
+
+        V_FILAS := SQL%ROWCOUNT;
+
+        IF V_FILAS = 0 THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No existe la marca o ya está eliminada.');
         END IF;
 
         COMMIT;
