@@ -16,6 +16,8 @@ router.use('/categories', require('./categoryRoutes'));
 router.use('/brands', require('./brandRoutes'));
 router.use('/products', require('./productRoutes'));
 router.use('/product-images', require('./productImageRoutes'));
+router.use('/inventories', require('./inventoryRoutes'));
+router.use('/inventory-movements', require('./inventoryMovementRoutes'));
 router.use('/currencies', require('./currencyRoutes'));
 router.use('/breeds', require('./breedRoutes'));
 router.use('/sexes', require('./sexRoutes'));
