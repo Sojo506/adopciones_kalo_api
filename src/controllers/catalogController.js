@@ -102,6 +102,16 @@ async function getResponseTypes(req, res, next) {
     }
 }
 
+async function getTrackingTypes(req, res, next) {
+    try {
+        const trackingTypes = await catalogService.getTrackingTypes();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: trackingTypes });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -112,5 +122,6 @@ module.exports = {
     getBreeds,
     getSexes,
     getRequestTypes,
-    getResponseTypes
+    getResponseTypes,
+    getTrackingTypes
 };
