@@ -22,4 +22,14 @@ async function getStates(req, res, next) {
     }
 }
 
-module.exports = { getUserTypes, getStates };
+async function getOtpTypes(req, res, next) {
+    try {
+        const otpTypes = await catalogService.getOtpTypes();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: otpTypes });
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = { getUserTypes, getStates, getOtpTypes };
