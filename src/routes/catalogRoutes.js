@@ -11,5 +11,6 @@ router.get('/brands', catalogController.getBrands);
 router.get('/currencies', catalogController.getCurrencies);
 router.get('/breeds', catalogController.getBreeds);
 router.get('/sexes', catalogController.getSexes);
+router.get('/request-types', catalogController.getRequestTypes);
 
 module.exports = router;
