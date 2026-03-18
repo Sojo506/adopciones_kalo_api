@@ -72,6 +72,16 @@ async function getBreeds(req, res, next) {
     }
 }
 
+async function getSexes(req, res, next) {
+    try {
+        const sexes = await catalogService.getSexes();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: sexes });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -79,5 +89,6 @@ module.exports = {
     getCategories,
     getBrands,
     getCurrencies,
-    getBreeds
+    getBreeds,
+    getSexes
 };
