@@ -14,6 +14,7 @@ router.use('/states', require('./stateRoutes'));
 router.use('/otp-types', require('./otpTypeRoutes'));
 router.use('/categories', require('./categoryRoutes'));
 router.use('/brands', require('./brandRoutes'));
+router.use('/currencies', require('./currencyRoutes'));
 router.use('/user-types', require('./userTypeRoutes'));
 router.use('/emails', require('./emailRoutes'));
 router.use('/phones', require('./phoneRoutes'));
