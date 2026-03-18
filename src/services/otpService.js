@@ -183,5 +183,6 @@ module.exports = {
     getOtpById,
     createOtp,
     updateOtp,
-    deleteOtp
+    deleteOtp,
+    invalidateAllOtpCaches: invalidateOtpCache
 };
