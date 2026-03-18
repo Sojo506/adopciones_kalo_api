@@ -62,6 +62,17 @@ async function getCategories() {
     });
 }
 
+async function getBrands() {
+    return catalogCache.getOrSet('catalog:brands', async () => {
+        const brands = await catalogRepository.findBrands();
+        return brands.map((brand) => ({
+            idMarca: brand.ID_MARCA,
+            nombre: brand.NOMBRE,
+            idEstado: brand.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -78,14 +89,20 @@ function invalidateCategoriesCache() {
     catalogCache.delete('catalog:categories');
 }
 
+function invalidateBrandsCache() {
+    catalogCache.delete('catalog:brands');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
     getOtpTypes,
     getOtpTypeById,
     getCategories,
+    getBrands,
     invalidateUserTypesCache,
     invalidateStatesCache,
     invalidateOtpTypesCache,
-    invalidateCategoriesCache
+    invalidateCategoriesCache,
+    invalidateBrandsCache
 };
