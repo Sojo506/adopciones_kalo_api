@@ -55,6 +55,10 @@ function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
 
+function invalidateStatesCache() {
+    catalogCache.delete('catalog:states');
+}
+
 function invalidateOtpTypesCache() {
     catalogCache.delete('catalog:otp-types');
 }
@@ -65,5 +69,6 @@ module.exports = {
     getOtpTypes,
     getOtpTypeById,
     invalidateUserTypesCache,
+    invalidateStatesCache,
     invalidateOtpTypesCache
 };

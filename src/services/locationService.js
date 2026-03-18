@@ -47,4 +47,44 @@ async function getDistricts(idCanton) {
     });
 }
 
-module.exports = { getCountries, getProvinces, getCantons, getDistricts };
+function invalidateCountriesCache() {
+    locationCache.delete('location:countries');
+}
+
+function invalidateProvincesCache(idPais = null) {
+    if (idPais !== null && idPais !== undefined) {
+        locationCache.delete(`location:provinces:${idPais}`);
+        return;
+    }
+
+    locationCache.clearByPrefix('location:provinces:');
+}
+
+function invalidateCantonsCache(idProvincia = null) {
+    if (idProvincia !== null && idProvincia !== undefined) {
+        locationCache.delete(`location:cantons:${idProvincia}`);
+        return;
+    }
+
+    locationCache.clearByPrefix('location:cantons:');
+}
+
+function invalidateDistrictsCache(idCanton = null) {
+    if (idCanton !== null && idCanton !== undefined) {
+        locationCache.delete(`location:districts:${idCanton}`);
+        return;
+    }
+
+    locationCache.clearByPrefix('location:districts:');
+}
+
+module.exports = {
+    getCountries,
+    getProvinces,
+    getCantons,
+    getDistricts,
+    invalidateCountriesCache,
+    invalidateProvincesCache,
+    invalidateCantonsCache,
+    invalidateDistrictsCache
+};
