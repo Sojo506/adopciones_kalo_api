@@ -9,5 +9,6 @@ router.get('/otp-types', catalogController.getOtpTypes);
 router.get('/categories', catalogController.getCategories);
 router.get('/brands', catalogController.getBrands);
 router.get('/currencies', catalogController.getCurrencies);
+router.get('/breeds', catalogController.getBreeds);
 
 module.exports = router;
