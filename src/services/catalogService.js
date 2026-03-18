@@ -129,6 +129,17 @@ async function getResponseTypes() {
     });
 }
 
+async function getTrackingTypes() {
+    return catalogCache.getOrSet('catalog:tracking-types', async () => {
+        const trackingTypes = await catalogRepository.findTrackingTypes();
+        return trackingTypes.map((trackingType) => ({
+            idTipoSeguimiento: trackingType.ID_TIPO_SEGUIMIENTO,
+            nombre: trackingType.NOMBRE,
+            idEstado: trackingType.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -169,6 +180,10 @@ function invalidateResponseTypesCache() {
     catalogCache.delete('catalog:response-types');
 }
 
+function invalidateTrackingTypesCache() {
+    catalogCache.delete('catalog:tracking-types');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -181,6 +196,7 @@ module.exports = {
     getSexes,
     getRequestTypes,
     getResponseTypes,
+    getTrackingTypes,
     invalidateUserTypesCache,
     invalidateStatesCache,
     invalidateOtpTypesCache,
@@ -190,5 +206,6 @@ module.exports = {
     invalidateBreedsCache,
     invalidateSexesCache,
     invalidateRequestTypesCache,
-    invalidateResponseTypesCache
+    invalidateResponseTypesCache,
+    invalidateTrackingTypesCache
 };
