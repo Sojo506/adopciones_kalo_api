@@ -52,6 +52,16 @@ async function getBrands(req, res, next) {
     }
 }
 
+async function getProducts(req, res, next) {
+    try {
+        const products = await catalogService.getProducts();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: products });
+    } catch (error) {
+        next(error);
+    }
+}
+
 async function getCurrencies(req, res, next) {
     try {
         const currencies = await catalogService.getCurrencies();
@@ -138,6 +148,7 @@ module.exports = {
     getOtpTypes,
     getCategories,
     getBrands,
+    getProducts,
     getCurrencies,
     getBreeds,
     getSexes,
