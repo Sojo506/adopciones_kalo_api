@@ -7,5 +7,6 @@ router.get('/user-types', catalogController.getUserTypes);
 router.get('/states', catalogController.getStates);
 router.get('/otp-types', catalogController.getOtpTypes);
 router.get('/categories', catalogController.getCategories);
+router.get('/brands', catalogController.getBrands);
 
 module.exports = router;
