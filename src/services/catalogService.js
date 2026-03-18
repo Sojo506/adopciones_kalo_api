@@ -140,6 +140,17 @@ async function getTrackingTypes() {
     });
 }
 
+async function getEventTypes() {
+    return catalogCache.getOrSet('catalog:event-types', async () => {
+        const eventTypes = await catalogRepository.findEventTypes();
+        return eventTypes.map((eventType) => ({
+            idTipoEvento: eventType.ID_TIPO_EVENTO,
+            nombre: eventType.NOMBRE,
+            idEstado: eventType.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -184,6 +195,10 @@ function invalidateTrackingTypesCache() {
     catalogCache.delete('catalog:tracking-types');
 }
 
+function invalidateEventTypesCache() {
+    catalogCache.delete('catalog:event-types');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -197,6 +212,7 @@ module.exports = {
     getRequestTypes,
     getResponseTypes,
     getTrackingTypes,
+    getEventTypes,
     invalidateUserTypesCache,
     invalidateStatesCache,
     invalidateOtpTypesCache,
@@ -207,5 +223,6 @@ module.exports = {
     invalidateSexesCache,
     invalidateRequestTypesCache,
     invalidateResponseTypesCache,
-    invalidateTrackingTypesCache
+    invalidateTrackingTypesCache,
+    invalidateEventTypesCache
 };
