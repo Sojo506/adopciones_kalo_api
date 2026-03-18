@@ -4,6 +4,7 @@ const addressService = require('./addressService');
 const catalogService = require('./catalogService');
 const emailRepository = require('../repositories/emailRepository');
 const locationRepository = require('../repositories/locationRepository');
+const phoneRepository = require('../repositories/phoneRepository');
 const userRepository = require('../repositories/userRepository');
 const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
 const { sendVerificationEmail } = require('../config/email');
@@ -195,6 +196,7 @@ async function getCurrentUser(idCuenta) {
 async function signUp(userData) {
     const normalizedUsername = String(userData.usuario || '').trim();
     const normalizedEmail = String(userData.correo || '').trim();
+    const normalizedPhone = String(userData.telefono || '').trim();
 
     const existingAccount = await userRepository.findAccountByUsuario(normalizedUsername);
     if (existingAccount) {
@@ -204,6 +206,11 @@ async function signUp(userData) {
     const existingEmail = await emailRepository.findEmailByAddress(normalizedEmail);
     if (existingEmail) {
         throw createHttpError('Email already exists', 409);
+    }
+
+    const existingPhone = await phoneRepository.findPhoneByNumber(normalizedPhone);
+    if (existingPhone) {
+        throw createHttpError('Phone already exists', 409);
     }
 
     const existingUser = await userRepository.findByIdentification(userData.identificacion);
@@ -254,6 +261,11 @@ async function signUp(userData) {
     await emailRepository.createEmail({
         identificacion: userResult.identificacion,
         correo: normalizedEmail,
+        idEstado: 1
+    });
+    await phoneRepository.createPhone({
+        identificacion: userResult.identificacion,
+        telefono: normalizedPhone,
         idEstado: 1
     });
 

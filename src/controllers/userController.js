@@ -1,5 +1,6 @@
 const userService = require('../services/userService');
 const { body, validationResult } = require('express-validator');
+const PHONE_PATTERN = /^[0-9()+\s-]{6,20}$/;
 
 async function getUsers(req, res, next) {
     try {
@@ -48,6 +49,7 @@ const signUpValidation = [
     body('apellidoPaterno').isLength({ min: 1 }).withMessage('Apellido Paterno is required'),
     body('apellidoMaterno').isLength({ min: 1 }).withMessage('Apellido Materno is required'),
     body('correo').isEmail().withMessage('Valid email is required'),
+    body('telefono').trim().matches(PHONE_PATTERN).withMessage('Valid phone is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('idPais').isNumeric().withMessage('ID Pais must be a number'),
     body('idProvincia').isNumeric().withMessage('ID Provincia must be a number'),
