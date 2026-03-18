@@ -19,6 +19,7 @@ router.use('/breeds', require('./breedRoutes'));
 router.use('/sexes', require('./sexRoutes'));
 router.use('/request-types', require('./requestTypeRoutes'));
 router.use('/response-types', require('./responseTypeRoutes'));
+router.use('/tracking-types', require('./trackingTypeRoutes'));
 router.use('/user-types', require('./userTypeRoutes'));
 router.use('/emails', require('./emailRoutes'));
 router.use('/phones', require('./phoneRoutes'));
