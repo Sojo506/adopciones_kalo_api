@@ -118,6 +118,17 @@ async function getRequestTypes() {
     });
 }
 
+async function getResponseTypes() {
+    return catalogCache.getOrSet('catalog:response-types', async () => {
+        const responseTypes = await catalogRepository.findResponseTypes();
+        return responseTypes.map((responseType) => ({
+            idTipoRespuesta: responseType.ID_TIPO_RESPUESTA,
+            nombre: responseType.NOMBRE,
+            idEstado: responseType.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -154,6 +165,10 @@ function invalidateRequestTypesCache() {
     catalogCache.delete('catalog:request-types');
 }
 
+function invalidateResponseTypesCache() {
+    catalogCache.delete('catalog:response-types');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -165,6 +180,7 @@ module.exports = {
     getBreeds,
     getSexes,
     getRequestTypes,
+    getResponseTypes,
     invalidateUserTypesCache,
     invalidateStatesCache,
     invalidateOtpTypesCache,
@@ -173,5 +189,6 @@ module.exports = {
     invalidateCurrenciesCache,
     invalidateBreedsCache,
     invalidateSexesCache,
-    invalidateRequestTypesCache
+    invalidateRequestTypesCache,
+    invalidateResponseTypesCache
 };
