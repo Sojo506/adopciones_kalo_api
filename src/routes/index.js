@@ -11,6 +11,7 @@ router.use('/cantons', require('./cantonRoutes'));
 router.use('/districts', require('./districtRoutes'));
 router.use('/addresses', require('./addressRoutes'));
 router.use('/states', require('./stateRoutes'));
+router.use('/otp-types', require('./otpTypeRoutes'));
 router.use('/user-types', require('./userTypeRoutes'));
 router.use('/emails', require('./emailRoutes'));
 router.use('/phones', require('./phoneRoutes'));
