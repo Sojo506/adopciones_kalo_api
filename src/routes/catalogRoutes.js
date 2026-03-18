@@ -15,5 +15,6 @@ router.get('/request-types', catalogController.getRequestTypes);
 router.get('/response-types', catalogController.getResponseTypes);
 router.get('/tracking-types', catalogController.getTrackingTypes);
 router.get('/event-types', catalogController.getEventTypes);
+router.get('/questions', catalogController.getQuestions);
 
 module.exports = router;
