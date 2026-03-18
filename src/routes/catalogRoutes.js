@@ -8,5 +8,6 @@ router.get('/states', catalogController.getStates);
 router.get('/otp-types', catalogController.getOtpTypes);
 router.get('/categories', catalogController.getCategories);
 router.get('/brands', catalogController.getBrands);
+router.get('/currencies', catalogController.getCurrencies);
 
 module.exports = router;
