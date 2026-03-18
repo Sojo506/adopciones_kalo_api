@@ -127,6 +127,43 @@ async function createRefreshToken(refreshTokenData) {
     }
 }
 
+async function findRefreshTokensByCuenta(idCuenta) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_REFRESH_TOKENS_POR_CUENTA_FN(
+          :idCuenta
+        );
+      END;
+    `;
+
+        const result = await connection.execute(
+            sql,
+            {
+                idCuenta,
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
 async function updateRefreshToken(refreshTokenData) {
     let connection;
 
@@ -201,6 +238,7 @@ module.exports = {
     findAllRefreshTokens,
     findRefreshTokenById,
     createRefreshToken,
+    findRefreshTokensByCuenta,
     updateRefreshToken,
     deleteRefreshToken
 };
