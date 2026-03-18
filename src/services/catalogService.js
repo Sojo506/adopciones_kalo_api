@@ -73,6 +73,27 @@ async function getBrands() {
     });
 }
 
+async function getProducts() {
+    return catalogCache.getOrSet('catalog:products', async () => {
+        const products = await catalogRepository.findProducts();
+        return products.map((product) => ({
+            idProducto: product.ID_PRODUCTO,
+            nombre: product.NOMBRE,
+            descripcion: product.DESCRIPCION || null,
+            precio: product.PRECIO === null || product.PRECIO === undefined
+                ? null
+                : Number(product.PRECIO),
+            idCategoria: product.ID_CATEGORIA,
+            categoria: product.CATEGORIA || null,
+            idMarca: product.ID_MARCA,
+            marca: product.MARCA || null,
+            stock: Number(product.STOCK || 0),
+            imageUrl: product.IMAGE_URL || null,
+            idEstado: product.ID_ESTADO
+        }));
+    });
+}
+
 async function getCurrencies() {
     return catalogCache.getOrSet('catalog:currencies', async () => {
         const currencies = await catalogRepository.findCurrencies();
@@ -184,6 +205,10 @@ function invalidateBrandsCache() {
     catalogCache.delete('catalog:brands');
 }
 
+function invalidateProductsCache() {
+    catalogCache.delete('catalog:products');
+}
+
 function invalidateCurrenciesCache() {
     catalogCache.delete('catalog:currencies');
 }
@@ -223,6 +248,7 @@ module.exports = {
     getOtpTypeById,
     getCategories,
     getBrands,
+    getProducts,
     getCurrencies,
     getBreeds,
     getSexes,
@@ -236,6 +262,7 @@ module.exports = {
     invalidateOtpTypesCache,
     invalidateCategoriesCache,
     invalidateBrandsCache,
+    invalidateProductsCache,
     invalidateCurrenciesCache,
     invalidateBreedsCache,
     invalidateSexesCache,
