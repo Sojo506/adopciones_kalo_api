@@ -112,6 +112,16 @@ async function getTrackingTypes(req, res, next) {
     }
 }
 
+async function getEventTypes(req, res, next) {
+    try {
+        const eventTypes = await catalogService.getEventTypes();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: eventTypes });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -123,5 +133,6 @@ module.exports = {
     getSexes,
     getRequestTypes,
     getResponseTypes,
-    getTrackingTypes
+    getTrackingTypes,
+    getEventTypes
 };
