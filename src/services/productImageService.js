@@ -31,9 +31,13 @@ function sanitizeFileName(fileName) {
 }
 
 function ensureCloudinaryConfiguration() {
-    const missingConfigKeys = ['CLOUD_NAME', 'CLOUD_API_KEY', 'CLOUD_API_SECRET'].filter(
-        (key) => !process.env[key]
-    );
+    const missingConfigKeys = [
+        ['CLOUDINARY_CLOUD_NAME', 'CLOUD_NAME'],
+        ['CLOUDINARY_API_KEY', 'CLOUD_API_KEY'],
+        ['CLOUDINARY_API_SECRET', 'CLOUD_API_SECRET']
+    ]
+        .filter(([primaryKey, fallbackKey]) => !process.env[primaryKey] && !process.env[fallbackKey])
+        .map(([primaryKey, fallbackKey]) => `${primaryKey} (or ${fallbackKey})`);
 
     if (missingConfigKeys.length) {
         throw createHttpError(
