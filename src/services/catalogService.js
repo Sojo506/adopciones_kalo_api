@@ -25,4 +25,8 @@ async function getStates() {
     });
 }
 
-module.exports = { getUserTypes, getStates };
+function invalidateUserTypesCache() {
+    catalogCache.delete('catalog:user-types');
+}
+
+module.exports = { getUserTypes, getStates, invalidateUserTypesCache };
