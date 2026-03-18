@@ -85,6 +85,17 @@ async function getCurrencies() {
     });
 }
 
+async function getBreeds() {
+    return catalogCache.getOrSet('catalog:breeds', async () => {
+        const breeds = await catalogRepository.findBreeds();
+        return breeds.map((breed) => ({
+            idRaza: breed.ID_RAZA,
+            nombre: breed.NOMBRE,
+            idEstado: breed.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -109,6 +120,10 @@ function invalidateCurrenciesCache() {
     catalogCache.delete('catalog:currencies');
 }
 
+function invalidateBreedsCache() {
+    catalogCache.delete('catalog:breeds');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -117,10 +132,12 @@ module.exports = {
     getCategories,
     getBrands,
     getCurrencies,
+    getBreeds,
     invalidateUserTypesCache,
     invalidateStatesCache,
     invalidateOtpTypesCache,
     invalidateCategoriesCache,
     invalidateBrandsCache,
-    invalidateCurrenciesCache
+    invalidateCurrenciesCache,
+    invalidateBreedsCache
 };
