@@ -16,6 +16,7 @@ router.use('/categories', require('./categoryRoutes'));
 router.use('/brands', require('./brandRoutes'));
 router.use('/currencies', require('./currencyRoutes'));
 router.use('/breeds', require('./breedRoutes'));
+router.use('/sexes', require('./sexRoutes'));
 router.use('/user-types', require('./userTypeRoutes'));
 router.use('/emails', require('./emailRoutes'));
 router.use('/phones', require('./phoneRoutes'));
