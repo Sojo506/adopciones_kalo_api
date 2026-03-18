@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const addressService = require('./addressService');
 const catalogService = require('./catalogService');
+const emailRepository = require('../repositories/emailRepository');
 const locationRepository = require('../repositories/locationRepository');
 const userRepository = require('../repositories/userRepository');
 const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
@@ -11,6 +12,7 @@ const MemoryCache = require('../utils/memoryCache');
 const USER_LIST_CACHE_KEY = 'user:list';
 const USER_DETAIL_CACHE_PREFIX = 'user:detail:';
 const USER_CACHE_TTL_MS = Number(process.env.USER_CACHE_TTL_MS || 15000);
+const CLIENT_USER_TYPE_ID = 2;
 const userQueryCache = new MemoryCache({ defaultTtlMs: USER_CACHE_TTL_MS });
 
 function createHttpError(message, statusCode) {
@@ -54,15 +56,32 @@ function invalidateUserCache(identificacion) {
 
     if (identificacion !== undefined && identificacion !== null) {
         userQueryCache.delete(getUserDetailCacheKey(identificacion));
+        return;
     }
+
+    userQueryCache.clearByPrefix(USER_DETAIL_CACHE_PREFIX);
 }
 
-async function getUserTypeIdByName(expectedName) {
+async function getUserTypeIdByName(expectedName, { fallbackId = null } = {}) {
     const normalizedExpectedName = String(expectedName || '').trim().toLowerCase();
     const userTypes = await catalogService.getUserTypes();
     const matchingUserType = userTypes.find(
         (userType) => String(userType.nombre || '').trim().toLowerCase() === normalizedExpectedName
     );
+
+    if (matchingUserType) {
+        return matchingUserType.idTipoUsuario;
+    }
+
+    if (fallbackId !== null) {
+        const fallbackUserType = userTypes.find(
+            (userType) => Number(userType.idTipoUsuario) === Number(fallbackId)
+        );
+
+        if (fallbackUserType) {
+            return fallbackUserType.idTipoUsuario;
+        }
+    }
 
     if (!matchingUserType) {
         throw createHttpError(`User type "${expectedName}" is not configured`, 500);
@@ -90,12 +109,48 @@ async function generateAndSendVerificationOtp(account, { failOnEmailError = fals
 
     await userRepository.createOTP(otpData);
 
-    const emailSent = await sendVerificationEmail(account.USUARIO, verificationCode);
+    const verificationEmail = account.CORREO || account.EMAIL || account.USUARIO;
+    const emailSent = await sendVerificationEmail(verificationEmail, verificationCode);
     if (!emailSent && failOnEmailError) {
         throw createHttpError('Failed to send verification email', 502);
     }
 
     return emailSent;
+}
+
+function pickPrimaryEmail(emailRows) {
+    const activeEmails = emailRows.filter((email) => Number(email.ID_ESTADO) === 1);
+    return activeEmails[0] || emailRows[0] || null;
+}
+
+function hasSameEmail(left, right) {
+    return String(left || '').trim().toLowerCase() === String(right || '').trim().toLowerCase();
+}
+
+async function getPrimaryEmailByIdentification(identificacion) {
+    const emails = await emailRepository.findEmailsByIdentification(identificacion);
+    return pickPrimaryEmail(emails);
+}
+
+async function findAccountByEmail(correo) {
+    const emailRecord = await emailRepository.findEmailByAddress(correo);
+
+    if (!emailRecord || Number(emailRecord.ID_ESTADO) !== 1) {
+        return null;
+    }
+
+    return userRepository.findAccountByIdentification(emailRecord.IDENTIFICACION);
+}
+
+async function findAccountByLoginIdentifier(identifier) {
+    const normalizedIdentifier = String(identifier || '').trim();
+    const accountByUsername = await userRepository.findAccountByUsuario(normalizedIdentifier);
+
+    if (accountByUsername) {
+        return accountByUsername;
+    }
+
+    return findAccountByEmail(normalizedIdentifier);
 }
 
 async function getUsers() {
@@ -123,21 +178,32 @@ async function getCurrentUser(idCuenta) {
         throw createHttpError('Account not found', 404);
     }
 
+    const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
+
     return {
         identificacion: account.IDENTIFICACION,
         nombre: account.NOMBRE,
         apellidoPaterno: account.APELLIDO_PATERNO,
         apellidoMaterno: account.APELLIDO_MATERNO,
-        correo: account.USUARIO,
+        usuario: account.USUARIO,
+        correo: primaryEmail?.CORREO || null,
         idTipoUsuario: account.ID_TIPO_USUARIO,
         tipoUsuario: account.TIPO_USUARIO
     };
 }
 
 async function signUp(userData) {
-    const existingAccount = await userRepository.findAccountByUsuario(userData.correo);
+    const normalizedUsername = String(userData.usuario || '').trim();
+    const normalizedEmail = String(userData.correo || '').trim();
+
+    const existingAccount = await userRepository.findAccountByUsuario(normalizedUsername);
     if (existingAccount) {
-        throw createHttpError('Account already exists', 409);
+        throw createHttpError('Username already exists', 409);
+    }
+
+    const existingEmail = await emailRepository.findEmailByAddress(normalizedEmail);
+    if (existingEmail) {
+        throw createHttpError('Email already exists', 409);
     }
 
     const existingUser = await userRepository.findByIdentification(userData.identificacion);
@@ -156,7 +222,9 @@ async function signUp(userData) {
         throw createHttpError('The selected country, province, canton, and district combination is invalid', 400);
     }
 
-    const clientUserTypeId = await getUserTypeIdByName('Cliente');
+    const clientUserTypeId = await getUserTypeIdByName('Cliente', {
+        fallbackId: CLIENT_USER_TYPE_ID
+    });
 
     const address = await addressService.createAddress({
         idDistrito: userData.idDistrito,
@@ -177,15 +245,22 @@ async function signUp(userData) {
 
     const accountData = {
         identificacion: userResult.identificacion,
-        usuario: userData.correo,
+        usuario: normalizedUsername,
         passwordHash: hashedPassword,
         idEstado: 3 // Pending verification
     };
 
     const accountResult = await userRepository.createAccount(accountData);
+    await emailRepository.createEmail({
+        identificacion: userResult.identificacion,
+        correo: normalizedEmail,
+        idEstado: 1
+    });
+
     const account = {
         ID_CUENTA: accountResult.idCuenta,
-        USUARIO: userData.correo
+        USUARIO: normalizedUsername,
+        CORREO: normalizedEmail
     };
     const emailSent = await generateAndSendVerificationOtp(account);
     invalidateUserCache(userResult.identificacion);
@@ -196,7 +271,8 @@ async function signUp(userData) {
             nombre: newUser.nombre,
             apellidoPaterno: newUser.apellidoPaterno,
             apellidoMaterno: newUser.apellidoMaterno,
-            correo: userData.correo
+            usuario: normalizedUsername,
+            correo: normalizedEmail
         },
         emailSent,
         message: emailSent
@@ -221,6 +297,8 @@ function hasDifferentIdentification(left, right) {
 }
 
 function formatDashboardUser(user) {
+    const hasAccountData = Boolean(user.ID_CUENTA || user.USUARIO || user.CORREO);
+
     return {
         identificacion: user.IDENTIFICACION,
         nombre: user.NOMBRE,
@@ -231,11 +309,12 @@ function formatDashboardUser(user) {
         tipoUsuario: user.TIPO_USUARIO,
         idEstado: user.ID_ESTADO,
         estado: user.ESTADO_USUARIO,
-        cuenta: user.ID_CUENTA ? {
-            idCuenta: user.ID_CUENTA,
-            correo: user.CORREO,
-            idEstado: user.ID_ESTADO_CUENTA,
-            estado: user.ESTADO_CUENTA
+        cuenta: hasAccountData ? {
+            idCuenta: user.ID_CUENTA || null,
+            usuario: user.USUARIO || null,
+            correo: user.CORREO || null,
+            idEstado: user.ID_ESTADO_CUENTA || null,
+            estado: user.ESTADO_CUENTA || null
         } : null,
         direccion: user.ID_DIRECCION ? {
             idDireccion: user.ID_DIRECCION,
@@ -254,9 +333,17 @@ function formatDashboardUser(user) {
 }
 
 async function createDashboardUser(userData) {
-    const existingAccount = await userRepository.findAccountByUsuario(userData.correo);
+    const normalizedUsername = String(userData.usuario || '').trim();
+    const normalizedEmail = String(userData.correo || '').trim();
+
+    const existingAccount = await userRepository.findAccountByUsuario(normalizedUsername);
     if (existingAccount) {
-        throw createHttpError('Account already exists', 409);
+        throw createHttpError('Username already exists', 409);
+    }
+
+    const existingEmail = await emailRepository.findEmailByAddress(normalizedEmail);
+    if (existingEmail) {
+        throw createHttpError('Email already exists', 409);
     }
 
     const existingUser = await userRepository.findByIdentification(userData.identificacion);
@@ -295,8 +382,13 @@ async function createDashboardUser(userData) {
 
     await userRepository.createAccount({
         identificacion: userData.identificacion,
-        usuario: userData.correo,
+        usuario: normalizedUsername,
         passwordHash,
+        idEstado: userData.idEstado
+    });
+    await emailRepository.createEmail({
+        identificacion: userData.identificacion,
+        correo: normalizedEmail,
         idEstado: userData.idEstado
     });
 
@@ -312,9 +404,21 @@ async function updateDashboardUser(identificacion, userData, actorAccount) {
 
     ensureActiveAdminIsNotEditingSelf(actorAccount, existingUser);
 
-    const accountWithSameEmail = await userRepository.findAccountByUsuario(userData.correo.trim());
-    if (accountWithSameEmail && hasDifferentIdentification(accountWithSameEmail.IDENTIFICACION, identificacion)) {
-        throw createHttpError('Account already exists', 409);
+    const normalizedUsername = String(userData.usuario || '').trim();
+    const normalizedEmail = String(userData.correo || '').trim();
+    const accountWithSameUsername = await userRepository.findAccountByUsuario(normalizedUsername);
+    if (accountWithSameUsername && hasDifferentIdentification(accountWithSameUsername.IDENTIFICACION, identificacion)) {
+        throw createHttpError('Username already exists', 409);
+    }
+
+    const emailWithSameAddress = await emailRepository.findEmailByAddress(normalizedEmail);
+    if (emailWithSameAddress && hasDifferentIdentification(emailWithSameAddress.IDENTIFICACION, identificacion)) {
+        throw createHttpError('Email already exists', 409);
+    }
+
+    const existingPrimaryEmail = await getPrimaryEmailByIdentification(identificacion);
+    if (existingPrimaryEmail && normalizedEmail && !hasSameEmail(existingPrimaryEmail.CORREO, normalizedEmail)) {
+        throw createHttpError('Use the emails module to add or change email addresses for this user', 400);
     }
 
     const districtHierarchy = await locationRepository.findDistrictHierarchy({
@@ -350,7 +454,7 @@ async function updateDashboardUser(identificacion, userData, actorAccount) {
         await userRepository.updateAccount({
             idCuenta: existingUser.ID_CUENTA,
             identificacion,
-            usuario: userData.correo,
+            usuario: normalizedUsername,
             passwordHash: userData.password
                 ? await bcrypt.hash(userData.password, 10)
                 : existingUser.PASSWORD_HASH,
@@ -363,8 +467,16 @@ async function updateDashboardUser(identificacion, userData, actorAccount) {
 
         await userRepository.createAccount({
             identificacion,
-            usuario: userData.correo,
+            usuario: normalizedUsername,
             passwordHash: await bcrypt.hash(userData.password, 10),
+            idEstado: userData.idEstado
+        });
+    }
+
+    if (normalizedEmail && !existingPrimaryEmail) {
+        await emailRepository.createEmail({
+            identificacion,
+            correo: normalizedEmail,
             idEstado: userData.idEstado
         });
     }
@@ -391,8 +503,8 @@ async function deleteDashboardUser(identificacion, actorAccount) {
     invalidateUserCache(identificacion);
 }
 
-async function signIn(correo, password) {
-    const account = await userRepository.findAccountByUsuario(correo);
+async function signIn(identifier, password) {
+    const account = await findAccountByLoginIdentifier(identifier);
     if (!account) {
         throw createHttpError('Invalid credentials', 401);
     }
@@ -419,6 +531,7 @@ async function signIn(correo, password) {
     const payload = { identificacion: account.IDENTIFICACION, idCuenta: account.ID_CUENTA };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
+    const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
 
     return {
         user: {
@@ -426,7 +539,8 @@ async function signIn(correo, password) {
             nombre: account.NOMBRE,
             apellidoPaterno: account.APELLIDO_PATERNO,
             apellidoMaterno: account.APELLIDO_MATERNO,
-            correo: account.USUARIO,
+            usuario: account.USUARIO,
+            correo: primaryEmail?.CORREO || null,
             idTipoUsuario: account.ID_TIPO_USUARIO,
             tipoUsuario: account.TIPO_USUARIO
         },
@@ -436,7 +550,8 @@ async function signIn(correo, password) {
 }
 
 async function verifyEmail(correo, code) {
-    const account = await userRepository.findAccountByUsuario(correo);
+    const normalizedEmail = String(correo || '').trim();
+    const account = await findAccountByEmail(normalizedEmail);
     if (!account) {
         throw createHttpError('Account not found', 404);
     }
@@ -455,7 +570,8 @@ async function verifyEmail(correo, code) {
 }
 
 async function resendVerificationEmail(correo) {
-    const account = await userRepository.findAccountByUsuario(correo);
+    const normalizedEmail = String(correo || '').trim();
+    const account = await findAccountByEmail(normalizedEmail);
     if (!account) {
         throw createHttpError('Account not found', 404);
     }
@@ -464,7 +580,10 @@ async function resendVerificationEmail(correo) {
         throw createHttpError('Account is already verified', 409);
     }
 
-    const emailSent = await generateAndSendVerificationOtp(account, { failOnEmailError: true });
+    const emailSent = await generateAndSendVerificationOtp(
+        { ...account, CORREO: normalizedEmail },
+        { failOnEmailError: true }
+    );
 
     return {
         emailSent,
@@ -482,5 +601,6 @@ module.exports = {
     resendVerificationEmail,
     createDashboardUser,
     updateDashboardUser,
-    deleteDashboardUser
+    deleteDashboardUser,
+    invalidateAllUserCaches: () => invalidateUserCache()
 };

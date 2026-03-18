@@ -43,6 +43,7 @@ async function getMe(req, res, next) {
 
 const signUpValidation = [
     body('identificacion').isNumeric().withMessage('Identificacion must be a number'),
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('nombre').isLength({ min: 1 }).withMessage('Nombre is required'),
     body('apellidoPaterno').isLength({ min: 1 }).withMessage('Apellido Paterno is required'),
     body('apellidoMaterno').isLength({ min: 1 }).withMessage('Apellido Materno is required'),
@@ -58,6 +59,7 @@ const signUpValidation = [
 
 const dashboardUserValidation = [
     body('identificacion').isNumeric().withMessage('Identificacion must be a number'),
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('nombre').isLength({ min: 1 }).withMessage('Nombre is required'),
     body('apellidoPaterno').isLength({ min: 1 }).withMessage('Apellido Paterno is required'),
     body('apellidoMaterno').isLength({ min: 1 }).withMessage('Apellido Materno is required'),
@@ -74,6 +76,7 @@ const dashboardUserValidation = [
 ];
 
 const dashboardUserUpdateValidation = [
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('nombre').isLength({ min: 1 }).withMessage('Nombre is required'),
     body('apellidoPaterno').isLength({ min: 1 }).withMessage('Apellido Paterno is required'),
     body('apellidoMaterno').isLength({ min: 1 }).withMessage('Apellido Materno is required'),
@@ -177,7 +180,7 @@ async function deleteDashboardUser(req, res, next) {
 }
 
 const signInValidation = [
-    body('correo').isEmail().withMessage('Valid email is required'),
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('password').exists().withMessage('Password is required')
 ];
 
@@ -192,8 +195,8 @@ async function signIn(req, res, next) {
             });
         }
 
-        const { correo, password } = req.body;
-        const result = await userService.signIn(correo, password);
+        const { usuario, password } = req.body;
+        const result = await userService.signIn(usuario, password);
 
         res.status(200).json({
             ok: true,
