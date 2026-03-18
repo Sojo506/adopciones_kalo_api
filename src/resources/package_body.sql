@@ -2755,6 +2755,90 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             RAISE_APPLICATION_ERROR(-20003, 'ERROR ' || SQLERRM);
     END FIDE_OBTENER_MARCAS_ADMIN_FN;
 
+    FUNCTION FIDE_OBTENER_PRODUCTOS_ADMIN_FN
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO     SYS_REFCURSOR;
+        V_SQL                  VARCHAR2(4000);
+        V_TIENE_ID_MARCA       NUMBER;
+        V_TIENE_PRODUCTO_IMAGEN NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO V_TIENE_ID_MARCA
+        FROM USER_TAB_COLUMNS
+        WHERE TABLE_NAME = 'FIDE_PRODUCTO_TB'
+          AND COLUMN_NAME = 'ID_MARCA';
+
+        SELECT COUNT(*)
+        INTO V_TIENE_PRODUCTO_IMAGEN
+        FROM USER_TABLES
+        WHERE TABLE_NAME = 'FIDE_PRODUCTO_IMAGEN_TB';
+
+        V_SQL := 'SELECT  P.ID_PRODUCTO,
+                          P.NOMBRE,
+                          P.DESCRIPCION,
+                          P.PRECIO,
+                          P.ID_CATEGORIA,
+                          C.NOMBRE AS CATEGORIA, ';
+
+        IF V_TIENE_ID_MARCA > 0 THEN
+            V_SQL := V_SQL || 'P.ID_MARCA,
+                               M.NOMBRE AS MARCA, ';
+        ELSE
+            V_SQL := V_SQL || 'CAST(NULL AS NUMBER) AS ID_MARCA,
+                               CAST(NULL AS VARCHAR2(100)) AS MARCA, ';
+        END IF;
+
+        V_SQL := V_SQL || 'NVL(I.CANTIDAD, 0) AS STOCK, ';
+
+        IF V_TIENE_PRODUCTO_IMAGEN > 0 THEN
+            V_SQL := V_SQL || 'PI.IMAGE_URL, ';
+        ELSE
+            V_SQL := V_SQL || 'CAST(NULL AS VARCHAR2(500)) AS IMAGE_URL, ';
+        END IF;
+
+        V_SQL := V_SQL || 'P.ID_ESTADO,
+                           E.NOMBRE_ESTADO AS ESTADO
+                    FROM FIDE_PRODUCTO_TB P
+                    JOIN FIDE_CATEGORIA_TB C ON P.ID_CATEGORIA = C.ID_CATEGORIA ';
+
+        IF V_TIENE_ID_MARCA > 0 THEN
+            V_SQL := V_SQL || 'JOIN FIDE_MARCA_TB M ON P.ID_MARCA = M.ID_MARCA ';
+        END IF;
+
+        V_SQL := V_SQL || 'JOIN FIDE_ESTADO_TB E ON P.ID_ESTADO = E.ID_ESTADO
+                           LEFT JOIN (
+                               SELECT  ID_PRODUCTO,
+                                       SUM(CANTIDAD) AS CANTIDAD
+                               FROM FIDE_INVENTARIO_TB
+                               WHERE ID_ESTADO = 1
+                               GROUP BY ID_PRODUCTO
+                           ) I ON P.ID_PRODUCTO = I.ID_PRODUCTO ';
+
+        IF V_TIENE_PRODUCTO_IMAGEN > 0 THEN
+            V_SQL := V_SQL || 'LEFT JOIN (
+                                   SELECT  ID_PRODUCTO,
+                                           MIN(IMAGE_URL) AS IMAGE_URL
+                                   FROM FIDE_PRODUCTO_IMAGEN_TB
+                                   WHERE ID_ESTADO = 1
+                                   GROUP BY ID_PRODUCTO
+                               ) PI ON P.ID_PRODUCTO = PI.ID_PRODUCTO ';
+        END IF;
+
+        V_SQL := V_SQL || 'ORDER BY P.ID_PRODUCTO';
+
+        OPEN V_CURSOR_RESULTADO FOR V_SQL;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20001, 'NO SE ENCONTRO DATOS CON EL ID INDICADO');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20002, 'DATOS DUPLICADOS');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20003, 'ERROR ' || SQLERRM);
+    END FIDE_OBTENER_PRODUCTOS_ADMIN_FN;
+
     FUNCTION FIDE_OBTENER_MONEDAS_ADMIN_FN
     RETURN SYS_REFCURSOR
     IS
@@ -6447,6 +6531,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
         P_DESCRIPCION  IN FIDE_PRODUCTO_TB.DESCRIPCION%TYPE,
         P_PRECIO       IN FIDE_PRODUCTO_TB.PRECIO%TYPE,
         P_ID_CATEGORIA IN FIDE_PRODUCTO_TB.ID_CATEGORIA%TYPE,
+        P_ID_MARCA     IN FIDE_PRODUCTO_TB.ID_MARCA%TYPE,
         P_ID_ESTADO    IN FIDE_PRODUCTO_TB.ID_ESTADO%TYPE
     )
     IS
@@ -6457,6 +6542,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             DESCRIPCION,
             PRECIO,
             ID_CATEGORIA,
+            ID_MARCA,
             ID_ESTADO
         )
         VALUES(
@@ -6464,6 +6550,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             P_DESCRIPCION,
             P_PRECIO,
             P_ID_CATEGORIA,
+            P_ID_MARCA,
             P_ID_ESTADO
         );
 
@@ -6492,6 +6579,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
         P_DESCRIPCION  IN FIDE_PRODUCTO_TB.DESCRIPCION%TYPE,
         P_PRECIO       IN FIDE_PRODUCTO_TB.PRECIO%TYPE,
         P_ID_CATEGORIA IN FIDE_PRODUCTO_TB.ID_CATEGORIA%TYPE,
+        P_ID_MARCA     IN FIDE_PRODUCTO_TB.ID_MARCA%TYPE,
         P_ID_ESTADO    IN FIDE_PRODUCTO_TB.ID_ESTADO%TYPE
     )
     IS
@@ -6504,6 +6592,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             DESCRIPCION = P_DESCRIPCION,
             PRECIO = P_PRECIO,
             ID_CATEGORIA = P_ID_CATEGORIA,
+            ID_MARCA = P_ID_MARCA,
             ID_ESTADO = P_ID_ESTADO
         WHERE ID_PRODUCTO = P_ID_PRODUCTO;
 
