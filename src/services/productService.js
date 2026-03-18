@@ -226,5 +226,6 @@ module.exports = {
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    invalidateProductReadCaches: invalidateRelatedCaches
 };
