@@ -204,11 +204,45 @@ async function findBrands() {
     }
 }
 
+async function findCurrencies() {
+    let connection;
+
+    try {
+        connection = await getConnection();
+        const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_MONEDAS_FN();
+      END;
+    `;
+
+        const result = await connection.execute(
+            sql,
+            {
+                [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+            },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+        try {
+            return await fetchRowsFromCursor(resultSet);
+        } finally {
+            await resultSet.close();
+        }
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
 module.exports = {
     findUserTypes,
     findStates,
     findOtpTypes,
     findOtpTypeById,
     findCategories,
-    findBrands
+    findBrands,
+    findCurrencies
 };
