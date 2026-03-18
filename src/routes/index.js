@@ -10,5 +10,6 @@ router.use('/emails', require('./emailRoutes'));
 router.use('/phones', require('./phoneRoutes'));
 router.use('/accounts', require('./accountRoutes'));
 router.use('/otp-codes', require('./otpRoutes'));
+router.use('/refresh-tokens', require('./refreshTokenRoutes'));
 
 module.exports = router;
