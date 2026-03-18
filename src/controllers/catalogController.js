@@ -32,4 +32,14 @@ async function getOtpTypes(req, res, next) {
     }
 }
 
-module.exports = { getUserTypes, getStates, getOtpTypes };
+async function getCategories(req, res, next) {
+    try {
+        const categories = await catalogService.getCategories();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: categories });
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = { getUserTypes, getStates, getOtpTypes, getCategories };
