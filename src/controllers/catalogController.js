@@ -82,6 +82,16 @@ async function getSexes(req, res, next) {
     }
 }
 
+async function getRequestTypes(req, res, next) {
+    try {
+        const requestTypes = await catalogService.getRequestTypes();
+        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: requestTypes });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -90,5 +100,6 @@ module.exports = {
     getBrands,
     getCurrencies,
     getBreeds,
-    getSexes
+    getSexes,
+    getRequestTypes
 };
