@@ -73,6 +73,18 @@ async function getBrands() {
     });
 }
 
+async function getCurrencies() {
+    return catalogCache.getOrSet('catalog:currencies', async () => {
+        const currencies = await catalogRepository.findCurrencies();
+        return currencies.map((currency) => ({
+            idMoneda: currency.ID_MONEDA,
+            nombre: currency.NOMBRE,
+            simbolo: currency.SIMBOLO,
+            idEstado: currency.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -93,6 +105,10 @@ function invalidateBrandsCache() {
     catalogCache.delete('catalog:brands');
 }
 
+function invalidateCurrenciesCache() {
+    catalogCache.delete('catalog:currencies');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -100,9 +116,11 @@ module.exports = {
     getOtpTypeById,
     getCategories,
     getBrands,
+    getCurrencies,
     invalidateUserTypesCache,
     invalidateStatesCache,
     invalidateOtpTypesCache,
     invalidateCategoriesCache,
-    invalidateBrandsCache
+    invalidateBrandsCache,
+    invalidateCurrenciesCache
 };
