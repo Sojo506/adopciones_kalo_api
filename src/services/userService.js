@@ -5,8 +5,9 @@ const catalogService = require('./catalogService');
 const emailRepository = require('../repositories/emailRepository');
 const locationRepository = require('../repositories/locationRepository');
 const phoneRepository = require('../repositories/phoneRepository');
+const refreshTokenRepository = require('../repositories/refreshTokenRepository');
 const userRepository = require('../repositories/userRepository');
-const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../config/jwt');
 const { sendVerificationEmail } = require('../config/email');
 const MemoryCache = require('../utils/memoryCache');
 
@@ -14,6 +15,7 @@ const USER_LIST_CACHE_KEY = 'user:list';
 const USER_DETAIL_CACHE_PREFIX = 'user:detail:';
 const USER_CACHE_TTL_MS = Number(process.env.USER_CACHE_TTL_MS || 15000);
 const ACTIVE_STATE_ID = 1;
+const INACTIVE_STATE_ID = 2;
 const PENDING_STATE_ID = 3;
 const CLIENT_USER_TYPE_ID = 2;
 const EMAIL_VERIFICATION_OTP_TYPE_ID = 1;
@@ -183,6 +185,18 @@ function isAvailableEmailState(idEstado) {
     return isActiveState(idEstado) || isPendingState(idEstado);
 }
 
+function isAvailableAccountState(idEstado) {
+    return isActiveState(idEstado) || isPendingState(idEstado);
+}
+
+function isRefreshTokenRecordActive(refreshTokenRecord) {
+    return (
+        Number(refreshTokenRecord?.ID_ESTADO) === ACTIVE_STATE_ID &&
+        !refreshTokenRecord?.FECHA_REVOCACION &&
+        new Date(refreshTokenRecord.FECHA_EXPIRACION).getTime() > Date.now()
+    );
+}
+
 function formatSessionUser(account, primaryEmail) {
     const idEstadoCorreo = primaryEmail ? Number(primaryEmail.ID_ESTADO) : null;
 
@@ -199,6 +213,103 @@ function formatSessionUser(account, primaryEmail) {
         idEstadoCorreo,
         emailVerified: isActiveState(idEstadoCorreo)
     };
+}
+
+function buildRefreshTokenPayload(account) {
+    return {
+        identificacion: account.IDENTIFICACION,
+        idCuenta: account.ID_CUENTA,
+        jti: crypto.randomUUID()
+    };
+}
+
+async function issueRefreshToken(account, requestMetadata = {}) {
+    const refreshTokenPayload = buildRefreshTokenPayload(account);
+    const refreshToken = generateRefreshToken(refreshTokenPayload);
+    const decodedRefreshToken = verifyRefreshToken(refreshToken);
+    const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000);
+
+    await refreshTokenRepository.createRefreshToken({
+        idCuenta: account.ID_CUENTA,
+        tokenHash: await bcrypt.hash(refreshToken, 10),
+        jti: refreshTokenPayload.jti,
+        ipAddress: requestMetadata.ipAddress || null,
+        userAgent: requestMetadata.userAgent || null,
+        fechaExpiracion: refreshTokenExpiresAt,
+        fechaRevocacion: null,
+        idEstado: ACTIVE_STATE_ID
+    });
+
+    return {
+        refreshToken,
+        refreshTokenExpiresAt
+    };
+}
+
+async function buildSessionTokens(account, requestMetadata = {}) {
+    const accessToken = generateAccessToken({
+        identificacion: account.IDENTIFICACION,
+        idCuenta: account.ID_CUENTA
+    });
+    const { refreshToken, refreshTokenExpiresAt } = await issueRefreshToken(account, requestMetadata);
+    const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
+
+    return {
+        user: formatSessionUser(account, primaryEmail),
+        accessToken,
+        refreshToken,
+        refreshTokenExpiresAt
+    };
+}
+
+async function findStoredRefreshToken(rawRefreshToken) {
+    let decodedRefreshToken;
+
+    try {
+        decodedRefreshToken = verifyRefreshToken(rawRefreshToken);
+    } catch (error) {
+        throw createHttpError('Invalid refresh token', 401);
+    }
+
+    if (!decodedRefreshToken?.idCuenta || !decodedRefreshToken?.jti) {
+        throw createHttpError('Invalid refresh token', 401);
+    }
+
+    const refreshTokens = await refreshTokenRepository.findRefreshTokensByCuenta(decodedRefreshToken.idCuenta);
+    const matchingRefreshTokens = refreshTokens.filter(
+        (refreshTokenRecord) =>
+            isRefreshTokenRecordActive(refreshTokenRecord) &&
+            String(refreshTokenRecord.JTI || '') === String(decodedRefreshToken.jti)
+    );
+
+    for (const refreshTokenRecord of matchingRefreshTokens) {
+        if (await bcrypt.compare(rawRefreshToken, refreshTokenRecord.TOKEN_HASH)) {
+            return {
+                decodedRefreshToken,
+                refreshTokenRecord
+            };
+        }
+    }
+
+    throw createHttpError('Invalid refresh token', 401);
+}
+
+async function revokeStoredRefreshToken(refreshTokenRecord) {
+    if (!refreshTokenRecord || Number(refreshTokenRecord.ID_ESTADO) !== ACTIVE_STATE_ID) {
+        return;
+    }
+
+    await refreshTokenRepository.updateRefreshToken({
+        idRefreshToken: refreshTokenRecord.ID_REFRESH_TOKEN,
+        idCuenta: refreshTokenRecord.ID_CUENTA,
+        tokenHash: refreshTokenRecord.TOKEN_HASH,
+        jti: refreshTokenRecord.JTI,
+        ipAddress: refreshTokenRecord.IP_ADDRESS,
+        userAgent: refreshTokenRecord.USER_AGENT,
+        fechaExpiracion: refreshTokenRecord.FECHA_EXPIRACION,
+        fechaRevocacion: new Date(),
+        idEstado: INACTIVE_STATE_ID
+    });
 }
 
 async function getPrimaryEmailByIdentification(identificacion) {
@@ -586,13 +697,13 @@ async function deleteDashboardUser(identificacion, actorAccount) {
     invalidateUserCache(identificacion);
 }
 
-async function signIn(identifier, password) {
+async function signIn(identifier, password, requestMetadata = {}) {
     const account = await findAccountByLoginIdentifier(identifier);
     if (!account) {
         throw createHttpError('Invalid credentials', 401);
     }
 
-    if (!isActiveState(account.ID_ESTADO) && !isPendingState(account.ID_ESTADO)) {
+    if (!isAvailableAccountState(account.ID_ESTADO)) {
         throw createHttpError('Account is not available', 403);
     }
 
@@ -611,16 +722,7 @@ async function signIn(identifier, password) {
         });
     }
 
-    const payload = { identificacion: account.IDENTIFICACION, idCuenta: account.ID_CUENTA };
-    const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
-    const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
-
-    return {
-        user: formatSessionUser(account, primaryEmail),
-        accessToken,
-        refreshToken
-    };
+    return buildSessionTokens(account, requestMetadata);
 }
 
 async function verifyEmail(correo, code) {
@@ -678,12 +780,49 @@ async function resendVerificationEmail(correo) {
     };
 }
 
+async function refreshSession(rawRefreshToken, requestMetadata = {}) {
+    if (!rawRefreshToken) {
+        throw createHttpError('Refresh token is required', 401);
+    }
+
+    const { decodedRefreshToken, refreshTokenRecord } = await findStoredRefreshToken(rawRefreshToken);
+    const account = await userRepository.findAccountByIdCuenta(decodedRefreshToken.idCuenta);
+
+    if (!account || !isAvailableAccountState(account.ID_ESTADO)) {
+        await revokeStoredRefreshToken(refreshTokenRecord);
+        throw createHttpError('Account is not available', 403);
+    }
+
+    await revokeStoredRefreshToken(refreshTokenRecord);
+
+    return buildSessionTokens(account, requestMetadata);
+}
+
+async function logout(rawRefreshToken) {
+    if (!rawRefreshToken) {
+        return;
+    }
+
+    try {
+        const { refreshTokenRecord } = await findStoredRefreshToken(rawRefreshToken);
+        await revokeStoredRefreshToken(refreshTokenRecord);
+    } catch (error) {
+        if (error?.statusCode === 401) {
+            return;
+        }
+
+        throw error;
+    }
+}
+
 module.exports = {
     getUsers,
     getUserByIdentification,
     getCurrentUser,
     signUp,
     signIn,
+    refreshSession,
+    logout,
     verifyEmail,
     resendVerificationEmail,
     createDashboardUser,
