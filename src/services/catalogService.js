@@ -151,6 +151,19 @@ async function getEventTypes() {
     });
 }
 
+async function getQuestions() {
+    return catalogCache.getOrSet('catalog:questions', async () => {
+        const questions = await catalogRepository.findQuestions();
+        return questions.map((question) => ({
+            idPregunta: question.ID_PREGUNTA,
+            pregunta: question.PREGUNTA,
+            idTipoRespuesta: question.ID_TIPO_RESPUESTA,
+            tipoRespuesta: question.TIPO_RESPUESTA,
+            idEstado: question.ID_ESTADO
+        }));
+    });
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
@@ -199,6 +212,10 @@ function invalidateEventTypesCache() {
     catalogCache.delete('catalog:event-types');
 }
 
+function invalidateQuestionsCache() {
+    catalogCache.delete('catalog:questions');
+}
+
 module.exports = {
     getUserTypes,
     getStates,
@@ -213,6 +230,7 @@ module.exports = {
     getResponseTypes,
     getTrackingTypes,
     getEventTypes,
+    getQuestions,
     invalidateUserTypesCache,
     invalidateStatesCache,
     invalidateOtpTypesCache,
@@ -224,5 +242,6 @@ module.exports = {
     invalidateRequestTypesCache,
     invalidateResponseTypesCache,
     invalidateTrackingTypesCache,
-    invalidateEventTypesCache
+    invalidateEventTypesCache,
+    invalidateQuestionsCache
 };
