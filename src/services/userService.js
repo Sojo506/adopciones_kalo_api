@@ -14,6 +14,8 @@ const USER_LIST_CACHE_KEY = 'user:list';
 const USER_DETAIL_CACHE_PREFIX = 'user:detail:';
 const USER_CACHE_TTL_MS = Number(process.env.USER_CACHE_TTL_MS || 15000);
 const CLIENT_USER_TYPE_ID = 2;
+const EMAIL_VERIFICATION_OTP_TYPE_ID = 1;
+const EMAIL_VERIFICATION_OTP_NAME = 'Verificación de correo';
 const userQueryCache = new MemoryCache({ defaultTtlMs: USER_CACHE_TTL_MS });
 
 function createHttpError(message, statusCode) {
@@ -24,6 +26,14 @@ function createHttpError(message, statusCode) {
 
 function isBcryptHash(value) {
     return typeof value === 'string' && /^\$2[aby]\$\d{2}\$/.test(value);
+}
+
+function normalizeCatalogName(value) {
+    return String(value || '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
 }
 
 async function verifyStoredPassword(candidatePassword, storedPassword) {
@@ -64,10 +74,10 @@ function invalidateUserCache(identificacion) {
 }
 
 async function getUserTypeIdByName(expectedName, { fallbackId = null } = {}) {
-    const normalizedExpectedName = String(expectedName || '').trim().toLowerCase();
+    const normalizedExpectedName = normalizeCatalogName(expectedName);
     const userTypes = await catalogService.getUserTypes();
     const matchingUserType = userTypes.find(
-        (userType) => String(userType.nombre || '').trim().toLowerCase() === normalizedExpectedName
+        (userType) => normalizeCatalogName(userType.nombre) === normalizedExpectedName
     );
 
     if (matchingUserType) {
@@ -91,15 +101,46 @@ async function getUserTypeIdByName(expectedName, { fallbackId = null } = {}) {
     return matchingUserType.idTipoUsuario;
 }
 
+async function getOtpTypeIdByName(expectedName, { fallbackId = null } = {}) {
+    const normalizedExpectedName = normalizeCatalogName(expectedName);
+    const otpTypes = await catalogService.getOtpTypes();
+    const matchingOtpType = otpTypes.find(
+        (otpType) => normalizeCatalogName(otpType.nombre) === normalizedExpectedName
+    );
+
+    if (matchingOtpType) {
+        return matchingOtpType.idTipoOtp;
+    }
+
+    if (fallbackId !== null) {
+        const fallbackOtpType = otpTypes.find(
+            (otpType) => Number(otpType.idTipoOtp) === Number(fallbackId)
+        );
+
+        if (fallbackOtpType) {
+            return fallbackOtpType.idTipoOtp;
+        }
+    }
+
+    throw createHttpError(`OTP type "${expectedName}" is not configured`, 500);
+}
+
+async function getEmailVerificationOtpTypeId() {
+    return getOtpTypeIdByName(EMAIL_VERIFICATION_OTP_NAME, {
+        fallbackId: EMAIL_VERIFICATION_OTP_TYPE_ID
+    });
+}
+
 async function generateAndSendVerificationOtp(account, { failOnEmailError = false } = {}) {
-    await userRepository.deactivateActiveOtpsByCuenta(account.ID_CUENTA);
+    const verificationOtpTypeId = await getEmailVerificationOtpTypeId();
+    await userRepository.deactivateActiveOtpsByCuenta(account.ID_CUENTA, verificationOtpTypeId);
 
     const verificationCode = crypto.randomInt(100000, 999999).toString();
     const hashedCode = await bcrypt.hash(verificationCode, 10);
 
     const otpData = {
         idCuenta: account.ID_CUENTA,
-        idTipoOtp: 1,
+        idTipoOtp: verificationOtpTypeId,
         codigoHash: hashedCode,
         fechaExpiracion: new Date(Date.now() + 24 * 60 * 60 * 1000),
         fechaUso: null,
@@ -568,7 +609,12 @@ async function verifyEmail(correo, code) {
         throw createHttpError('Account not found', 404);
     }
 
-    const otp = await userRepository.findOTPByCodeAndCuenta(code, account.ID_CUENTA);
+    const verificationOtpTypeId = await getEmailVerificationOtpTypeId();
+    const otp = await userRepository.findOTPByCodeAndCuenta(
+        code,
+        account.ID_CUENTA,
+        verificationOtpTypeId
+    );
     if (!otp) {
         throw createHttpError('Invalid or expired verification code', 400);
     }
