@@ -8,6 +8,7 @@ router.get('/states', catalogController.getStates);
 router.get('/otp-types', catalogController.getOtpTypes);
 router.get('/categories', catalogController.getCategories);
 router.get('/brands', catalogController.getBrands);
+router.get('/products', catalogController.getProducts);
 router.get('/currencies', catalogController.getCurrencies);
 router.get('/breeds', catalogController.getBreeds);
 router.get('/sexes', catalogController.getSexes);
