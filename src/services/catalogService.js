@@ -25,8 +25,45 @@ async function getStates() {
     });
 }
 
+async function getOtpTypes() {
+    return catalogCache.getOrSet('catalog:otp-types', async () => {
+        const otpTypes = await catalogRepository.findOtpTypes();
+        return otpTypes.map((otpType) => ({
+            idTipoOtp: otpType.ID_TIPO_OTP,
+            nombre: otpType.NOMBRE,
+            idEstado: otpType.ID_ESTADO
+        }));
+    });
+}
+
+async function getOtpTypeById(idTipoOtp) {
+    const otpType = await catalogRepository.findOtpTypeById(idTipoOtp);
+
+    if (!otpType) {
+        return null;
+    }
+
+    return {
+        idTipoOtp: otpType.ID_TIPO_OTP,
+        nombre: otpType.NOMBRE,
+        idEstado: otpType.ID_ESTADO,
+        estado: otpType.ESTADO
+    };
+}
+
 function invalidateUserTypesCache() {
     catalogCache.delete('catalog:user-types');
 }
 
-module.exports = { getUserTypes, getStates, invalidateUserTypesCache };
+function invalidateOtpTypesCache() {
+    catalogCache.delete('catalog:otp-types');
+}
+
+module.exports = {
+    getUserTypes,
+    getStates,
+    getOtpTypes,
+    getOtpTypeById,
+    invalidateUserTypesCache,
+    invalidateOtpTypesCache
+};
