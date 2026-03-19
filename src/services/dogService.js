@@ -159,9 +159,9 @@ async function ensureDogCanBeDisabled(existingDog, nextState) {
         );
     }
 
-    if (dependencySummary.activeRequests > 0) {
+    if (dependencySummary.activeAdoptions > 0) {
         throw createHttpError(
-            'Cannot deactivate a dog that still has active requests',
+            'Cannot deactivate a dog that still has active adoptions',
             409
         );
     }
