@@ -10466,6 +10466,41 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
     END;
 
+    /* PROCEDURE FIDE_EVIDENCIA_TB DELETE LOGICO */
+
+    PROCEDURE FIDE_EVIDENCIA_DELETE_SP(
+        P_ID_EVIDENCIA IN FIDE_EVIDENCIA_TB.ID_EVIDENCIA%TYPE
+    )
+    IS
+        V_ESTADO NUMBER := 2;
+        V_FILAS NUMBER;
+    BEGIN
+
+        UPDATE FIDE_EVIDENCIA_TB
+        SET ID_ESTADO = V_ESTADO
+        WHERE ID_EVIDENCIA = P_ID_EVIDENCIA
+        AND ID_ESTADO != 0;
+
+        V_FILAS := SQL%ROWCOUNT;
+
+        IF V_FILAS = 0 THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No existe o ya está eliminada.');
+        END IF;
+
+        COMMIT;
+
+    EXCEPTION
+        WHEN VALUE_ERROR THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20002, 'Error en tipo o tamaño de dato.');
+        WHEN INVALID_NUMBER THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
+        WHEN OTHERS THEN
+            ROLLBACK;
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END;
+
     /* PROCEDURE FIDE_CAMPANIA_TB INSERT */
 
     PROCEDURE FIDE_CAMPANIA_INSERT_SP(

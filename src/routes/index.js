@@ -30,6 +30,7 @@ router.use('/sexes', require('./sexRoutes'));
 router.use('/dogs', require('./dogRoutes'));
 router.use('/adoptions', require('./adoptionRoutes'));
 router.use('/follow-ups', require('./followUpRoutes'));
+router.use('/evidences', require('./evidenceRoutes'));
 router.use('/dog-images', require('./dogImageRoutes'));
 router.use('/dog-events', require('./dogEventRoutes'));
 router.use('/event-details', require('./eventDetailRoutes'));
