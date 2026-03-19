@@ -28,6 +28,7 @@ router.use('/currencies', require('./currencyRoutes'));
 router.use('/breeds', require('./breedRoutes'));
 router.use('/sexes', require('./sexRoutes'));
 router.use('/dogs', require('./dogRoutes'));
+router.use('/adoptions', require('./adoptionRoutes'));
 router.use('/dog-images', require('./dogImageRoutes'));
 router.use('/dog-events', require('./dogEventRoutes'));
 router.use('/event-details', require('./eventDetailRoutes'));

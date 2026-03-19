@@ -249,5 +249,6 @@ module.exports = {
     getRequestById,
     createRequest,
     updateRequest,
-    deleteRequest
+    deleteRequest,
+    invalidateRequestReadCaches: invalidateRequestCache
 };
