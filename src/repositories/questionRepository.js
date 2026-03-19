@@ -118,6 +118,33 @@ async function countActiveResponsesByQuestion(idPregunta) {
     }
 }
 
+async function countActiveAssignmentsByQuestion(idPregunta) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const result = await connection.execute(
+            `
+        SELECT COUNT(*) AS TOTAL
+        FROM FIDE_SOLICITUD_PREGUNTA_TB SP
+        JOIN FIDE_SOLICITUD_TB S ON SP.ID_SOLICITUD = S.ID_SOLICITUD
+        WHERE SP.ID_PREGUNTA = :idPregunta
+          AND SP.ID_ESTADO = 1
+          AND S.ID_ESTADO = 1
+      `,
+            { idPregunta },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        return Number(result.rows?.[0]?.TOTAL || 0);
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
 async function createQuestion(questionData) {
     let connection;
 
@@ -222,6 +249,7 @@ module.exports = {
     findAllQuestionsForAdmin,
     findQuestionById,
     countActiveResponsesByQuestion,
+    countActiveAssignmentsByQuestion,
     createQuestion,
     updateQuestion,
     deleteQuestion

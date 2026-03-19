@@ -101,6 +101,10 @@ async function getActiveResponsesCount(idPregunta) {
     return questionRepository.countActiveResponsesByQuestion(idPregunta);
 }
 
+async function getActiveAssignmentsCount(idPregunta) {
+    return questionRepository.countActiveAssignmentsByQuestion(idPregunta);
+}
+
 async function ensureQuestionCanBeDisabled(existingQuestion, nextState) {
     if (Number(nextState) === 1) {
         return;
@@ -108,6 +112,15 @@ async function ensureQuestionCanBeDisabled(existingQuestion, nextState) {
 
     if (Number(existingQuestion.idEstado) !== 1) {
         return;
+    }
+
+    const activeAssignmentsCount = await getActiveAssignmentsCount(existingQuestion.idPregunta);
+
+    if (activeAssignmentsCount > 0) {
+        throw createHttpError(
+            'Cannot deactivate a question that is still assigned to active forms',
+            409
+        );
     }
 
     const activeResponsesCount = await getActiveResponsesCount(existingQuestion.idPregunta);
@@ -138,6 +151,15 @@ async function ensureQuestionResponseTypeCanChange(existingQuestion, nextRespons
 async function ensureQuestionCanBeDeleted(existingQuestion) {
     if (Number(existingQuestion.idEstado) !== 1) {
         throw createHttpError('Question is already inactive', 409);
+    }
+
+    const activeAssignmentsCount = await getActiveAssignmentsCount(existingQuestion.idPregunta);
+
+    if (activeAssignmentsCount > 0) {
+        throw createHttpError(
+            'Cannot delete a question that is still assigned to active forms',
+            409
+        );
     }
 
     const activeResponsesCount = await getActiveResponsesCount(existingQuestion.idPregunta);
