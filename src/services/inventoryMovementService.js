@@ -38,6 +38,10 @@ function invalidateMovementCaches(idMovimiento) {
     inventoryMovementCache.clearByPrefix(MOVEMENT_DETAIL_CACHE_PREFIX);
 }
 
+function invalidateInventoryMovementQueryCaches() {
+    invalidateMovementCaches();
+}
+
 function normalizeKeyword(value) {
     return String(value || '')
         .normalize('NFD')
@@ -435,5 +439,6 @@ module.exports = {
     getActiveMovementTypes,
     createInventoryMovement,
     updateInventoryMovement,
-    deleteInventoryMovement
+    deleteInventoryMovement,
+    invalidateInventoryMovementQueryCaches
 };
