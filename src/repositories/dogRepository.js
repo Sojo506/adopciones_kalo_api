@@ -169,9 +169,9 @@ async function getActiveDependencySummaryByDog(idPerrito) {
             'KALO.FIDE_KALO_PKG.FIDE_HISTORIAL_MEDICO_PERRITO_FN(:idPerrito)',
             { idPerrito }
         );
-        const requests = await executeCursorFunctionWithConnection(
+        const adoptions = await executeCursorFunctionWithConnection(
             connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_FN()'
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_ADOPCIONES_FN()'
         );
         const houseAssignments = await executeCursorFunctionWithConnection(
             connection,
@@ -181,10 +181,10 @@ async function getActiveDependencySummaryByDog(idPerrito) {
         return {
             activeImages: images.filter((image) => Number(image.ID_ESTADO) === 1).length,
             activeEvents: events.filter((event) => Number(event.ID_ESTADO) === 1).length,
-            activeRequests: requests.filter(
-                (request) =>
-                    Number(request.ID_PERRITO) === Number(idPerrito) &&
-                    Number(request.ID_ESTADO) === 1
+            activeAdoptions: adoptions.filter(
+                (adoption) =>
+                    Number(adoption.ID_PERRITO) === Number(idPerrito) &&
+                    Number(adoption.ID_ESTADO) === 1
             ).length,
             activeHouseAssignments: houseAssignments.filter(
                 (assignment) =>
