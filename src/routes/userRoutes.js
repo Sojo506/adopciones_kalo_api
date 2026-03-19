@@ -10,6 +10,8 @@ router.get('/:identificacion', authenticateToken, requireAdmin, userController.g
 router.post('/', authenticateToken, requireAdmin, userController.dashboardUserValidation, userController.createDashboardUser);
 router.post('/register', userController.signUpValidation, userController.signUp);
 router.post('/login', userController.signInValidation, userController.signIn);
+router.post('/refresh', userController.refreshSession);
+router.post('/logout', userController.logout);
 router.post('/verify-email', userController.verifyEmailValidation, userController.verifyEmail);
 router.post('/resend-verification-email', userController.resendVerificationEmailValidation, userController.resendVerificationEmail);
 router.put('/:identificacion', authenticateToken, requireAdmin, userController.dashboardUserUpdateValidation, userController.updateDashboardUser);
