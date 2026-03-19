@@ -31,6 +31,7 @@ router.use('/dogs', require('./dogRoutes'));
 router.use('/dog-images', require('./dogImageRoutes'));
 router.use('/dog-events', require('./dogEventRoutes'));
 router.use('/event-details', require('./eventDetailRoutes'));
+router.use('/foster-homes', require('./fosterHomeRoutes'));
 router.use('/request-types', require('./requestTypeRoutes'));
 router.use('/requests', require('./requestRoutes'));
 router.use('/request-questions', require('./requestQuestionRoutes'));
