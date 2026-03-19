@@ -32,6 +32,7 @@ router.use('/dog-images', require('./dogImageRoutes'));
 router.use('/dog-events', require('./dogEventRoutes'));
 router.use('/event-details', require('./eventDetailRoutes'));
 router.use('/request-types', require('./requestTypeRoutes'));
+router.use('/requests', require('./requestRoutes'));
 router.use('/response-types', require('./responseTypeRoutes'));
 router.use('/tracking-types', require('./trackingTypeRoutes'));
 router.use('/event-types', require('./eventTypeRoutes'));
