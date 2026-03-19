@@ -3,8 +3,12 @@ const { getConnection } = require('../config/db');
 const {
     OUT_CURSOR_BIND_NAME,
     fetchRowsFromCursor,
-    getCurrentSequenceValue
+    getCurrentSequenceValue,
+    qualifyDbObjectName
 } = require('./repositoryUtils');
+
+const REQUEST_QUESTION_TABLE = qualifyDbObjectName('FIDE_SOLICITUD_PREGUNTA_TB');
+const REQUEST_TABLE = qualifyDbObjectName('FIDE_SOLICITUD_TB');
 
 async function findAllQuestionsForAdmin() {
     let connection;
@@ -127,8 +131,8 @@ async function countActiveAssignmentsByQuestion(idPregunta) {
         const result = await connection.execute(
             `
         SELECT COUNT(*) AS TOTAL
-        FROM FIDE_SOLICITUD_PREGUNTA_TB SP
-        JOIN FIDE_SOLICITUD_TB S ON SP.ID_SOLICITUD = S.ID_SOLICITUD
+        FROM ${REQUEST_QUESTION_TABLE} SP
+        JOIN ${REQUEST_TABLE} S ON SP.ID_SOLICITUD = S.ID_SOLICITUD
         WHERE SP.ID_PREGUNTA = :idPregunta
           AND SP.ID_ESTADO = 1
           AND S.ID_ESTADO = 1
