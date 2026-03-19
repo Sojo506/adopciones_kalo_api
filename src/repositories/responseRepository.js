@@ -1,54 +1,18 @@
-const oracledb = require('oracledb');
 const { getConnection } = require('../config/db');
 const {
-    getCurrentSequenceValue,
-    qualifyDbObjectName
+    executeCursorFunctionWithConnection,
+    getCurrentSequenceValue
 } = require('./repositoryUtils');
-
-const RESPONSE_TABLE = qualifyDbObjectName('FIDE_RESPUESTA_TB');
-const REQUEST_TABLE = qualifyDbObjectName('FIDE_SOLICITUD_TB');
-const USER_TABLE = qualifyDbObjectName('FIDE_USUARIO_TB');
-const REQUEST_TYPE_TABLE = qualifyDbObjectName('FIDE_TIPO_SOLICITUD_TB');
-const QUESTION_TABLE = qualifyDbObjectName('FIDE_PREGUNTA_TB');
-const RESPONSE_TYPE_TABLE = qualifyDbObjectName('FIDE_TIPO_RESPUESTA_TB');
-const STATE_TABLE = qualifyDbObjectName('FIDE_ESTADO_TB');
 
 async function findAllResponsesForAdmin() {
     let connection;
 
     try {
         connection = await getConnection();
-
-        const result = await connection.execute(
-            `
-        SELECT
-            R.ID_RESPUESTA,
-            R.ID_SOLICITUD,
-            S.IDENTIFICACION,
-            U.NOMBRE || ' ' || U.APELLIDO_PATERNO || ' ' || U.APELLIDO_MATERNO AS SOLICITANTE,
-            S.ID_TIPO_SOLICITUD,
-            TS.NOMBRE AS TIPO_SOLICITUD,
-            R.ID_PREGUNTA,
-            P.PREGUNTA,
-            P.ID_TIPO_RESPUESTA,
-            TR.NOMBRE AS TIPO_RESPUESTA,
-            R.RESPUESTA,
-            R.ID_ESTADO,
-            E.NOMBRE_ESTADO AS ESTADO_RESPUESTA
-        FROM ${RESPONSE_TABLE} R
-        JOIN ${REQUEST_TABLE} S ON R.ID_SOLICITUD = S.ID_SOLICITUD
-        JOIN ${USER_TABLE} U ON S.IDENTIFICACION = U.IDENTIFICACION
-        JOIN ${REQUEST_TYPE_TABLE} TS ON S.ID_TIPO_SOLICITUD = TS.ID_TIPO_SOLICITUD
-        JOIN ${QUESTION_TABLE} P ON R.ID_PREGUNTA = P.ID_PREGUNTA
-        JOIN ${RESPONSE_TYPE_TABLE} TR ON P.ID_TIPO_RESPUESTA = TR.ID_TIPO_RESPUESTA
-        JOIN ${STATE_TABLE} E ON R.ID_ESTADO = E.ID_ESTADO
-        ORDER BY R.ID_RESPUESTA DESC
-      `,
-            {},
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        return await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_RESPUESTAS_ADMIN_FN()'
         );
-
-        return result.rows || [];
     } finally {
         if (connection) {
             await connection.close();
@@ -61,37 +25,12 @@ async function findResponseById(idRespuesta) {
 
     try {
         connection = await getConnection();
-
-        const result = await connection.execute(
-            `
-        SELECT
-            R.ID_RESPUESTA,
-            R.ID_SOLICITUD,
-            S.IDENTIFICACION,
-            U.NOMBRE || ' ' || U.APELLIDO_PATERNO || ' ' || U.APELLIDO_MATERNO AS SOLICITANTE,
-            S.ID_TIPO_SOLICITUD,
-            TS.NOMBRE AS TIPO_SOLICITUD,
-            R.ID_PREGUNTA,
-            P.PREGUNTA,
-            P.ID_TIPO_RESPUESTA,
-            TR.NOMBRE AS TIPO_RESPUESTA,
-            R.RESPUESTA,
-            R.ID_ESTADO,
-            E.NOMBRE_ESTADO AS ESTADO_RESPUESTA
-        FROM ${RESPONSE_TABLE} R
-        JOIN ${REQUEST_TABLE} S ON R.ID_SOLICITUD = S.ID_SOLICITUD
-        JOIN ${USER_TABLE} U ON S.IDENTIFICACION = U.IDENTIFICACION
-        JOIN ${REQUEST_TYPE_TABLE} TS ON S.ID_TIPO_SOLICITUD = TS.ID_TIPO_SOLICITUD
-        JOIN ${QUESTION_TABLE} P ON R.ID_PREGUNTA = P.ID_PREGUNTA
-        JOIN ${RESPONSE_TYPE_TABLE} TR ON P.ID_TIPO_RESPUESTA = TR.ID_TIPO_RESPUESTA
-        JOIN ${STATE_TABLE} E ON R.ID_ESTADO = E.ID_ESTADO
-        WHERE R.ID_RESPUESTA = :idRespuesta
-      `,
-            { idRespuesta },
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        const rows = await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_RESPUESTA_ADMIN_POR_ID_FN(:idRespuesta)',
+            { idRespuesta }
         );
-
-        return result.rows?.[0] || null;
+        return rows[0] || null;
     } finally {
         if (connection) {
             await connection.close();
@@ -104,36 +43,20 @@ async function findResponseByRequestQuestion(idSolicitud, idPregunta, { excludeI
 
     try {
         connection = await getConnection();
-
-        const conditions = [
-            'ID_SOLICITUD = :idSolicitud',
-            'ID_PREGUNTA = :idPregunta'
-        ];
-        const binds = { idSolicitud, idPregunta };
-
-        if (excludeId !== null && excludeId !== undefined) {
-            conditions.push('ID_RESPUESTA != :excludeId');
-            binds.excludeId = excludeId;
-        }
-
-        const result = await connection.execute(
-            `
-        SELECT
-            ID_RESPUESTA,
-            ID_SOLICITUD,
-            ID_PREGUNTA,
-            RESPUESTA,
-            ID_ESTADO
-        FROM ${RESPONSE_TABLE}
-        WHERE ${conditions.join('\n          AND ')}
-        ORDER BY ID_RESPUESTA DESC
-        FETCH FIRST 1 ROWS ONLY
-      `,
-            binds,
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        const responses = await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_RESPUESTAS_POR_SOLICITUD_FN(:idSolicitud)',
+            { idSolicitud }
         );
-
-        return result.rows?.[0] || null;
+        return (
+            responses.find(
+                (response) =>
+                    Number(response.ID_PREGUNTA) === Number(idPregunta) &&
+                    (excludeId === null ||
+                        excludeId === undefined ||
+                        Number(response.ID_RESPUESTA) !== Number(excludeId))
+            ) || null
+        );
     } finally {
         if (connection) {
             await connection.close();
