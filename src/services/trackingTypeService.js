@@ -181,5 +181,6 @@ module.exports = {
     getTrackingTypeById,
     createTrackingType,
     updateTrackingType,
-    deleteTrackingType
+    deleteTrackingType,
+    invalidateTrackingTypeReadCaches: invalidateTrackingTypeCache
 };

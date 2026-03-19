@@ -388,5 +388,6 @@ module.exports = {
     getAdoptionById,
     createAdoption,
     updateAdoption,
-    deleteAdoption
+    deleteAdoption,
+    invalidateAdoptionReadCaches: invalidateAdoptionCache
 };
