@@ -27,6 +27,7 @@ router.use('/paypal-payments', require('./paypalPaymentRoutes'));
 router.use('/currencies', require('./currencyRoutes'));
 router.use('/breeds', require('./breedRoutes'));
 router.use('/sexes', require('./sexRoutes'));
+router.use('/dogs', require('./dogRoutes'));
 router.use('/request-types', require('./requestTypeRoutes'));
 router.use('/response-types', require('./responseTypeRoutes'));
 router.use('/tracking-types', require('./trackingTypeRoutes'));
