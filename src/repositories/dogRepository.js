@@ -40,6 +40,35 @@ async function executeCursorFunctionWithConnection(connection, functionCall, bin
     }
 }
 
+function getPrimaryImageUrl(images) {
+    const activeImageUrls = images
+        .filter((image) => Number(image.ID_ESTADO) === 1)
+        .map((image) => String(image.IMAGE_URL || '').trim())
+        .filter(Boolean)
+        .sort();
+
+    return activeImageUrls[0] || null;
+}
+
+async function attachPrimaryImageUrls(connection, dogs) {
+    const dogsWithImages = [];
+
+    for (const dog of dogs) {
+        const images = await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_IMAGENES_PERRO_FN(:idPerrito)',
+            { idPerrito: dog.ID_PERRITO }
+        );
+
+        dogsWithImages.push({
+            ...dog,
+            IMAGE_URL: getPrimaryImageUrl(images)
+        });
+    }
+
+    return dogsWithImages;
+}
+
 function normalizeDogId(value) {
     return Number(value);
 }
@@ -98,7 +127,21 @@ async function findCreatedDogByPackage(connection, dogData, existingDogIds) {
 }
 
 async function findAllDogsForAdmin() {
-    return executeCursorFunction('KALO.FIDE_KALO_PKG.FIDE_OBTENER_PERRITOS_FN()');
+    let connection;
+
+    try {
+        connection = await getConnection();
+        const dogs = await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_PERRITOS_FN()'
+        );
+
+        return await attachPrimaryImageUrls(connection, dogs);
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
 }
 
 async function findDogById(idPerrito) {
