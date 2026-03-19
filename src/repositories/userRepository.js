@@ -571,7 +571,7 @@ async function deleteAddress(idDireccion) {
     }
 }
 
-async function findOTPByCodeAndCuenta(codigo, idCuenta) {
+async function findOTPByCodeAndCuenta(codigo, idCuenta, idTipoOtp) {
     let connection;
 
     try {
@@ -590,7 +590,7 @@ async function findOTPByCodeAndCuenta(codigo, idCuenta) {
             readSql,
             {
                 idCuenta,
-                idTipoOtp: 1,
+                idTipoOtp,
                 [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
             },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -713,7 +713,7 @@ async function markOTPAsUsed(idCodigoOtp) {
     }
 }
 
-async function deactivateActiveOtpsByCuenta(idCuenta) {
+async function deactivateActiveOtpsByCuenta(idCuenta, idTipoOtp) {
     let connection;
 
     try {
@@ -732,7 +732,7 @@ async function deactivateActiveOtpsByCuenta(idCuenta) {
             readSql,
             {
                 idCuenta,
-                idTipoOtp: 1,
+                idTipoOtp,
                 [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
             },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }

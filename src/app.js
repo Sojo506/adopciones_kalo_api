@@ -23,9 +23,15 @@ app.get("/", (req, res) => {
 app.use((err, req, res, next) => {
     console.error(err);
 
-    res.status(err.statusCode || 500).json({
+    const isMulterError = err?.name === 'MulterError';
+    const statusCode = isMulterError ? 400 : err.statusCode || 500;
+    const message = isMulterError && err.code === 'LIMIT_FILE_SIZE'
+        ? 'Image file is too large'
+        : err.message || 'Error interno del servidor';
+
+    res.status(statusCode).json({
         ok: false,
-        message: err.message || "Error interno del servidor"
+        message
     });
 });
 

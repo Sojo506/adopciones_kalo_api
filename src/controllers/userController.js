@@ -1,5 +1,13 @@
 const userService = require('../services/userService');
 const { body, validationResult } = require('express-validator');
+const {
+    REFRESH_TOKEN_COOKIE_NAME,
+    getCookieValue,
+    getRefreshTokenClearCookieOptions,
+    getRefreshTokenCookieOptions,
+    getRequestMetadata
+} = require('../utils/authCookies');
+const PHONE_PATTERN = /^[0-9()+\s-]{6,20}$/;
 
 async function getUsers(req, res, next) {
     try {
@@ -43,10 +51,12 @@ async function getMe(req, res, next) {
 
 const signUpValidation = [
     body('identificacion').isNumeric().withMessage('Identificacion must be a number'),
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('nombre').isLength({ min: 1 }).withMessage('Nombre is required'),
     body('apellidoPaterno').isLength({ min: 1 }).withMessage('Apellido Paterno is required'),
     body('apellidoMaterno').isLength({ min: 1 }).withMessage('Apellido Materno is required'),
     body('correo').isEmail().withMessage('Valid email is required'),
+    body('telefono').trim().matches(PHONE_PATTERN).withMessage('Valid phone is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('idPais').isNumeric().withMessage('ID Pais must be a number'),
     body('idProvincia').isNumeric().withMessage('ID Provincia must be a number'),
@@ -58,6 +68,7 @@ const signUpValidation = [
 
 const dashboardUserValidation = [
     body('identificacion').isNumeric().withMessage('Identificacion must be a number'),
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('nombre').isLength({ min: 1 }).withMessage('Nombre is required'),
     body('apellidoPaterno').isLength({ min: 1 }).withMessage('Apellido Paterno is required'),
     body('apellidoMaterno').isLength({ min: 1 }).withMessage('Apellido Materno is required'),
@@ -74,6 +85,7 @@ const dashboardUserValidation = [
 ];
 
 const dashboardUserUpdateValidation = [
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('nombre').isLength({ min: 1 }).withMessage('Nombre is required'),
     body('apellidoPaterno').isLength({ min: 1 }).withMessage('Apellido Paterno is required'),
     body('apellidoMaterno').isLength({ min: 1 }).withMessage('Apellido Materno is required'),
@@ -177,7 +189,7 @@ async function deleteDashboardUser(req, res, next) {
 }
 
 const signInValidation = [
-    body('correo').isEmail().withMessage('Valid email is required'),
+    body('usuario').isLength({ min: 1 }).withMessage('Usuario is required'),
     body('password').exists().withMessage('Password is required')
 ];
 
@@ -192,15 +204,66 @@ async function signIn(req, res, next) {
             });
         }
 
-        const { correo, password } = req.body;
-        const result = await userService.signIn(correo, password);
+        const { usuario, password } = req.body;
+        const result = await userService.signIn(usuario, password, getRequestMetadata(req));
+
+        res.cookie(
+            REFRESH_TOKEN_COOKIE_NAME,
+            result.refreshToken,
+            getRefreshTokenCookieOptions(result.refreshTokenExpiresAt)
+        );
 
         res.status(200).json({
             ok: true,
             message: 'Sign in successful',
-            data: result
+            data: {
+                user: result.user,
+                accessToken: result.accessToken
+            }
         });
     } catch (error) {
+        next(error);
+    }
+}
+
+async function refreshSession(req, res, next) {
+    try {
+        const result = await userService.refreshSession(
+            getCookieValue(req, REFRESH_TOKEN_COOKIE_NAME),
+            getRequestMetadata(req)
+        );
+
+        res.cookie(
+            REFRESH_TOKEN_COOKIE_NAME,
+            result.refreshToken,
+            getRefreshTokenCookieOptions(result.refreshTokenExpiresAt)
+        );
+
+        res.status(200).json({
+            ok: true,
+            message: 'Token refreshed successfully',
+            data: {
+                accessToken: result.accessToken,
+                user: result.user
+            }
+        });
+    } catch (error) {
+        res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, getRefreshTokenClearCookieOptions());
+        next(error);
+    }
+}
+
+async function logout(req, res, next) {
+    try {
+        await userService.logout(getCookieValue(req, REFRESH_TOKEN_COOKIE_NAME));
+        res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, getRefreshTokenClearCookieOptions());
+
+        res.status(200).json({
+            ok: true,
+            message: 'Logout successful'
+        });
+    } catch (error) {
+        res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, getRefreshTokenClearCookieOptions());
         next(error);
     }
 }
@@ -270,6 +333,8 @@ module.exports = {
     updateDashboardUser,
     deleteDashboardUser,
     signIn,
+    refreshSession,
+    logout,
     verifyEmail,
     resendVerificationEmail,
     signUpValidation,
