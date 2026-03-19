@@ -34,6 +34,7 @@ router.use('/event-details', require('./eventDetailRoutes'));
 router.use('/request-types', require('./requestTypeRoutes'));
 router.use('/requests', require('./requestRoutes'));
 router.use('/request-questions', require('./requestQuestionRoutes'));
+router.use('/responses', require('./responseRoutes'));
 router.use('/response-types', require('./responseTypeRoutes'));
 router.use('/tracking-types', require('./trackingTypeRoutes'));
 router.use('/event-types', require('./eventTypeRoutes'));
