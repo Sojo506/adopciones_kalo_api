@@ -358,5 +358,6 @@ module.exports = {
     getFosterHomeById,
     createFosterHome,
     updateFosterHome,
-    deleteFosterHome
+    deleteFosterHome,
+    invalidateFosterHomeReadCaches: invalidateFosterHomeCache
 };

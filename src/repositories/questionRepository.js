@@ -2,13 +2,10 @@ const oracledb = require('oracledb');
 const { getConnection } = require('../config/db');
 const {
     OUT_CURSOR_BIND_NAME,
+    executeCursorFunctionWithConnection,
     fetchRowsFromCursor,
-    getCurrentSequenceValue,
-    qualifyDbObjectName
+    getCurrentSequenceValue
 } = require('./repositoryUtils');
-
-const REQUEST_QUESTION_TABLE = qualifyDbObjectName('FIDE_SOLICITUD_PREGUNTA_TB');
-const REQUEST_TABLE = qualifyDbObjectName('FIDE_SOLICITUD_TB');
 
 async function findAllQuestionsForAdmin() {
     let connection;
@@ -127,21 +124,26 @@ async function countActiveAssignmentsByQuestion(idPregunta) {
 
     try {
         connection = await getConnection();
-
-        const result = await connection.execute(
-            `
-        SELECT COUNT(*) AS TOTAL
-        FROM ${REQUEST_QUESTION_TABLE} SP
-        JOIN ${REQUEST_TABLE} S ON SP.ID_SOLICITUD = S.ID_SOLICITUD
-        WHERE SP.ID_PREGUNTA = :idPregunta
-          AND SP.ID_ESTADO = 1
-          AND S.ID_ESTADO = 1
-      `,
-            { idPregunta },
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        const requests = await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_FN()'
+        );
+        const activeRequestIds = new Set(
+            requests
+                .filter((request) => Number(request.ID_ESTADO) === 1)
+                .map((request) => Number(request.ID_SOLICITUD))
+        );
+        const requestQuestions = await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_PREGUNTA_ADMIN_FN()'
         );
 
-        return Number(result.rows?.[0]?.TOTAL || 0);
+        return requestQuestions.filter(
+            (requestQuestion) =>
+                Number(requestQuestion.ID_PREGUNTA) === Number(idPregunta) &&
+                Number(requestQuestion.ID_ESTADO) === 1 &&
+                activeRequestIds.has(Number(requestQuestion.ID_SOLICITUD))
+        ).length;
     } finally {
         if (connection) {
             await connection.close();

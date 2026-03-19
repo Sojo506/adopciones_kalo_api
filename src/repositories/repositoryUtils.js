@@ -30,6 +30,31 @@ async function fetchRowsFromCursor(resultSet) {
     return rows;
 }
 
+async function executeCursorFunctionWithConnection(connection, functionCall, binds = {}) {
+    const sql = `
+      BEGIN
+        :${OUT_CURSOR_BIND_NAME} := ${functionCall};
+      END;
+    `;
+
+    const result = await connection.execute(
+        sql,
+        {
+            ...binds,
+            [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
+        },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
+
+    try {
+        return await fetchRowsFromCursor(resultSet);
+    } finally {
+        await resultSet.close();
+    }
+}
+
 function assertSafeSequenceName(sequenceName) {
     if (!/^[A-Z0-9_$.]+$/i.test(sequenceName)) {
         throw new Error(`Unsafe Oracle sequence name: ${sequenceName}`);
@@ -59,6 +84,7 @@ async function getCurrentSequenceValue(connection, sequenceName) {
 
 module.exports = {
     OUT_CURSOR_BIND_NAME,
+    executeCursorFunctionWithConnection,
     fetchRowsFromCursor,
     getCurrentSequenceValue,
     qualifyDbObjectName
