@@ -73,6 +73,17 @@ async function getBrands() {
     });
 }
 
+async function getMovementTypes() {
+    return catalogCache.getOrSet('catalog:movement-types', async () => {
+        const movementTypes = await catalogRepository.findMovementTypes();
+        return movementTypes.map((movementType) => ({
+            idTipoMovimiento: movementType.ID_TIPO_MOVIMIENTO,
+            nombre: movementType.NOMBRE,
+            idEstado: movementType.ID_ESTADO
+        }));
+    });
+}
+
 async function getProducts() {
     return catalogCache.getOrSet('catalog:products', async () => {
         const products = await catalogRepository.findProducts();
@@ -205,6 +216,10 @@ function invalidateBrandsCache() {
     catalogCache.delete('catalog:brands');
 }
 
+function invalidateMovementTypesCache() {
+    catalogCache.delete('catalog:movement-types');
+}
+
 function invalidateProductsCache() {
     catalogCache.delete('catalog:products');
 }
@@ -248,6 +263,7 @@ module.exports = {
     getOtpTypeById,
     getCategories,
     getBrands,
+    getMovementTypes,
     getProducts,
     getCurrencies,
     getBreeds,
@@ -262,6 +278,7 @@ module.exports = {
     invalidateOtpTypesCache,
     invalidateCategoriesCache,
     invalidateBrandsCache,
+    invalidateMovementTypesCache,
     invalidateProductsCache,
     invalidateCurrenciesCache,
     invalidateBreedsCache,
