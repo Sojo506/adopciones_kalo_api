@@ -60,5 +60,6 @@ async function getCurrentSequenceValue(connection, sequenceName) {
 module.exports = {
     OUT_CURSOR_BIND_NAME,
     fetchRowsFromCursor,
-    getCurrentSequenceValue
+    getCurrentSequenceValue,
+    qualifyDbObjectName
 };
