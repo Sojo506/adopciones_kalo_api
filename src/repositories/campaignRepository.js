@@ -2,12 +2,11 @@ const oracledb = require('oracledb');
 const { getConnection } = require('../config/db');
 const {
     OUT_CURSOR_BIND_NAME,
-    executeCursorFunctionWithConnection,
     fetchRowsFromCursor,
     getCurrentSequenceValue
 } = require('./repositoryUtils');
 
-async function findAllQuestionsForAdmin() {
+async function findAllCampaignsForAdmin() {
     let connection;
 
     try {
@@ -15,7 +14,7 @@ async function findAllQuestionsForAdmin() {
 
         const sql = `
       BEGIN
-        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_PREGUNTAS_ADMIN_FN();
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_CAMPANIAS_ADMIN_FN();
       END;
     `;
 
@@ -41,7 +40,7 @@ async function findAllQuestionsForAdmin() {
     }
 }
 
-async function findQuestionById(idPregunta) {
+async function findCampaignById(idCampania) {
     let connection;
 
     try {
@@ -49,8 +48,8 @@ async function findQuestionById(idPregunta) {
 
         const sql = `
       BEGIN
-        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_PREGUNTA_POR_ID_FN(
-          :idPregunta
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_CAMPANIA_POR_ID_FN(
+          :idCampania
         );
       END;
     `;
@@ -58,7 +57,7 @@ async function findQuestionById(idPregunta) {
         const result = await connection.execute(
             sql,
             {
-                idPregunta,
+                idCampania,
                 [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
             },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -79,7 +78,7 @@ async function findQuestionById(idPregunta) {
     }
 }
 
-async function countActiveResponsesByQuestion(idPregunta) {
+async function countActiveDonationsByCampaign(idCampania) {
     let connection;
 
     try {
@@ -87,13 +86,16 @@ async function countActiveResponsesByQuestion(idPregunta) {
 
         const sql = `
       BEGIN
-        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_RESPUESTAS_FN();
+        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_DONACIONES_POR_CAMPANIA_FN(
+          :idCampania
+        );
       END;
     `;
 
         const result = await connection.execute(
             sql,
             {
+                idCampania,
                 [OUT_CURSOR_BIND_NAME]: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }
             },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -102,13 +104,8 @@ async function countActiveResponsesByQuestion(idPregunta) {
         const resultSet = result.outBinds[OUT_CURSOR_BIND_NAME];
 
         try {
-            const responses = await fetchRowsFromCursor(resultSet);
-
-            return responses.filter(
-                (response) =>
-                    Number(response.ID_PREGUNTA) === Number(idPregunta) &&
-                    Number(response.ID_ESTADO) === 1
-            ).length;
+            const donations = await fetchRowsFromCursor(resultSet);
+            return donations.filter((donation) => Number(donation.ID_ESTADO) === 1).length;
         } finally {
             await resultSet.close();
         }
@@ -119,39 +116,7 @@ async function countActiveResponsesByQuestion(idPregunta) {
     }
 }
 
-async function countActiveAssignmentsByQuestion(idPregunta) {
-    let connection;
-
-    try {
-        connection = await getConnection();
-        const requests = await executeCursorFunctionWithConnection(
-            connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_FN()'
-        );
-        const activeRequestIds = new Set(
-            requests
-                .filter((request) => Number(request.ID_ESTADO) === 1)
-                .map((request) => Number(request.ID_SOLICITUD))
-        );
-        const requestQuestions = await executeCursorFunctionWithConnection(
-            connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_PREGUNTA_ADMIN_FN()'
-        );
-
-        return requestQuestions.filter(
-            (requestQuestion) =>
-                Number(requestQuestion.ID_PREGUNTA) === Number(idPregunta) &&
-                Number(requestQuestion.ID_ESTADO) === 1 &&
-                activeRequestIds.has(Number(requestQuestion.ID_SOLICITUD))
-        ).length;
-    } finally {
-        if (connection) {
-            await connection.close();
-        }
-    }
-}
-
-async function createQuestion(questionData) {
+async function createCampaign(campaignData) {
     let connection;
 
     try {
@@ -159,9 +124,12 @@ async function createQuestion(questionData) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_KALO_PKG.FIDE_PREGUNTA_INSERT_SP(
-          :pregunta,
-          :idTipoRespuesta,
+        KALO.FIDE_KALO_PKG.FIDE_CAMPANIA_INSERT_SP(
+          :nombre,
+          :descripcion,
+          :imageUrl,
+          :fechaInicio,
+          :fechaFin,
           :idEstado
         );
       END;
@@ -170,20 +138,23 @@ async function createQuestion(questionData) {
         await connection.execute(
             sql,
             {
-                pregunta: questionData.pregunta,
-                idTipoRespuesta: questionData.idTipoRespuesta,
-                idEstado: questionData.idEstado
+                nombre: campaignData.nombre,
+                descripcion: campaignData.descripcion,
+                imageUrl: campaignData.imageUrl,
+                fechaInicio: campaignData.fechaInicio,
+                fechaFin: campaignData.fechaFin,
+                idEstado: campaignData.idEstado
             },
             { autoCommit: true }
         );
 
-        const idPregunta = await getCurrentSequenceValue(connection, 'FIDE_PREGUNTA_SEQ');
+        const idCampania = await getCurrentSequenceValue(connection, 'FIDE_CAMPANIA_SEQ');
 
-        if (!idPregunta) {
-            throw new Error('No fue posible obtener la pregunta creada desde el package.');
+        if (!idCampania) {
+            throw new Error('No fue posible obtener la campania creada desde el package.');
         }
 
-        return { idPregunta };
+        return { idCampania };
     } finally {
         if (connection) {
             await connection.close();
@@ -191,7 +162,7 @@ async function createQuestion(questionData) {
     }
 }
 
-async function updateQuestion(questionData) {
+async function updateCampaign(campaignData) {
     let connection;
 
     try {
@@ -199,10 +170,13 @@ async function updateQuestion(questionData) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_KALO_PKG.FIDE_PREGUNTA_UPDATE_SP(
-          :idPregunta,
-          :pregunta,
-          :idTipoRespuesta,
+        KALO.FIDE_KALO_PKG.FIDE_CAMPANIA_UPDATE_SP(
+          :idCampania,
+          :nombre,
+          :descripcion,
+          :imageUrl,
+          :fechaInicio,
+          :fechaFin,
           :idEstado
         );
       END;
@@ -211,10 +185,13 @@ async function updateQuestion(questionData) {
         await connection.execute(
             sql,
             {
-                idPregunta: questionData.idPregunta,
-                pregunta: questionData.pregunta,
-                idTipoRespuesta: questionData.idTipoRespuesta,
-                idEstado: questionData.idEstado
+                idCampania: campaignData.idCampania,
+                nombre: campaignData.nombre,
+                descripcion: campaignData.descripcion,
+                imageUrl: campaignData.imageUrl,
+                fechaInicio: campaignData.fechaInicio,
+                fechaFin: campaignData.fechaFin,
+                idEstado: campaignData.idEstado
             },
             { autoCommit: true }
         );
@@ -225,7 +202,7 @@ async function updateQuestion(questionData) {
     }
 }
 
-async function deleteQuestion(idPregunta) {
+async function deleteCampaign(idCampania) {
     let connection;
 
     try {
@@ -233,15 +210,15 @@ async function deleteQuestion(idPregunta) {
 
         const sql = `
       BEGIN
-        KALO.FIDE_KALO_PKG.FIDE_PREGUNTA_DELETE_SP(
-          :idPregunta
+        KALO.FIDE_KALO_PKG.FIDE_CAMPANIA_DELETE_SP(
+          :idCampania
         );
       END;
     `;
 
         await connection.execute(
             sql,
-            { idPregunta },
+            { idCampania },
             { autoCommit: true }
         );
     } finally {
@@ -252,11 +229,10 @@ async function deleteQuestion(idPregunta) {
 }
 
 module.exports = {
-    findAllQuestionsForAdmin,
-    findQuestionById,
-    countActiveResponsesByQuestion,
-    countActiveAssignmentsByQuestion,
-    createQuestion,
-    updateQuestion,
-    deleteQuestion
+    findAllCampaignsForAdmin,
+    findCampaignById,
+    countActiveDonationsByCampaign,
+    createCampaign,
+    updateCampaign,
+    deleteCampaign
 };
