@@ -1,3 +1,4 @@
+const cloudinary = require('../config/cloudinary');
 const catalogService = require('./catalogService');
 const campaignRepository = require('../repositories/campaignRepository');
 const MemoryCache = require('../utils/memoryCache');
@@ -87,6 +88,101 @@ function normalizeOptionalText(value) {
     return normalizedValue || null;
 }
 
+function normalizeOptionalImageUrl(value) {
+    const normalizedValue = String(value || '').trim();
+
+    if (!normalizedValue) {
+        return null;
+    }
+
+    let parsedUrl;
+
+    try {
+        parsedUrl = new URL(normalizedValue);
+    } catch (error) {
+        throw createHttpError('Image URL is invalid', 400);
+    }
+
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        throw createHttpError('Image URL must use HTTP or HTTPS', 400);
+    }
+
+    return normalizedValue;
+}
+
+function sanitizeFileName(fileName) {
+    return String(fileName || 'campaign')
+        .replace(/\.[^.]+$/, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40) || 'campaign';
+}
+
+function ensureCloudinaryConfiguration() {
+    const missingConfigKeys = [
+        ['CLOUDINARY_CLOUD_NAME', 'CLOUD_NAME'],
+        ['CLOUDINARY_API_KEY', 'CLOUD_API_KEY'],
+        ['CLOUDINARY_API_SECRET', 'CLOUD_API_SECRET']
+    ]
+        .filter(([primaryKey, fallbackKey]) => !process.env[primaryKey] && !process.env[fallbackKey])
+        .map(([primaryKey, fallbackKey]) => `${primaryKey} (or ${fallbackKey})`);
+
+    if (missingConfigKeys.length) {
+        throw createHttpError(
+            `Missing Cloudinary configuration: ${missingConfigKeys.join(', ')}`,
+            500
+        );
+    }
+}
+
+async function uploadImageToCloudinary(file, campaignName) {
+    ensureCloudinaryConfiguration();
+
+    const folder = process.env.CLOUDINARY_CAMPAIGN_IMAGES_FOLDER || 'kalo/campaign-images';
+    const publicId = `campaign-${Date.now()}-${sanitizeFileName(
+        campaignName || file.originalname
+    )}`;
+
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder,
+                public_id: publicId,
+                resource_type: 'image'
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve(result);
+            }
+        );
+
+        uploadStream.end(file.buffer);
+    });
+}
+
+async function destroyCloudinaryAsset(publicId) {
+    if (!publicId) {
+        return;
+    }
+
+    try {
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+    } catch (error) {
+        console.error('Failed to clean Cloudinary asset:', error);
+    }
+}
+
+function ensureCampaignHasImage(imageUrl) {
+    if (!imageUrl) {
+        throw createHttpError('Image file is required', 400);
+    }
+}
+
 function ensureValidDateRange(fechaInicio, fechaFin) {
     const startDate = new Date(fechaInicio);
     const endDate = new Date(fechaFin);
@@ -104,6 +200,7 @@ function formatCampaign(campaign) {
         idCampania: Number(campaign.ID_CAMPANIA),
         nombre: campaign.NOMBRE || '',
         descripcion: campaign.DESCRIPCION || '',
+        imageUrl: campaign.IMAGE_URL || null,
         fechaInicio: serializeDateOnly(campaign.FECHA_INICIO),
         fechaFin: serializeDateOnly(campaign.FECHA_FIN),
         idEstado: Number(campaign.ID_ESTADO),
@@ -191,7 +288,7 @@ async function getCampaignById(idCampania) {
     });
 }
 
-async function createCampaign(campaignData) {
+async function createCampaign(campaignData, file) {
     const requestedState =
         campaignData.idEstado === undefined ||
         campaignData.idEstado === null ||
@@ -215,13 +312,32 @@ async function createCampaign(campaignData) {
     ensureValidDateRange(payload.fechaInicio, payload.fechaFin);
     await ensureCampaignNameIsAvailable(payload.nombre);
 
-    const result = await campaignRepository.createCampaign(payload);
-    invalidateCampaignCache(result.idCampania);
+    const imageUrlFromBody = normalizeOptionalImageUrl(campaignData.imageUrl);
+    let uploadedImage = null;
+    let imageUrl = imageUrlFromBody;
 
-    return getCampaignById(result.idCampania);
+    if (file?.buffer) {
+        uploadedImage = await uploadImageToCloudinary(file, payload.nombre);
+        imageUrl = uploadedImage.secure_url;
+    }
+
+    ensureCampaignHasImage(imageUrl);
+
+    try {
+        const result = await campaignRepository.createCampaign({
+            ...payload,
+            imageUrl
+        });
+        invalidateCampaignCache(result.idCampania);
+
+        return getCampaignById(result.idCampania);
+    } catch (error) {
+        await destroyCloudinaryAsset(uploadedImage?.public_id);
+        throw error;
+    }
 }
 
-async function updateCampaign(idCampania, campaignData) {
+async function updateCampaign(idCampania, campaignData, file) {
     const existingCampaign = await getCampaignById(idCampania);
     const payload = {
         idCampania: Number(idCampania),
@@ -239,10 +355,35 @@ async function updateCampaign(idCampania, campaignData) {
     });
     await ensureCampaignCanBeDisabled(existingCampaign, payload.idEstado);
 
-    await campaignRepository.updateCampaign(payload);
-    invalidateCampaignCache(payload.idCampania);
+    const hasImageUrlField = Object.prototype.hasOwnProperty.call(
+        campaignData,
+        'imageUrl'
+    );
+    const nextManualImageUrl = normalizeOptionalImageUrl(campaignData.imageUrl);
+    let uploadedImage = null;
+    let nextImageUrl = existingCampaign.imageUrl;
 
-    return getCampaignById(payload.idCampania);
+    if (file?.buffer) {
+        uploadedImage = await uploadImageToCloudinary(file, payload.nombre);
+        nextImageUrl = uploadedImage.secure_url;
+    } else if (hasImageUrlField) {
+        nextImageUrl = nextManualImageUrl;
+    }
+
+    ensureCampaignHasImage(nextImageUrl);
+
+    try {
+        await campaignRepository.updateCampaign({
+            ...payload,
+            imageUrl: nextImageUrl
+        });
+        invalidateCampaignCache(payload.idCampania);
+
+        return getCampaignById(payload.idCampania);
+    } catch (error) {
+        await destroyCloudinaryAsset(uploadedImage?.public_id);
+        throw error;
+    }
 }
 
 async function deleteCampaign(idCampania) {

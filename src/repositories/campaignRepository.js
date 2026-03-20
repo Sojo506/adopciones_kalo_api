@@ -127,6 +127,7 @@ async function createCampaign(campaignData) {
         KALO.FIDE_KALO_PKG.FIDE_CAMPANIA_INSERT_SP(
           :nombre,
           :descripcion,
+          :imageUrl,
           :fechaInicio,
           :fechaFin,
           :idEstado
@@ -139,6 +140,7 @@ async function createCampaign(campaignData) {
             {
                 nombre: campaignData.nombre,
                 descripcion: campaignData.descripcion,
+                imageUrl: campaignData.imageUrl,
                 fechaInicio: campaignData.fechaInicio,
                 fechaFin: campaignData.fechaFin,
                 idEstado: campaignData.idEstado
@@ -172,6 +174,7 @@ async function updateCampaign(campaignData) {
           :idCampania,
           :nombre,
           :descripcion,
+          :imageUrl,
           :fechaInicio,
           :fechaFin,
           :idEstado
@@ -185,6 +188,7 @@ async function updateCampaign(campaignData) {
                 idCampania: campaignData.idCampania,
                 nombre: campaignData.nombre,
                 descripcion: campaignData.descripcion,
+                imageUrl: campaignData.imageUrl,
                 fechaInicio: campaignData.fechaInicio,
                 fechaFin: campaignData.fechaFin,
                 idEstado: campaignData.idEstado
