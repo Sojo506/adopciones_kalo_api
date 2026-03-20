@@ -1,4 +1,4 @@
-const { body, param, validationResult } = require('express-validator');
+const { param, validationResult } = require('express-validator');
 const dogService = require('../services/dogService');
 
 function validationErrorResponse(req, res) {
@@ -16,42 +16,14 @@ function validationErrorResponse(req, res) {
 }
 
 const dogIdValidation = [
-    param('idPerrito').isInt({ min: 1 }).withMessage('ID Perrito must be a positive number')
-];
-
-const createDogValidation = [
-    body('nombre')
-        .trim()
-        .isLength({ min: 1, max: 100 })
-        .withMessage('Dog name is required and must be at most 100 characters'),
-    body('fechaIngreso').isISO8601().withMessage('Admission date must be a valid ISO-8601 date'),
-    body('edad').isInt({ min: 0 }).withMessage('Age must be a non-negative integer'),
-    body('peso').isFloat({ gt: 0 }).withMessage('Weight must be greater than zero'),
-    body('estatura').isFloat({ gt: 0 }).withMessage('Height must be greater than zero'),
-    body('idSexo').isInt({ min: 1 }).withMessage('ID Sexo must be a positive number'),
-    body('idRaza').isInt({ min: 1 }).withMessage('ID Raza must be a positive number'),
-    body('idEstado')
-        .optional({ values: 'falsy' })
+    param('idPerrito')
         .isInt({ min: 1 })
-        .withMessage('ID Estado must be a positive number')
+        .withMessage('ID Perrito must be a positive number')
 ];
 
-const updateDogValidation = [
-    body('nombre')
-        .trim()
-        .isLength({ min: 1, max: 100 })
-        .withMessage('Dog name is required and must be at most 100 characters'),
-    body('edad').isInt({ min: 0 }).withMessage('Age must be a non-negative integer'),
-    body('peso').isFloat({ gt: 0 }).withMessage('Weight must be greater than zero'),
-    body('estatura').isFloat({ gt: 0 }).withMessage('Height must be greater than zero'),
-    body('idSexo').isInt({ min: 1 }).withMessage('ID Sexo must be a positive number'),
-    body('idRaza').isInt({ min: 1 }).withMessage('ID Raza must be a positive number'),
-    body('idEstado').isInt({ min: 1 }).withMessage('ID Estado must be a positive number')
-];
-
-async function getDogs(req, res, next) {
+async function getAvailableDogs(req, res, next) {
     try {
-        const dogs = await dogService.getDogs();
+        const dogs = await dogService.getAvailableDogs();
 
         res.status(200).json({
             ok: true,
@@ -80,69 +52,8 @@ async function getDogById(req, res, next) {
     }
 }
 
-async function createDog(req, res, next) {
-    try {
-        if (validationErrorResponse(req, res)) {
-            return;
-        }
-
-        const dog = await dogService.createDog(req.body);
-
-        res.status(201).json({
-            ok: true,
-            message: 'Dog created successfully',
-            data: dog
-        });
-    } catch (error) {
-        next(error);
-    }
-}
-
-async function updateDog(req, res, next) {
-    try {
-        if (validationErrorResponse(req, res)) {
-            return;
-        }
-
-        const dog = await dogService.updateDog(
-            req.params.idPerrito,
-            req.body
-        );
-
-        res.status(200).json({
-            ok: true,
-            message: 'Dog updated successfully',
-            data: dog
-        });
-    } catch (error) {
-        next(error);
-    }
-}
-
-async function deleteDog(req, res, next) {
-    try {
-        if (validationErrorResponse(req, res)) {
-            return;
-        }
-
-        await dogService.deleteDog(req.params.idPerrito);
-
-        res.status(200).json({
-            ok: true,
-            message: 'Dog deleted successfully'
-        });
-    } catch (error) {
-        next(error);
-    }
-}
-
 module.exports = {
-    getDogs,
+    getAvailableDogs,
     getDogById,
-    createDog,
-    updateDog,
-    deleteDog,
-    dogIdValidation,
-    createDogValidation,
-    updateDogValidation
+    dogIdValidation
 };
