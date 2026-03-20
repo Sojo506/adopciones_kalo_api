@@ -1,5 +1,6 @@
 const express = require('express');
 const campaignController = require('../controllers/campaignController');
+const campaignImageUpload = require('../middlewares/campaignImageUpload');
 const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();
@@ -14,11 +15,13 @@ router.get(
 );
 router.post(
     '/',
+    campaignImageUpload.single('image'),
     campaignController.createCampaignValidation,
     campaignController.createCampaign
 );
 router.put(
     '/:idCampania',
+    campaignImageUpload.single('image'),
     [
         ...campaignController.campaignIdValidation,
         ...campaignController.updateCampaignValidation

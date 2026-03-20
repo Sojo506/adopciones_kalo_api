@@ -31,6 +31,23 @@ const createCampaignValidation = [
         .trim()
         .isLength({ max: 500 })
         .withMessage('Descripcion must be at most 500 characters'),
+    body('imageUrl')
+        .optional({ values: 'falsy' })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Image URL must be at most 500 characters')
+        .bail()
+        .isURL({ protocols: ['http', 'https'], require_protocol: true })
+        .withMessage('Image URL must be a valid HTTP or HTTPS URL'),
+    body().custom((value, { req }) => {
+        const imageUrl = String(req.body?.imageUrl || '').trim();
+
+        if (req.file?.buffer || imageUrl) {
+            return true;
+        }
+
+        throw new Error('Image file is required');
+    }),
     body('fechaInicio')
         .isISO8601()
         .withMessage('Start date must be a valid ISO-8601 date'),
@@ -53,6 +70,14 @@ const updateCampaignValidation = [
         .trim()
         .isLength({ max: 500 })
         .withMessage('Descripcion must be at most 500 characters'),
+    body('imageUrl')
+        .optional({ values: 'falsy' })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Image URL must be at most 500 characters')
+        .bail()
+        .isURL({ protocols: ['http', 'https'], require_protocol: true })
+        .withMessage('Image URL must be a valid HTTP or HTTPS URL'),
     body('fechaInicio')
         .isISO8601()
         .withMessage('Start date must be a valid ISO-8601 date'),
@@ -101,7 +126,7 @@ async function createCampaign(req, res, next) {
             return;
         }
 
-        const campaign = await campaignService.createCampaign(req.body);
+        const campaign = await campaignService.createCampaign(req.body, req.file);
 
         res.status(201).json({
             ok: true,
@@ -121,7 +146,8 @@ async function updateCampaign(req, res, next) {
 
         const campaign = await campaignService.updateCampaign(
             req.params.idCampania,
-            req.body
+            req.body,
+            req.file
         );
 
         res.status(200).json({

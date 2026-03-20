@@ -324,6 +324,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             SELECT  C.ID_CAMPANIA,
                     C.NOMBRE,
                     C.DESCRIPCION,
+                    C.IMAGE_URL,
                     C.FECHA_INICIO,
                     C.FECHA_FIN,
                     C.ID_ESTADO,
@@ -3518,6 +3519,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             SELECT  C.ID_CAMPANIA,
                     C.NOMBRE,
                     C.DESCRIPCION,
+                    C.IMAGE_URL,
                     C.FECHA_INICIO,
                     C.FECHA_FIN,
                     C.ID_ESTADO,
@@ -3651,6 +3653,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             SELECT  C.ID_CAMPANIA,
                     C.NOMBRE,
                     C.DESCRIPCION,
+                    C.IMAGE_URL,
                     C.FECHA_INICIO,
                     C.FECHA_FIN,
                     C.ID_ESTADO,
@@ -10533,16 +10536,21 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
     PROCEDURE FIDE_CAMPANIA_INSERT_SP(
         P_NOMBRE        IN FIDE_CAMPANIA_TB.NOMBRE%TYPE,
         P_DESCRIPCION   IN FIDE_CAMPANIA_TB.DESCRIPCION%TYPE,
+        P_IMAGE_URL     IN FIDE_CAMPANIA_TB.IMAGE_URL%TYPE,
         P_FECHA_INICIO  IN FIDE_CAMPANIA_TB.FECHA_INICIO%TYPE,
         P_FECHA_FIN     IN FIDE_CAMPANIA_TB.FECHA_FIN%TYPE,
         P_ID_ESTADO     IN FIDE_CAMPANIA_TB.ID_ESTADO%TYPE
     )
     IS
     BEGIN
+        IF P_IMAGE_URL IS NULL OR TRIM(P_IMAGE_URL) IS NULL THEN
+            RAISE_APPLICATION_ERROR(-20005, 'La imagen de la campaña es obligatoria.');
+        END IF;
 
         INSERT INTO FIDE_CAMPANIA_TB(
             NOMBRE,
             DESCRIPCION,
+            IMAGE_URL,
             FECHA_INICIO,
             FECHA_FIN,
             ID_ESTADO
@@ -10550,6 +10558,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
         VALUES(
             P_NOMBRE,
             P_DESCRIPCION,
+            P_IMAGE_URL,
             P_FECHA_INICIO,
             P_FECHA_FIN,
             P_ID_ESTADO
@@ -10569,6 +10578,9 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             RAISE_APPLICATION_ERROR(-20004, 'Número inválido.');
         WHEN OTHERS THEN
             ROLLBACK;
+            IF SQLCODE BETWEEN -20999 AND -20000 THEN
+                RAISE;
+            END IF;
             RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
     END;
 
@@ -10578,6 +10590,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
         P_ID_CAMPANIA   IN FIDE_CAMPANIA_TB.ID_CAMPANIA%TYPE,
         P_NOMBRE        IN FIDE_CAMPANIA_TB.NOMBRE%TYPE,
         P_DESCRIPCION   IN FIDE_CAMPANIA_TB.DESCRIPCION%TYPE,
+        P_IMAGE_URL     IN FIDE_CAMPANIA_TB.IMAGE_URL%TYPE,
         P_FECHA_INICIO  IN FIDE_CAMPANIA_TB.FECHA_INICIO%TYPE,
         P_FECHA_FIN     IN FIDE_CAMPANIA_TB.FECHA_FIN%TYPE,
         P_ID_ESTADO     IN FIDE_CAMPANIA_TB.ID_ESTADO%TYPE
@@ -10585,11 +10598,15 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
     IS
         V_HAY_UPDATE NUMBER;
     BEGIN
+        IF P_IMAGE_URL IS NULL OR TRIM(P_IMAGE_URL) IS NULL THEN
+            RAISE_APPLICATION_ERROR(-20005, 'La imagen de la campaña es obligatoria.');
+        END IF;
 
         UPDATE FIDE_CAMPANIA_TB
         SET
             NOMBRE = P_NOMBRE,
             DESCRIPCION = P_DESCRIPCION,
+            IMAGE_URL = P_IMAGE_URL,
             FECHA_INICIO = P_FECHA_INICIO,
             FECHA_FIN = P_FECHA_FIN,
             ID_ESTADO = P_ID_ESTADO
@@ -10612,6 +10629,9 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             RAISE_APPLICATION_ERROR(-20003, 'Número inválido.');
         WHEN OTHERS THEN
             ROLLBACK;
+            IF SQLCODE BETWEEN -20999 AND -20000 THEN
+                RAISE;
+            END IF;
             RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
     END;
 
