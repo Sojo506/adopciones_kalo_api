@@ -16,6 +16,7 @@ router.use('/categories', require('./categoryRoutes'));
 router.use('/brands', require('./brandRoutes'));
 router.use('/campaigns', require('./campaignRoutes'));
 router.use('/donations', require('./donationRoutes'));
+router.use('/donation-invoices', require('./donationInvoiceRoutes'));
 router.use('/movement-types', require('./movementTypeRoutes'));
 router.use('/products', require('./productRoutes'));
 router.use('/product-images', require('./productImageRoutes'));
