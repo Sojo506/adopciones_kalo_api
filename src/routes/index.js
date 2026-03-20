@@ -14,6 +14,7 @@ router.use('/states', require('./stateRoutes'));
 router.use('/otp-types', require('./otpTypeRoutes'));
 router.use('/categories', require('./categoryRoutes'));
 router.use('/brands', require('./brandRoutes'));
+router.use('/campaigns', require('./campaignRoutes'));
 router.use('/movement-types', require('./movementTypeRoutes'));
 router.use('/products', require('./productRoutes'));
 router.use('/product-images', require('./productImageRoutes'));
