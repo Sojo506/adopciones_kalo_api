@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
 const adoptionRequestService = require('../services/adoptionRequestService');
 
 function validationErrorResponse(req, res) {
@@ -58,7 +58,32 @@ async function submitAdoptionRequest(req, res, next) {
     }
 }
 
+const checkPendingAdoptionValidation = [
+    query('idPerrito')
+        .isInt({ min: 1 })
+        .withMessage('ID Perrito must be a positive number')
+];
+
+async function checkPendingAdoption(req, res, next) {
+    try {
+        if (validationErrorResponse(req, res)) {
+            return;
+        }
+
+        const hasPending = await adoptionRequestService.hasPendingAdoptionForDog(
+            req.user.identificacion,
+            req.query.idPerrito
+        );
+
+        res.json({ ok: true, hasPending });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     submitAdoptionRequest,
-    submitAdoptionRequestValidation
+    submitAdoptionRequestValidation,
+    checkPendingAdoption,
+    checkPendingAdoptionValidation
 };

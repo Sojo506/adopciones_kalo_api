@@ -4,6 +4,13 @@ const { authenticateToken } = require('../middlewares/auth');
 
 const router = express.Router();
 
+router.get(
+    '/check',
+    authenticateToken,
+    adoptionRequestController.checkPendingAdoptionValidation,
+    adoptionRequestController.checkPendingAdoption
+);
+
 router.post(
     '/',
     authenticateToken,
