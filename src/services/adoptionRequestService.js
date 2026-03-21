@@ -2,10 +2,12 @@ const catalogService = require('./catalogService');
 const dogService = require('./dogService');
 const adoptionRequestRepository = require('../repositories/adoptionRequestRepository');
 const requestQuestionService = require('./requestQuestionService');
+const { createAdoption } = require('./adoptionService');
 
 const ACTIVE_STATE_ID = 1;
 const PENDING_STATE_ID = 3;
 const ADOPTION_REQUEST_TYPE_NAME = 'Adopcion';
+
 const CLOSED_REQUEST_STATES = new Set([
     'inactivo',
     'rechazado',
@@ -27,6 +29,10 @@ function normalizeText(value) {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
+}
+
+function normalizeIdentification(value) {
+    return String(value || '').trim();
 }
 
 function normalizeBooleanAnswer(value) {
@@ -91,8 +97,10 @@ function isRequestClosed(stateName) {
 
 async function getAdoptionRequestTypeId() {
     const requestTypes = await catalogService.getRequestTypes();
+
     const matchingType = requestTypes.find(
-        (requestType) => normalizeText(requestType.nombre) === normalizeText(ADOPTION_REQUEST_TYPE_NAME)
+        (requestType) =>
+            normalizeText(requestType.nombre) === normalizeText(ADOPTION_REQUEST_TYPE_NAME)
     );
 
     if (matchingType) {
@@ -140,6 +148,7 @@ async function ensureResponsesAreValid(respuestas, idTipoSolicitud) {
     const questionsById = new Map(
         questions.map((question) => [Number(question.idPregunta), question])
     );
+
     const answeredQuestions = new Set();
     const normalizedResponses = [];
 
@@ -156,6 +165,7 @@ async function ensureResponsesAreValid(respuestas, idTipoSolicitud) {
         }
 
         answeredQuestions.add(idPregunta);
+
         normalizedResponses.push({
             idPregunta,
             respuesta: normalizeAnswerByQuestion(question, respuesta.respuesta)
@@ -170,10 +180,12 @@ async function ensureResponsesAreValid(respuestas, idTipoSolicitud) {
 }
 
 async function ensureNoOpenRequestForDog(identificacion, idPerrito) {
+    const normalizedIdentification = normalizeIdentification(identificacion);
     const requests = await adoptionRequestRepository.findAllRequests();
+
     const duplicatedRequest = requests.find(
         (request) =>
-            Number(request.IDENTIFICACION) === Number(identificacion) &&
+            normalizeIdentification(request.IDENTIFICACION) === normalizedIdentification &&
             Number(request.ID_PERRITO) === Number(idPerrito) &&
             !isRequestClosed(request.ESTADO_SOLICITUD)
     );
@@ -187,19 +199,25 @@ async function ensureNoOpenRequestForDog(identificacion, idPerrito) {
 }
 
 async function createAdoptionRequest({ identificacion, idPerrito, respuestas }) {
+    const normalizedIdentification = normalizeIdentification(identificacion);
+
     const [dog, idTipoSolicitud] = await Promise.all([
         dogService.getDogById(idPerrito),
         getAdoptionRequestTypeId()
     ]);
-    const normalizedResponses = await ensureResponsesAreValid(respuestas, idTipoSolicitud);
 
-    await ensureApplicantIsEligible(identificacion);
-    await ensureNoOpenRequestForDog(identificacion, dog.idPerrito);
+    const normalizedResponses = await ensureResponsesAreValid(
+        respuestas,
+        idTipoSolicitud
+    );
+
+    await ensureApplicantIsEligible(normalizedIdentification);
+    await ensureNoOpenRequestForDog(normalizedIdentification, dog.idPerrito);
 
     const createdRequest = await adoptionRequestRepository.createRequest({
-        identificacion,
+        identificacion: normalizedIdentification,
         idTipoSolicitud,
-        idEstado: PENDING_STATE_ID
+        idEstado: ACTIVE_STATE_ID
     });
 
     for (const response of normalizedResponses) {
@@ -211,14 +229,28 @@ async function createAdoptionRequest({ identificacion, idPerrito, respuestas }) 
         });
     }
 
+    const createdAdoption = await createAdoption({
+        identificacion: normalizedIdentification,
+        idPerrito: dog.idPerrito,
+        idSolicitud: createdRequest.idSolicitud,
+        idEstado: PENDING_STATE_ID
+    });
+
     return {
         idSolicitud: createdRequest.idSolicitud,
         idPerrito: dog.idPerrito,
         nombrePerrito: dog.nombre,
         idTipoSolicitud,
         totalRespuestas: normalizedResponses.length,
-        idEstado: PENDING_STATE_ID,
-        estado: 'Pendiente'
+        solicitud: {
+            idEstado: ACTIVE_STATE_ID
+        },
+        adopcion: {
+            idAdopcion: createdAdoption.idAdopcion,
+            idEstado: createdAdoption.idEstado,
+            estado: createdAdoption.estado,
+            fechaAdopcion: createdAdoption.fechaAdopcion
+        }
     };
 }
 
