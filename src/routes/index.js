@@ -41,6 +41,7 @@ router.use('/foster-homes', require('./fosterHomeRoutes'));
 router.use('/house-dogs', require('./houseDogRoutes'));
 router.use('/request-types', require('./requestTypeRoutes'));
 router.use('/requests', require('./requestRoutes'));
+router.use('/request-type-questions', require('./requestQuestionRoutes'));
 router.use('/request-questions', require('./requestQuestionRoutes'));
 router.use('/responses', require('./responseRoutes'));
 router.use('/response-types', require('./responseTypeRoutes'));

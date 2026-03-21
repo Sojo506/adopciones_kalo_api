@@ -124,25 +124,25 @@ async function countActiveAssignmentsByQuestion(idPregunta) {
 
     try {
         connection = await getConnection();
-        const requests = await executeCursorFunctionWithConnection(
+        const requestTypes = await executeCursorFunctionWithConnection(
             connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_FN()'
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_TIPOS_SOLICITUD_ADMIN_FN()'
         );
-        const activeRequestIds = new Set(
-            requests
-                .filter((request) => Number(request.ID_ESTADO) === 1)
-                .map((request) => Number(request.ID_SOLICITUD))
+        const activeRequestTypeIds = new Set(
+            requestTypes
+                .filter((requestType) => Number(requestType.ID_ESTADO) === 1)
+                .map((requestType) => Number(requestType.ID_TIPO_SOLICITUD))
         );
         const requestQuestions = await executeCursorFunctionWithConnection(
             connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_PREGUNTA_ADMIN_FN()'
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_TIPOS_SOLICITUD_PREGUNTA_ADMIN_FN()'
         );
 
         return requestQuestions.filter(
             (requestQuestion) =>
                 Number(requestQuestion.ID_PREGUNTA) === Number(idPregunta) &&
                 Number(requestQuestion.ID_ESTADO) === 1 &&
-                activeRequestIds.has(Number(requestQuestion.ID_SOLICITUD))
+                activeRequestTypeIds.has(Number(requestQuestion.ID_TIPO_SOLICITUD))
         ).length;
     } finally {
         if (connection) {
