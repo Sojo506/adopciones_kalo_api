@@ -10,6 +10,10 @@ const ADOPTION_DETAIL_CACHE_PREFIX = 'adoption:detail:';
 const ADOPTION_CACHE_TTL_MS = Number(process.env.ADOPTION_CACHE_TTL_MS || 15000);
 const ADOPTION_REQUEST_TYPE_NAME = 'Adopcion';
 const ADOPTION_REQUEST_TYPE_FALLBACK_ID = 1;
+
+const ACTIVE_STATE_ID = 1;
+const PENDING_STATE_ID = 3;
+
 const adoptionQueryCache = new MemoryCache({
     defaultTtlMs: ADOPTION_CACHE_TTL_MS
 });
@@ -26,6 +30,18 @@ function normalizeCatalogName(value) {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
+}
+
+function normalizeText(value) {
+    return String(value || '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+}
+
+function normalizeIdentification(value) {
+    return String(value || '').trim();
 }
 
 function getAdoptionDetailCacheKey(idAdopcion) {
@@ -60,11 +76,13 @@ function serializeDateOnly(value) {
 
     if (typeof value === 'string') {
         const trimmedValue = value.trim();
+
         if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
             return trimmedValue;
         }
 
         const parsedDate = new Date(trimmedValue);
+
         if (Number.isNaN(parsedDate.getTime())) {
             return null;
         }
@@ -90,6 +108,20 @@ function parseDateValue(value, fieldLabel) {
 
     if (Number.isNaN(parsedDate.getTime())) {
         throw createHttpError(`${fieldLabel} is invalid`, 400);
+    }
+
+    return parsedDate;
+}
+
+function parseOptionalDateValue(value, fallbackValue = null) {
+    if (value === undefined || value === null || value === '') {
+        return fallbackValue;
+    }
+
+    const parsedDate = value instanceof Date ? value : new Date(value);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        throw createHttpError('Adoption date is invalid', 400);
     }
 
     return parsedDate;
@@ -150,7 +182,7 @@ async function ensureRequestCanBeUsedForAdoption(request) {
     const requestTypeMatches =
         Number(request.idTipoSolicitud) === Number(adoptionRequestTypeId) ||
         normalizeCatalogName(request.tipoSolicitud) ===
-            normalizeCatalogName(ADOPTION_REQUEST_TYPE_NAME);
+        normalizeCatalogName(ADOPTION_REQUEST_TYPE_NAME);
 
     if (!requestTypeMatches) {
         throw createHttpError(
@@ -161,7 +193,10 @@ async function ensureRequestCanBeUsedForAdoption(request) {
 }
 
 function ensureRequestOwnershipMatchesAdopter(identificacion, request) {
-    if (String(request.identificacion) !== String(identificacion)) {
+    const normalizedRequestIdentification = normalizeIdentification(request.identificacion);
+    const normalizedAdopterIdentification = normalizeIdentification(identificacion);
+
+    if (normalizedRequestIdentification !== normalizedAdopterIdentification) {
         throw createHttpError(
             'The selected request does not belong to the selected adopter',
             409
@@ -169,26 +204,49 @@ function ensureRequestOwnershipMatchesAdopter(identificacion, request) {
     }
 }
 
+function ensureAssignmentEntitiesAreActive({ adopter, dog, request }) {
+    if (Number(adopter.idEstado) !== ACTIVE_STATE_ID) {
+        throw createHttpError(
+            'Cannot assign an adoption to an inactive adopter',
+            409
+        );
+    }
+
+    if (Number(dog.idEstado) !== ACTIVE_STATE_ID) {
+        throw createHttpError(
+            'Cannot assign an adoption to an inactive dog',
+            409
+        );
+    }
+
+    if (Number(request.idEstado) !== ACTIVE_STATE_ID) {
+        throw createHttpError(
+            'Cannot assign an adoption to an inactive request',
+            409
+        );
+    }
+}
+
 function ensureActiveAdoptionCanUseAssignments({ adopter, dog, request, nextState }) {
-    if (Number(nextState) !== 1) {
+    if (Number(nextState) !== ACTIVE_STATE_ID) {
         return;
     }
 
-    if (Number(adopter.idEstado) !== 1) {
+    if (Number(adopter.idEstado) !== ACTIVE_STATE_ID) {
         throw createHttpError(
             'Cannot keep an adoption active for an inactive adopter',
             409
         );
     }
 
-    if (Number(dog.idEstado) !== 1) {
+    if (Number(dog.idEstado) !== ACTIVE_STATE_ID) {
         throw createHttpError(
             'Cannot keep an adoption active for an inactive dog',
             409
         );
     }
 
-    if (Number(request.idEstado) !== 1) {
+    if (Number(request.idEstado) !== ACTIVE_STATE_ID) {
         throw createHttpError(
             'Cannot keep an adoption active for an inactive request',
             409
@@ -226,11 +284,11 @@ async function ensureDogIsAvailableForActiveAdoption(
 }
 
 async function ensureAdoptionCanBeDisabled(existingAdoption, nextState) {
-    if (Number(nextState) === 1) {
+    if (Number(nextState) === ACTIVE_STATE_ID) {
         return;
     }
 
-    if (Number(existingAdoption.idEstado) !== 1) {
+    if (Number(existingAdoption.idEstado) !== ACTIVE_STATE_ID) {
         return;
     }
 
@@ -247,7 +305,7 @@ async function ensureAdoptionCanBeDisabled(existingAdoption, nextState) {
 }
 
 async function ensureAdoptionCanBeDeleted(existingAdoption) {
-    if (Number(existingAdoption.idEstado) !== 1) {
+    if (Number(existingAdoption.idEstado) !== ACTIVE_STATE_ID) {
         throw createHttpError('Adoption is already inactive', 409);
     }
 
@@ -285,24 +343,34 @@ async function getAdoptionById(idAdopcion) {
 async function createAdoption(adoptionData) {
     const requestedState =
         adoptionData.idEstado === undefined ||
-        adoptionData.idEstado === null ||
-        adoptionData.idEstado === ''
-            ? 1
+            adoptionData.idEstado === null ||
+            adoptionData.idEstado === ''
+            ? ACTIVE_STATE_ID
             : Number(adoptionData.idEstado);
 
-    if (requestedState !== 1) {
-        throw createHttpError('New adoptions must start in active state', 400);
+    const isNewAdoptionStateAllowed =
+        requestedState === ACTIVE_STATE_ID || requestedState === PENDING_STATE_ID;
+
+    if (!isNewAdoptionStateAllowed) {
+        throw createHttpError(
+            'New adoptions must start in active or pending state',
+            400
+        );
     }
 
     const payload = {
-        identificacion: String(adoptionData.identificacion || '').trim(),
+        identificacion: normalizeIdentification(adoptionData.identificacion),
         idPerrito: Number(adoptionData.idPerrito),
         idSolicitud: Number(adoptionData.idSolicitud),
-        fechaAdopcion: parseDateValue(adoptionData.fechaAdopcion, 'Adoption date'),
+        fechaAdopcion:
+            requestedState === PENDING_STATE_ID
+                ? parseOptionalDateValue(adoptionData.fechaAdopcion, new Date())
+                : parseDateValue(adoptionData.fechaAdopcion, 'Adoption date'),
         idEstado: requestedState
     };
 
     await ensureStateExists(payload.idEstado);
+
     const [adopter, dog, request] = await Promise.all([
         userService.getUserByIdentification(payload.identificacion),
         dogService.getDogById(payload.idPerrito),
@@ -311,6 +379,7 @@ async function createAdoption(adoptionData) {
 
     await ensureRequestCanBeUsedForAdoption(request);
     ensureRequestOwnershipMatchesAdopter(payload.identificacion, request);
+    ensureAssignmentEntitiesAreActive({ adopter, dog, request });
     ensureActiveAdoptionCanUseAssignments({
         adopter,
         dog,
@@ -319,7 +388,10 @@ async function createAdoption(adoptionData) {
     });
 
     await ensureRequestIsAvailable(payload.idSolicitud);
-    await ensureDogIsAvailableForActiveAdoption(payload.idPerrito);
+
+    if (Number(payload.idEstado) === ACTIVE_STATE_ID) {
+        await ensureDogIsAvailableForActiveAdoption(payload.idPerrito);
+    }
 
     const result = await adoptionRepository.createAdoption(payload);
     invalidateRelatedCaches(result.idAdopcion, [payload.idSolicitud]);
@@ -330,16 +402,26 @@ async function createAdoption(adoptionData) {
 async function updateAdoption(idAdopcion, adoptionData) {
     const normalizedIdAdopcion = Number(idAdopcion);
     const existingAdoption = await getAdoptionById(normalizedIdAdopcion);
+
     const payload = {
         idAdopcion: normalizedIdAdopcion,
-        identificacion: String(adoptionData.identificacion || '').trim(),
+        identificacion: normalizeIdentification(adoptionData.identificacion),
         idPerrito: Number(adoptionData.idPerrito),
         idSolicitud: Number(adoptionData.idSolicitud),
-        fechaAdopcion: parseDateValue(adoptionData.fechaAdopcion, 'Adoption date'),
+        fechaAdopcion:
+            Number(adoptionData.idEstado) === PENDING_STATE_ID
+                ? parseOptionalDateValue(
+                    adoptionData.fechaAdopcion,
+                    existingAdoption.fechaAdopcion
+                        ? new Date(existingAdoption.fechaAdopcion)
+                        : new Date()
+                )
+                : parseDateValue(adoptionData.fechaAdopcion, 'Adoption date'),
         idEstado: Number(adoptionData.idEstado)
     };
 
     await ensureStateExists(payload.idEstado);
+
     const [adopter, dog, request] = await Promise.all([
         userService.getUserByIdentification(payload.identificacion),
         dogService.getDogById(payload.idPerrito),
@@ -348,18 +430,21 @@ async function updateAdoption(idAdopcion, adoptionData) {
 
     await ensureRequestCanBeUsedForAdoption(request);
     ensureRequestOwnershipMatchesAdopter(payload.identificacion, request);
+    ensureAssignmentEntitiesAreActive({ adopter, dog, request });
     ensureActiveAdoptionCanUseAssignments({
         adopter,
         dog,
         request,
         nextState: payload.idEstado
     });
+
     await ensureRequestIsAvailable(payload.idSolicitud, {
         excludeId: payload.idAdopcion
     });
+
     await ensureAdoptionCanBeDisabled(existingAdoption, payload.idEstado);
 
-    if (Number(payload.idEstado) === 1) {
+    if (Number(payload.idEstado) === ACTIVE_STATE_ID) {
         await ensureDogIsAvailableForActiveAdoption(payload.idPerrito, {
             excludeId: payload.idAdopcion
         });
