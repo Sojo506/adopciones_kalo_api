@@ -84,10 +84,6 @@ async function getActiveDependencySummaryByRequest(idSolicitud) {
 
     try {
         connection = await getConnection();
-        const requestQuestions = await executeCursorFunctionWithConnection(
-            connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_PREGUNTA_ADMIN_FN()'
-        );
         const responses = await executeCursorFunctionWithConnection(
             connection,
             'KALO.FIDE_KALO_PKG.FIDE_OBTENER_RESPUESTAS_ADMIN_FN()'
@@ -102,11 +98,7 @@ async function getActiveDependencySummaryByRequest(idSolicitud) {
         );
 
         return {
-            activeAssignments: requestQuestions.filter(
-                (requestQuestion) =>
-                    Number(requestQuestion.ID_SOLICITUD) === Number(idSolicitud) &&
-                    Number(requestQuestion.ID_ESTADO) === 1
-            ).length,
+            activeAssignments: 0,
             activeResponses: responses.filter(
                 (response) =>
                     Number(response.ID_SOLICITUD) === Number(idSolicitud) &&

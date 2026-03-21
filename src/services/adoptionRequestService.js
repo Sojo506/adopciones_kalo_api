@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const dogService = require('./dogService');
 const adoptionRequestRepository = require('../repositories/adoptionRequestRepository');
+const requestQuestionService = require('./requestQuestionService');
 
 const ACTIVE_STATE_ID = 1;
 const PENDING_STATE_ID = 3;
@@ -124,8 +125,18 @@ async function ensureApplicantIsEligible(identificacion) {
     }
 }
 
-async function ensureResponsesAreValid(respuestas) {
-    const questions = await catalogService.getQuestions();
+async function ensureResponsesAreValid(respuestas, idTipoSolicitud) {
+    const questions = await requestQuestionService.getActiveQuestionsByRequestType(
+        idTipoSolicitud
+    );
+
+    if (questions.length === 0) {
+        throw createHttpError(
+            'The selected request type does not have active questions configured',
+            409
+        );
+    }
+
     const questionsById = new Map(
         questions.map((question) => [Number(question.idPregunta), question])
     );
@@ -152,7 +163,7 @@ async function ensureResponsesAreValid(respuestas) {
     }
 
     if (answeredQuestions.size !== questionsById.size) {
-        throw createHttpError('All active questions must be answered', 400);
+        throw createHttpError('All active questions for this form must be answered', 400);
     }
 
     return normalizedResponses;
@@ -176,18 +187,17 @@ async function ensureNoOpenRequestForDog(identificacion, idPerrito) {
 }
 
 async function createAdoptionRequest({ identificacion, idPerrito, respuestas }) {
-    const [dog, normalizedResponses, idTipoSolicitud] = await Promise.all([
+    const [dog, idTipoSolicitud] = await Promise.all([
         dogService.getDogById(idPerrito),
-        ensureResponsesAreValid(respuestas),
         getAdoptionRequestTypeId()
     ]);
+    const normalizedResponses = await ensureResponsesAreValid(respuestas, idTipoSolicitud);
 
     await ensureApplicantIsEligible(identificacion);
     await ensureNoOpenRequestForDog(identificacion, dog.idPerrito);
 
     const createdRequest = await adoptionRequestRepository.createRequest({
         identificacion,
-        idPerrito: dog.idPerrito,
         idTipoSolicitud,
         idEstado: PENDING_STATE_ID
     });
