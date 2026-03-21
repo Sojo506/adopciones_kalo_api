@@ -5,13 +5,18 @@ const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 const router = express.Router();
 
 router.get(
+    '/request-types/:idTipoSolicitud/questions',
+    requestQuestionController.requestTypeIdValidation,
+    requestQuestionController.getActiveQuestionsByRequestType
+);
+router.get(
     '/',
     authenticateToken,
     requireAdmin,
     requestQuestionController.getRequestQuestions
 );
 router.get(
-    '/:idSolicitud/:idPregunta',
+    '/:idTipoSolicitud/:idPregunta',
     authenticateToken,
     requireAdmin,
     requestQuestionController.requestQuestionKeyValidation,
@@ -25,7 +30,7 @@ router.post(
     requestQuestionController.createRequestQuestion
 );
 router.put(
-    '/:idSolicitud/:idPregunta',
+    '/:idTipoSolicitud/:idPregunta',
     authenticateToken,
     requireAdmin,
     [
@@ -35,7 +40,7 @@ router.put(
     requestQuestionController.updateRequestQuestion
 );
 router.delete(
-    '/:idSolicitud/:idPregunta',
+    '/:idTipoSolicitud/:idPregunta',
     authenticateToken,
     requireAdmin,
     requestQuestionController.requestQuestionKeyValidation,
