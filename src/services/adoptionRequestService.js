@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const dogService = require('./dogService');
 const adoptionRequestRepository = require('../repositories/adoptionRequestRepository');
+const adoptionRepository = require('../repositories/adoptionRepository');
 const requestQuestionService = require('./requestQuestionService');
 const { createAdoption } = require('./adoptionService');
 
@@ -9,6 +10,15 @@ const PENDING_STATE_ID = 3;
 const ADOPTION_REQUEST_TYPE_NAME = 'Adopcion';
 
 const CLOSED_REQUEST_STATES = new Set([
+    'inactivo',
+    'rechazado',
+    'cancelado',
+    'archivado',
+    'completado',
+    'finalizado'
+]);
+
+const CLOSED_ADOPTION_STATES = new Set([
     'inactivo',
     'rechazado',
     'cancelado',
@@ -198,6 +208,20 @@ async function ensureNoOpenRequestForDog(identificacion, idPerrito) {
     }
 }
 
+async function hasPendingAdoptionForDog(identificacion, idPerrito) {
+    const adoptions = await adoptionRepository.findAllAdoptions();
+    const normalizedIdentification = normalizeIdentification(identificacion);
+
+    const blockingAdoption = adoptions.find(
+        (adoption) =>
+            normalizeIdentification(adoption.IDENTIFICACION) === normalizedIdentification &&
+            Number(adoption.ID_PERRITO) === Number(idPerrito) &&
+            !CLOSED_ADOPTION_STATES.has(normalizeText(adoption.ESTADO))
+    );
+
+    return !!blockingAdoption;
+}
+
 async function createAdoptionRequest({ identificacion, idPerrito, respuestas }) {
     const normalizedIdentification = normalizeIdentification(identificacion);
 
@@ -255,5 +279,6 @@ async function createAdoptionRequest({ identificacion, idPerrito, respuestas }) 
 }
 
 module.exports = {
-    createAdoptionRequest
+    createAdoptionRequest,
+    hasPendingAdoptionForDog
 };
