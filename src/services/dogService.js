@@ -264,12 +264,24 @@ function normalizeUpdatePayload(dogData) {
     };
 }
 
+// States that block a dog from appearing in the public catalog.
+// ACTIVO and RECHAZADO adoptions still allow the dog to be listed.
+const ADOPTION_BLOCKS_LISTING = new Set(['inactivo', 'en proceso', 'pendiente', 'aprobado']);
+
+function normalizeStateName(value) {
+    return String(value || '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+}
+
 async function getActiveAdoptedDogIds() {
     const adoptions = await adoptionRequestRepository.findAllAdoptions();
 
     return new Set(
         adoptions
-            .filter((adoption) => Number(adoption.ID_ESTADO) === 1)
+            .filter((adoption) => ADOPTION_BLOCKS_LISTING.has(normalizeStateName(adoption.ESTADO)))
             .map((adoption) => Number(adoption.ID_PERRITO))
     );
 }
