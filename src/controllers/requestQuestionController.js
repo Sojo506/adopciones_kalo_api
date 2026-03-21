@@ -16,18 +16,24 @@ function validationErrorResponse(req, res) {
 }
 
 const requestQuestionKeyValidation = [
-    param('idSolicitud')
+    param('idTipoSolicitud')
         .isInt({ min: 1 })
-        .withMessage('ID Solicitud must be a positive number'),
+        .withMessage('ID Tipo Solicitud must be a positive number'),
     param('idPregunta')
         .isInt({ min: 1 })
         .withMessage('ID Pregunta must be a positive number')
 ];
 
-const createRequestQuestionValidation = [
-    body('idSolicitud')
+const requestTypeIdValidation = [
+    param('idTipoSolicitud')
         .isInt({ min: 1 })
-        .withMessage('ID Solicitud must be a positive number'),
+        .withMessage('ID Tipo Solicitud must be a positive number')
+];
+
+const createRequestQuestionValidation = [
+    body('idTipoSolicitud')
+        .isInt({ min: 1 })
+        .withMessage('ID Tipo Solicitud must be a positive number'),
     body('idPregunta')
         .isInt({ min: 1 })
         .withMessage('ID Pregunta must be a positive number'),
@@ -55,6 +61,26 @@ async function getRequestQuestions(req, res, next) {
     }
 }
 
+async function getActiveQuestionsByRequestType(req, res, next) {
+    try {
+        if (validationErrorResponse(req, res)) {
+            return;
+        }
+
+        const questions = await requestQuestionService.getActiveQuestionsByRequestType(
+            req.params.idTipoSolicitud
+        );
+
+        res.status(200).json({
+            ok: true,
+            count: questions.length,
+            data: questions
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 async function getRequestQuestionByPk(req, res, next) {
     try {
         if (validationErrorResponse(req, res)) {
@@ -62,7 +88,7 @@ async function getRequestQuestionByPk(req, res, next) {
         }
 
         const requestQuestion = await requestQuestionService.getRequestQuestionByPk(
-            req.params.idSolicitud,
+            req.params.idTipoSolicitud,
             req.params.idPregunta
         );
 
@@ -85,7 +111,7 @@ async function createRequestQuestion(req, res, next) {
 
         res.status(201).json({
             ok: true,
-            message: 'Request-question relation created successfully',
+            message: 'Request-type-question relation created successfully',
             data: requestQuestion
         });
     } catch (error) {
@@ -100,14 +126,14 @@ async function updateRequestQuestion(req, res, next) {
         }
 
         const requestQuestion = await requestQuestionService.updateRequestQuestion(
-            req.params.idSolicitud,
+            req.params.idTipoSolicitud,
             req.params.idPregunta,
             req.body
         );
 
         res.status(200).json({
             ok: true,
-            message: 'Request-question relation updated successfully',
+            message: 'Request-type-question relation updated successfully',
             data: requestQuestion
         });
     } catch (error) {
@@ -122,13 +148,13 @@ async function deleteRequestQuestion(req, res, next) {
         }
 
         await requestQuestionService.deleteRequestQuestion(
-            req.params.idSolicitud,
+            req.params.idTipoSolicitud,
             req.params.idPregunta
         );
 
         res.status(200).json({
             ok: true,
-            message: 'Request-question relation deleted successfully'
+            message: 'Request-type-question relation deleted successfully'
         });
     } catch (error) {
         next(error);
@@ -137,10 +163,12 @@ async function deleteRequestQuestion(req, res, next) {
 
 module.exports = {
     getRequestQuestions,
+    getActiveQuestionsByRequestType,
     getRequestQuestionByPk,
     createRequestQuestion,
     updateRequestQuestion,
     deleteRequestQuestion,
+    requestTypeIdValidation,
     requestQuestionKeyValidation,
     createRequestQuestionValidation,
     updateRequestQuestionValidation

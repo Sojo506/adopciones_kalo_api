@@ -66,15 +66,15 @@ async function ensureStateExists(idEstado) {
     }
 }
 
-async function ensureRequestQuestionRelationExists(idSolicitud, idPregunta) {
+async function ensureRequestQuestionRelationExists(request, idPregunta) {
     const requestQuestion = await requestQuestionRepository.findRequestQuestionByPk(
-        idSolicitud,
+        request.idTipoSolicitud,
         idPregunta
     );
 
     if (!requestQuestion) {
         throw createHttpError(
-            'The selected question is not assigned to the selected request',
+            'The selected question is not assigned to the selected request type',
             409
         );
     }
@@ -85,7 +85,7 @@ async function ensureRequestQuestionRelationExists(idSolicitud, idPregunta) {
 function ensureRequestQuestionRelationIsActive(requestQuestion) {
     if (Number(requestQuestion.ID_ESTADO) !== 1) {
         throw createHttpError(
-            'Cannot capture or update a response for an inactive request-question relation',
+            'Cannot capture or update a response for an inactive request-type-question relation',
             409
         );
     }
@@ -158,11 +158,14 @@ async function createResponse(responseData) {
     };
 
     await ensureStateExists(payload.idEstado);
-    const [request, question, requestQuestion] = await Promise.all([
+    const [request, question] = await Promise.all([
         requestService.getRequestById(payload.idSolicitud),
-        questionService.getQuestionById(payload.idPregunta),
-        ensureRequestQuestionRelationExists(payload.idSolicitud, payload.idPregunta)
+        questionService.getQuestionById(payload.idPregunta)
     ]);
+    const requestQuestion = await ensureRequestQuestionRelationExists(
+        request,
+        payload.idPregunta
+    );
 
     ensureRequestQuestionRelationIsActive(requestQuestion);
     ensureResponseCanRemainActive({
@@ -189,11 +192,14 @@ async function updateResponse(idRespuesta, responseData) {
     };
 
     await ensureStateExists(payload.idEstado);
-    const [request, question, requestQuestion] = await Promise.all([
+    const [request, question] = await Promise.all([
         requestService.getRequestById(payload.idSolicitud),
-        questionService.getQuestionById(payload.idPregunta),
-        ensureRequestQuestionRelationExists(payload.idSolicitud, payload.idPregunta)
+        questionService.getQuestionById(payload.idPregunta)
     ]);
+    const requestQuestion = await ensureRequestQuestionRelationExists(
+        request,
+        payload.idPregunta
+    );
 
     ensureRequestQuestionRelationIsActive(requestQuestion);
     ensureResponseCanRemainActive({

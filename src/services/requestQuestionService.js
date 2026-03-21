@@ -1,7 +1,7 @@
 const catalogService = require('./catalogService');
 const questionService = require('./questionService');
 const requestQuestionRepository = require('../repositories/requestQuestionRepository');
-const requestService = require('./requestService');
+const requestTypeRepository = require('../repositories/requestTypeRepository');
 const MemoryCache = require('../utils/memoryCache');
 
 const REQUEST_QUESTION_LIST_CACHE_KEY = 'request-question:list';
@@ -19,25 +19,25 @@ function createHttpError(message, statusCode) {
     return error;
 }
 
-function normalizeRequestQuestionKey(idSolicitud, idPregunta) {
-    return `${String(idSolicitud).trim()}:${String(idPregunta).trim()}`;
+function normalizeRequestQuestionKey(idTipoSolicitud, idPregunta) {
+    return `${String(idTipoSolicitud).trim()}:${String(idPregunta).trim()}`;
 }
 
-function getRequestQuestionDetailCacheKey(idSolicitud, idPregunta) {
-    return `${REQUEST_QUESTION_DETAIL_CACHE_PREFIX}${normalizeRequestQuestionKey(idSolicitud, idPregunta)}`;
+function getRequestQuestionDetailCacheKey(idTipoSolicitud, idPregunta) {
+    return `${REQUEST_QUESTION_DETAIL_CACHE_PREFIX}${normalizeRequestQuestionKey(idTipoSolicitud, idPregunta)}`;
 }
 
-function invalidateRequestQuestionCache(idSolicitud, idPregunta) {
+function invalidateRequestQuestionCache(idTipoSolicitud, idPregunta) {
     requestQuestionQueryCache.delete(REQUEST_QUESTION_LIST_CACHE_KEY);
 
     if (
-        idSolicitud !== undefined &&
-        idSolicitud !== null &&
+        idTipoSolicitud !== undefined &&
+        idTipoSolicitud !== null &&
         idPregunta !== undefined &&
         idPregunta !== null
     ) {
         requestQuestionQueryCache.delete(
-            getRequestQuestionDetailCacheKey(idSolicitud, idPregunta)
+            getRequestQuestionDetailCacheKey(idTipoSolicitud, idPregunta)
         );
         return;
     }
@@ -47,9 +47,6 @@ function invalidateRequestQuestionCache(idSolicitud, idPregunta) {
 
 function formatRequestQuestion(requestQuestion) {
     return {
-        idSolicitud: Number(requestQuestion.ID_SOLICITUD),
-        identificacion: requestQuestion.IDENTIFICACION,
-        solicitante: requestQuestion.SOLICITANTE || null,
         idTipoSolicitud: Number(requestQuestion.ID_TIPO_SOLICITUD),
         tipoSolicitud: requestQuestion.TIPO_SOLICITUD || null,
         idPregunta: Number(requestQuestion.ID_PREGUNTA),
@@ -57,7 +54,34 @@ function formatRequestQuestion(requestQuestion) {
         idTipoRespuesta: Number(requestQuestion.ID_TIPO_RESPUESTA),
         tipoRespuesta: requestQuestion.TIPO_RESPUESTA || null,
         idEstado: Number(requestQuestion.ID_ESTADO),
-        estado: requestQuestion.ESTADO_RELACION || null
+        estado: requestQuestion.ESTADO_RELACION || requestQuestion.ESTADO || null,
+        idEstadoPregunta:
+            requestQuestion.ID_ESTADO_PREGUNTA === undefined ||
+            requestQuestion.ID_ESTADO_PREGUNTA === null
+                ? null
+                : Number(requestQuestion.ID_ESTADO_PREGUNTA),
+        estadoPregunta: requestQuestion.ESTADO_PREGUNTA || null,
+        idEstadoTipoSolicitud:
+            requestQuestion.ID_ESTADO_TIPO_SOLICITUD === undefined ||
+            requestQuestion.ID_ESTADO_TIPO_SOLICITUD === null
+                ? null
+                : Number(requestQuestion.ID_ESTADO_TIPO_SOLICITUD),
+        estadoTipoSolicitud: requestQuestion.ESTADO_TIPO_SOLICITUD || null
+    };
+}
+
+function formatActiveQuestionByRequestType(question) {
+    return {
+        idTipoSolicitud: Number(question.ID_TIPO_SOLICITUD),
+        idPregunta: Number(question.ID_PREGUNTA),
+        pregunta: question.PREGUNTA || null,
+        idTipoRespuesta:
+            question.ID_TIPO_RESPUESTA === undefined || question.ID_TIPO_RESPUESTA === null
+                ? null
+                : Number(question.ID_TIPO_RESPUESTA),
+        tipoRespuesta: question.TIPO_RESPUESTA || null,
+        idEstado: Number(question.ID_ESTADO),
+        estado: question.ESTADO || null
     };
 }
 
@@ -70,36 +94,46 @@ async function ensureStateExists(idEstado) {
     }
 }
 
-function ensureActiveRequestQuestionCanBeApplied({ request, question, idEstado }) {
+function ensureActiveRequestQuestionCanBeApplied({ requestType, question, idEstado }) {
     if (Number(idEstado) !== 1) {
         return;
     }
 
-    if (Number(request.idEstado) !== 1) {
+    if (Number(requestType.ID_ESTADO) !== 1) {
         throw createHttpError(
-            'Cannot keep a request-question relation active for an inactive request',
+            'Cannot keep a request-type-question relation active for an inactive request type',
             409
         );
     }
 
     if (Number(question.idEstado) !== 1) {
         throw createHttpError(
-            'Cannot keep a request-question relation active for an inactive question',
+            'Cannot keep a request-type-question relation active for an inactive question',
             409
         );
     }
 }
 
-async function ensureNoActiveResponses(idSolicitud, idPregunta, action) {
+async function ensureRequestTypeExists(idTipoSolicitud) {
+    const requestType = await requestTypeRepository.findRequestTypeById(idTipoSolicitud);
+
+    if (!requestType) {
+        throw createHttpError('Request type not found', 404);
+    }
+
+    return requestType;
+}
+
+async function ensureNoActiveResponses(idTipoSolicitud, idPregunta, action) {
     const activeResponsesCount =
         await requestQuestionRepository.countActiveResponsesByAssignment(
-            idSolicitud,
+            idTipoSolicitud,
             idPregunta
         );
 
     if (activeResponsesCount > 0) {
         throw createHttpError(
-            `Cannot ${action} a request-question relation that still has active responses`,
+            `Cannot ${action} a request-type-question relation that still has active responses`,
             409
         );
     }
@@ -113,17 +147,32 @@ async function getRequestQuestions() {
     });
 }
 
-async function getRequestQuestionByPk(idSolicitud, idPregunta) {
+async function getActiveQuestionsByRequestType(idTipoSolicitud) {
+    const normalizedIdTipoSolicitud = Number(idTipoSolicitud);
+    const requestType = await ensureRequestTypeExists(normalizedIdTipoSolicitud);
+
+    if (Number(requestType.ID_ESTADO) !== 1) {
+        return [];
+    }
+
+    const questions = await requestQuestionRepository.findActiveQuestionsByRequestType(
+        normalizedIdTipoSolicitud
+    );
+
+    return questions.map(formatActiveQuestionByRequestType);
+}
+
+async function getRequestQuestionByPk(idTipoSolicitud, idPregunta) {
     return requestQuestionQueryCache.getOrSet(
-        getRequestQuestionDetailCacheKey(idSolicitud, idPregunta),
+        getRequestQuestionDetailCacheKey(idTipoSolicitud, idPregunta),
         async () => {
             const requestQuestion = await requestQuestionRepository.findRequestQuestionByPk(
-                idSolicitud,
+                idTipoSolicitud,
                 idPregunta
             );
 
             if (!requestQuestion) {
-                throw createHttpError('Request-question relation not found', 404);
+                throw createHttpError('Request-type-question relation not found', 404);
             }
 
             return formatRequestQuestion(requestQuestion);
@@ -141,56 +190,56 @@ async function createRequestQuestion(requestQuestionData) {
 
     if (requestedState !== 1) {
         throw createHttpError(
-            'New request-question relations must start in active state',
+            'New request-type-question relations must start in active state',
             400
         );
     }
 
     const payload = {
-        idSolicitud: Number(requestQuestionData.idSolicitud),
+        idTipoSolicitud: Number(requestQuestionData.idTipoSolicitud),
         idPregunta: Number(requestQuestionData.idPregunta),
         idEstado: requestedState
     };
 
     await ensureStateExists(payload.idEstado);
-    const [request, question] = await Promise.all([
-        requestService.getRequestById(payload.idSolicitud),
+    const [requestType, question] = await Promise.all([
+        ensureRequestTypeExists(payload.idTipoSolicitud),
         questionService.getQuestionById(payload.idPregunta)
     ]);
     ensureActiveRequestQuestionCanBeApplied({
-        request,
+        requestType,
         question,
         idEstado: payload.idEstado
     });
 
     const existingRequestQuestion =
         await requestQuestionRepository.findRequestQuestionByPk(
-            payload.idSolicitud,
+            payload.idTipoSolicitud,
             payload.idPregunta
         );
 
     if (existingRequestQuestion) {
         throw createHttpError(
-            'Request-question relation already exists. Update it if you need to reactivate it',
+            'Request-type-question relation already exists. Update it if you need to reactivate it',
             409
         );
     }
 
     await requestQuestionRepository.createRequestQuestion(payload);
-    invalidateRequestQuestionCache(payload.idSolicitud, payload.idPregunta);
+    invalidateRequestQuestionCache(payload.idTipoSolicitud, payload.idPregunta);
 
-    return getRequestQuestionByPk(payload.idSolicitud, payload.idPregunta);
+    return getRequestQuestionByPk(payload.idTipoSolicitud, payload.idPregunta);
 }
 
-async function updateRequestQuestion(idSolicitud, idPregunta, requestQuestionData) {
-    const normalizedIdSolicitud = Number(idSolicitud);
+async function updateRequestQuestion(idTipoSolicitud, idPregunta, requestQuestionData) {
+    const normalizedIdTipoSolicitud = Number(idTipoSolicitud);
     const normalizedIdPregunta = Number(idPregunta);
     const existingRequestQuestion = await getRequestQuestionByPk(
-        normalizedIdSolicitud,
+        normalizedIdTipoSolicitud,
         normalizedIdPregunta
     );
     const payload = {
-        idSolicitud: normalizedIdSolicitud,
+        idTipoSolicitud: normalizedIdTipoSolicitud,
         idPregunta: normalizedIdPregunta,
         idEstado: Number(requestQuestionData.idEstado)
     };
@@ -198,46 +247,51 @@ async function updateRequestQuestion(idSolicitud, idPregunta, requestQuestionDat
     await ensureStateExists(payload.idEstado);
 
     if (Number(payload.idEstado) === 1) {
-        const [request, question] = await Promise.all([
-            requestService.getRequestById(payload.idSolicitud),
+        const [requestType, question] = await Promise.all([
+            ensureRequestTypeExists(payload.idTipoSolicitud),
             questionService.getQuestionById(payload.idPregunta)
         ]);
 
         ensureActiveRequestQuestionCanBeApplied({
-            request,
+            requestType,
             question,
             idEstado: payload.idEstado
         });
     } else if (Number(existingRequestQuestion.idEstado) === 1) {
-        await ensureNoActiveResponses(payload.idSolicitud, payload.idPregunta, 'deactivate');
+        await ensureNoActiveResponses(
+            payload.idTipoSolicitud,
+            payload.idPregunta,
+            'deactivate'
+        );
     }
 
     await requestQuestionRepository.updateRequestQuestion(payload);
     invalidateRequestQuestionCache(
-        existingRequestQuestion.idSolicitud,
+        existingRequestQuestion.idTipoSolicitud,
         existingRequestQuestion.idPregunta
     );
 
-    return getRequestQuestionByPk(payload.idSolicitud, payload.idPregunta);
+    return getRequestQuestionByPk(payload.idTipoSolicitud, payload.idPregunta);
 }
 
-async function deleteRequestQuestion(idSolicitud, idPregunta) {
-    const existingRequestQuestion = await getRequestQuestionByPk(idSolicitud, idPregunta);
+async function deleteRequestQuestion(idTipoSolicitud, idPregunta) {
+    const existingRequestQuestion = await getRequestQuestionByPk(idTipoSolicitud, idPregunta);
 
     if (Number(existingRequestQuestion.idEstado) !== 1) {
-        throw createHttpError('Request-question relation is already inactive', 409);
+        throw createHttpError('Request-type-question relation is already inactive', 409);
     }
 
-    await ensureNoActiveResponses(idSolicitud, idPregunta, 'delete');
-    await requestQuestionRepository.deleteRequestQuestion(idSolicitud, idPregunta);
+    await ensureNoActiveResponses(idTipoSolicitud, idPregunta, 'delete');
+    await requestQuestionRepository.deleteRequestQuestion(idTipoSolicitud, idPregunta);
     invalidateRequestQuestionCache(
-        existingRequestQuestion.idSolicitud,
+        existingRequestQuestion.idTipoSolicitud,
         existingRequestQuestion.idPregunta
     );
 }
 
 module.exports = {
     getRequestQuestions,
+    getActiveQuestionsByRequestType,
     getRequestQuestionByPk,
     createRequestQuestion,
     updateRequestQuestion,

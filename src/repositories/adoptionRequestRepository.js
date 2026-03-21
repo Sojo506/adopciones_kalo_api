@@ -77,7 +77,6 @@ async function createRequest(requestData) {
           BEGIN
             KALO.FIDE_KALO_PKG.FIDE_SOLICITUD_INSERT_SP(
               :identificacion,
-              :idPerrito,
               :idTipoSolicitud,
               :idEstado
             );
@@ -85,7 +84,6 @@ async function createRequest(requestData) {
         `,
             {
                 identificacion: requestData.identificacion,
-                idPerrito: requestData.idPerrito,
                 idTipoSolicitud: requestData.idTipoSolicitud,
                 idEstado: requestData.idEstado
             },
