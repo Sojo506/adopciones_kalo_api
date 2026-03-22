@@ -5,6 +5,10 @@ const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();
 
+// Public endpoints (no auth required)
+router.get('/public', campaignController.getActiveCampaigns);
+
+// Admin-only endpoints
 router.use(authenticateToken, requireAdmin);
 
 router.get('/', campaignController.getCampaigns);
