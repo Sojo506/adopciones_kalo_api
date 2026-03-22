@@ -27,6 +27,7 @@ router.use('/sale-products', require('./saleProductRoutes'));
 router.use('/sale-invoices', require('./saleInvoiceRoutes'));
 router.use('/invoices', require('./invoiceRoutes'));
 router.use('/paypal-payments', require('./paypalPaymentRoutes'));
+router.use('/paypal-checkout', require('./paypalCheckoutRoutes'));
 router.use('/currencies', require('./currencyRoutes'));
 router.use('/breeds', require('./breedRoutes'));
 router.use('/sexes', require('./sexRoutes'));

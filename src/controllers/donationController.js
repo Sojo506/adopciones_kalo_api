@@ -15,6 +15,20 @@ function validationErrorResponse(req, res) {
     });
 }
 
+const publicDonationValidation = [
+    body('idCampania')
+        .isInt({ min: 1 })
+        .withMessage('ID Campania must be a positive number'),
+    body('monto')
+        .isFloat({ gt: 0 })
+        .withMessage('Monto must be greater than 0'),
+    body('mensaje')
+        .optional({ values: 'falsy' })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Mensaje must be at most 500 characters')
+];
+
 const donationIdValidation = [
     param('idDonacion')
         .isInt({ min: 1 })
@@ -43,6 +57,24 @@ const donationValidation = [
         .isInt({ min: 1 })
         .withMessage('ID Estado must be a positive number')
 ];
+
+async function createPublicDonation(req, res, next) {
+    try {
+        if (validationErrorResponse(req, res)) {
+            return;
+        }
+
+        const donation = await donationService.createPublicDonation(req.body, req.user.identificacion);
+
+        res.status(201).json({
+            ok: true,
+            message: 'Donation created successfully',
+            data: donation
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 
 async function getDonations(req, res, next) {
     try {
@@ -129,6 +161,8 @@ async function deleteDonation(req, res, next) {
 }
 
 module.exports = {
+    createPublicDonation,
+    publicDonationValidation,
     getDonations,
     getDonationById,
     createDonation,
