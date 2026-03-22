@@ -1,5 +1,5 @@
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
-const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_SECRET;
 const PAYPAL_BASE_URL =
     process.env.PAYPAL_ENV === 'production'
         ? 'https://api-m.paypal.com'
