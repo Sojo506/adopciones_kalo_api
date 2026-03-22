@@ -4,6 +4,7 @@ const campaignRepository = require('../repositories/campaignRepository');
 const MemoryCache = require('../utils/memoryCache');
 
 const CAMPAIGN_LIST_CACHE_KEY = 'campaign:list';
+const CAMPAIGN_PUBLIC_LIST_CACHE_KEY = 'campaign:public:list';
 const CAMPAIGN_DETAIL_CACHE_PREFIX = 'campaign:detail:';
 const CAMPAIGN_CACHE_TTL_MS = Number(process.env.CAMPAIGN_CACHE_TTL_MS || 15000);
 const campaignQueryCache = new MemoryCache({
@@ -22,6 +23,7 @@ function getCampaignDetailCacheKey(idCampania) {
 
 function invalidateCampaignCache(idCampania) {
     campaignQueryCache.delete(CAMPAIGN_LIST_CACHE_KEY);
+    campaignQueryCache.delete(CAMPAIGN_PUBLIC_LIST_CACHE_KEY);
 
     if (idCampania !== undefined && idCampania !== null) {
         campaignQueryCache.delete(getCampaignDetailCacheKey(idCampania));
@@ -276,6 +278,15 @@ async function getCampaigns() {
     });
 }
 
+async function getActiveCampaigns() {
+    return campaignQueryCache.getOrSet(CAMPAIGN_PUBLIC_LIST_CACHE_KEY, async () => {
+        const campaigns = await campaignRepository.findAllCampaignsForAdmin();
+        return campaigns
+            .filter((campaign) => Number(campaign.ID_ESTADO) === 1)
+            .map(formatCampaign);
+    });
+}
+
 async function getCampaignById(idCampania) {
     return campaignQueryCache.getOrSet(getCampaignDetailCacheKey(idCampania), async () => {
         const campaign = await campaignRepository.findCampaignById(idCampania);
@@ -397,6 +408,7 @@ async function deleteCampaign(idCampania) {
 module.exports = {
     getCampaigns,
     getCampaignById,
+    getActiveCampaigns,
     createCampaign,
     updateCampaign,
     deleteCampaign,

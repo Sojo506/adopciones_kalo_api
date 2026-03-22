@@ -89,6 +89,20 @@ const updateCampaignValidation = [
         .withMessage('ID Estado must be a positive number')
 ];
 
+async function getActiveCampaigns(req, res, next) {
+    try {
+        const campaigns = await campaignService.getActiveCampaigns();
+
+        res.status(200).json({
+            ok: true,
+            count: campaigns.length,
+            data: campaigns
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 async function getCampaigns(req, res, next) {
     try {
         const campaigns = await campaignService.getCampaigns();
@@ -178,6 +192,7 @@ async function deleteCampaign(req, res, next) {
 }
 
 module.exports = {
+    getActiveCampaigns,
     getCampaigns,
     getCampaignById,
     createCampaign,
