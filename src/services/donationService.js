@@ -232,6 +232,32 @@ async function ensureDonationCanBeDeleted(existingDonation) {
     }
 }
 
+async function createPublicDonation(donationData, identificacion) {
+    const payload = {
+        identificacion: Number(identificacion),
+        idCampania: Number(donationData.idCampania),
+        monto: parseAmountValue(donationData.monto),
+        fechaDonacion: new Date(),
+        mensaje: normalizeOptionalText(donationData.mensaje),
+        idEstado: 1
+    };
+
+    await ensureStateExists(payload.idEstado);
+    const [user, campaign] = await Promise.all([
+        ensureUserExists(payload.identificacion),
+        ensureCampaignExists(payload.idCampania)
+    ]);
+
+    ensureActiveDonationCanUseUser(user, payload.idEstado);
+    ensureActiveDonationCanUseCampaign(campaign, payload.idEstado);
+    ensureDonationDateFitsCampaign(campaign, payload.fechaDonacion);
+
+    const result = await donationRepository.createDonation(payload);
+    invalidateDonationCache(result.idDonacion);
+
+    return getDonationById(result.idDonacion);
+}
+
 async function getDonations() {
     return donationQueryCache.getOrSet(DONATION_LIST_CACHE_KEY, async () => {
         const donations = await donationRepository.findAllDonations();
@@ -316,6 +342,7 @@ async function deleteDonation(idDonacion) {
 }
 
 module.exports = {
+    createPublicDonation,
     getDonations,
     getDonationById,
     createDonation,
