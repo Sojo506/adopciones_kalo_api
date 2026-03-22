@@ -281,8 +281,15 @@ async function getCampaigns() {
 async function getActiveCampaigns() {
     return campaignQueryCache.getOrSet(CAMPAIGN_PUBLIC_LIST_CACHE_KEY, async () => {
         const campaigns = await campaignRepository.findAllCampaignsForAdmin();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         return campaigns
-            .filter((campaign) => Number(campaign.ID_ESTADO) === 1)
+            .filter((campaign) => {
+                if (Number(campaign.ID_ESTADO) !== 1) return false;
+                const endDate = new Date(campaign.FECHA_FIN);
+                endDate.setHours(0, 0, 0, 0);
+                return endDate >= today;
+            })
             .map(formatCampaign);
     });
 }
