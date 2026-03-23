@@ -4,6 +4,14 @@ const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();
 
+// Public endpoint — requires auth but not admin
+router.post(
+    '/public',
+    authenticateToken,
+    donationController.publicDonationValidation,
+    donationController.createPublicDonation
+);
+
 router.get('/', authenticateToken, requireAdmin, donationController.getDonations);
 router.get(
     '/:idDonacion',

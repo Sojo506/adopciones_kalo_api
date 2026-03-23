@@ -424,7 +424,7 @@ async function updateAdoption(idAdopcion, adoptionData) {
 
     const [adopter, dog, request] = await Promise.all([
         userService.getUserByIdentification(payload.identificacion),
-        dogService.getDogById(payload.idPerrito),
+        dogService.getDogByIdForAdmin(payload.idPerrito),
         requestService.getRequestById(payload.idSolicitud)
     ]);
 
