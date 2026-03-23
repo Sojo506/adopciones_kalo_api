@@ -278,15 +278,6 @@ async function getCampaigns() {
     });
 }
 
-async function getActiveCampaigns() {
-    return campaignQueryCache.getOrSet(CAMPAIGN_PUBLIC_LIST_CACHE_KEY, async () => {
-        const campaigns = await campaignRepository.findAllCampaignsForAdmin();
-        return campaigns
-            .filter((campaign) => Number(campaign.ID_ESTADO) === 1)
-            .map(formatCampaign);
-    });
-}
-
 async function getCampaignById(idCampania) {
     return campaignQueryCache.getOrSet(getCampaignDetailCacheKey(idCampania), async () => {
         const campaign = await campaignRepository.findCampaignById(idCampania);
