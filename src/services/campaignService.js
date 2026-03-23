@@ -278,6 +278,22 @@ async function getCampaigns() {
     });
 }
 
+async function getActiveCampaigns() {
+    return campaignQueryCache.getOrSet(CAMPAIGN_PUBLIC_LIST_CACHE_KEY, async () => {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+
+        const campaigns = await campaignRepository.findAllCampaignsForAdmin();
+        return campaigns
+            .map(formatCampaign)
+            .filter((c) => {
+                if (Number(c.idEstado) !== 1) return false;
+                const endDate = c.fechaFin ? new Date(c.fechaFin) : null;
+                return endDate && endDate >= today;
+            });
+    });
+}
+
 async function getCampaignById(idCampania) {
     return campaignQueryCache.getOrSet(getCampaignDetailCacheKey(idCampania), async () => {
         const campaign = await campaignRepository.findCampaignById(idCampania);
