@@ -5210,6 +5210,328 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
     END FIDE_OBTENER_VENTA_PRODUCTO_POR_PK_FN;
 
+    FUNCTION FIDE_RESUMEN_ADMIN_DASHBOARD_FN
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_FACTURA_TB F
+                        WHERE F.ID_ESTADO = 1
+                    ), 0) AS FACTURAS_ACTIVAS,
+                    NVL((
+                        SELECT SUM(F.TOTAL)
+                        FROM FIDE_FACTURA_TB F
+                        WHERE F.ID_ESTADO = 1
+                    ), 0) AS TOTAL_FACTURADO,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_VENTA_TB V
+                        WHERE V.ID_ESTADO = 1
+                    ), 0) AS VENTAS_ACTIVAS,
+                    NVL((
+                        SELECT SUM(V.TOTAL_VENTA)
+                        FROM FIDE_VENTA_TB V
+                        WHERE V.ID_ESTADO = 1
+                    ), 0) AS TOTAL_VENTAS,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_DONACION_TB D
+                        WHERE D.ID_ESTADO = 1
+                    ), 0) AS DONACIONES_ACTIVAS,
+                    NVL((
+                        SELECT SUM(D.MONTO)
+                        FROM FIDE_DONACION_TB D
+                        WHERE D.ID_ESTADO = 1
+                    ), 0) AS TOTAL_DONACIONES,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_ADOPCION_TB A
+                        WHERE A.ID_ESTADO = 1
+                    ), 0) AS ADOPCIONES_ACTIVAS,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_PERRITO_TB P
+                        WHERE P.ID_ESTADO = 1
+                    ), 0) AS PERRITOS_ACTIVOS,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_CAMPANIA_TB C
+                        WHERE C.ID_ESTADO = 1
+                          AND TRUNC(SYSDATE) >= TRUNC(NVL(C.FECHA_INICIO, SYSDATE))
+                          AND TRUNC(SYSDATE) <= TRUNC(NVL(C.FECHA_FIN, SYSDATE))
+                    ), 0) AS CAMPANIAS_VIGENTES,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_INVENTARIO_TB I
+                        WHERE I.ID_ESTADO = 1
+                          AND NVL(I.CANTIDAD, 0) <= 10
+                    ), 0) AS PRODUCTOS_STOCK_BAJO,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_SEGUIMIENTO_TB S
+                        WHERE S.ID_ESTADO = 1
+                          AND TRUNC(S.FECHA_FIN) < TRUNC(SYSDATE)
+                    ), 0) AS SEGUIMIENTOS_VENCIDOS,
+                    NVL((
+                        SELECT COUNT(*)
+                        FROM FIDE_SEGUIMIENTO_TB S
+                        WHERE S.ID_ESTADO = 1
+                          AND TRUNC(S.FECHA_FIN) BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 7
+                    ), 0) AS SEGUIMIENTOS_PROXIMOS
+            FROM DUAL;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_RESUMEN_ADMIN_DASHBOARD_FN;
+
+    FUNCTION FIDE_REPORTE_FACTURAS_ADMIN_FN
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  F.ID_FACTURA,
+                    F.FECHA_FACTURA,
+                    F.ID_MONEDA,
+                    M.NOMBRE AS MONEDA,
+                    M.SIMBOLO,
+                    F.SUBTOTAL,
+                    F.IMPUESTO,
+                    F.TOTAL,
+                    NVL(VF.CANTIDAD_VENTAS, 0) AS CANTIDAD_VENTAS,
+                    NVL(DF.CANTIDAD_DONACIONES, 0) AS CANTIDAD_DONACIONES,
+                    NVL(PP.CANTIDAD_PAGOS_PAYPAL, 0) AS CANTIDAD_PAGOS_PAYPAL,
+                    F.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_FACTURA_TB F
+            JOIN FIDE_MONEDA_TB M ON F.ID_MONEDA = M.ID_MONEDA
+            JOIN FIDE_ESTADO_TB E ON F.ID_ESTADO = E.ID_ESTADO
+            LEFT JOIN (
+                SELECT  VF.ID_FACTURA,
+                        COUNT(*) AS CANTIDAD_VENTAS
+                FROM FIDE_VENTA_FACTURA_TB VF
+                WHERE VF.ID_ESTADO = 1
+                GROUP BY VF.ID_FACTURA
+            ) VF ON F.ID_FACTURA = VF.ID_FACTURA
+            LEFT JOIN (
+                SELECT  DF.ID_FACTURA,
+                        COUNT(*) AS CANTIDAD_DONACIONES
+                FROM FIDE_DONACION_FACTURA_TB DF
+                WHERE DF.ID_ESTADO = 1
+                GROUP BY DF.ID_FACTURA
+            ) DF ON F.ID_FACTURA = DF.ID_FACTURA
+            LEFT JOIN (
+                SELECT  PP.ID_FACTURA,
+                        COUNT(*) AS CANTIDAD_PAGOS_PAYPAL
+                FROM FIDE_PAGO_PAYPAL_TB PP
+                WHERE PP.ID_ESTADO = 1
+                GROUP BY PP.ID_FACTURA
+            ) PP ON F.ID_FACTURA = PP.ID_FACTURA
+            ORDER BY F.FECHA_FACTURA DESC, F.ID_FACTURA DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_REPORTE_FACTURAS_ADMIN_FN;
+
+    FUNCTION FIDE_REPORTE_DONACIONES_ADMIN_FN
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  D.ID_DONACION,
+                    D.FECHA_DONACION,
+                    D.IDENTIFICACION,
+                    U.NOMBRE || ' ' || U.APELLIDO_PATERNO || ' ' || U.APELLIDO_MATERNO AS DONADOR,
+                    D.ID_CAMPANIA,
+                    C.NOMBRE AS CAMPANIA,
+                    D.MONTO,
+                    NVL(DF.CANTIDAD_FACTURAS, 0) AS CANTIDAD_FACTURAS,
+                    D.MENSAJE,
+                    D.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_DONACION_TB D
+            JOIN FIDE_USUARIO_TB U ON D.IDENTIFICACION = U.IDENTIFICACION
+            LEFT JOIN FIDE_CAMPANIA_TB C ON D.ID_CAMPANIA = C.ID_CAMPANIA
+            JOIN FIDE_ESTADO_TB E ON D.ID_ESTADO = E.ID_ESTADO
+            LEFT JOIN (
+                SELECT  DF.ID_DONACION,
+                        COUNT(*) AS CANTIDAD_FACTURAS
+                FROM FIDE_DONACION_FACTURA_TB DF
+                WHERE DF.ID_ESTADO = 1
+                GROUP BY DF.ID_DONACION
+            ) DF ON D.ID_DONACION = DF.ID_DONACION
+            ORDER BY D.FECHA_DONACION DESC, D.ID_DONACION DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_REPORTE_DONACIONES_ADMIN_FN;
+
+    FUNCTION FIDE_REPORTE_ADOPCIONES_ADMIN_FN
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  A.ID_ADOPCION,
+                    A.FECHA_ADOPCION,
+                    A.IDENTIFICACION,
+                    U.NOMBRE || ' ' || U.APELLIDO_PATERNO || ' ' || U.APELLIDO_MATERNO AS ADOPTANTE,
+                    A.ID_SOLICITUD,
+                    A.ID_PERRITO,
+                    P.NOMBRE AS NOMBRE_PERRITO,
+                    NVL(SG.TOTAL_SEGUIMIENTOS, 0) AS TOTAL_SEGUIMIENTOS,
+                    NVL(SG.SEGUIMIENTOS_ACTIVOS, 0) AS SEGUIMIENTOS_ACTIVOS,
+                    NVL(SG.SEGUIMIENTOS_VENCIDOS, 0) AS SEGUIMIENTOS_VENCIDOS,
+                    A.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_ADOPCION_TB A
+            JOIN FIDE_USUARIO_TB U ON A.IDENTIFICACION = U.IDENTIFICACION
+            JOIN FIDE_PERRITO_TB P ON A.ID_PERRITO = P.ID_PERRITO
+            JOIN FIDE_ESTADO_TB E ON A.ID_ESTADO = E.ID_ESTADO
+            LEFT JOIN (
+                SELECT  S.ID_ADOPCION,
+                        COUNT(*) AS TOTAL_SEGUIMIENTOS,
+                        SUM(CASE WHEN S.ID_ESTADO = 1 THEN 1 ELSE 0 END) AS SEGUIMIENTOS_ACTIVOS,
+                        SUM(
+                            CASE
+                                WHEN S.ID_ESTADO = 1
+                                 AND TRUNC(S.FECHA_FIN) < TRUNC(SYSDATE)
+                                THEN 1
+                                ELSE 0
+                            END
+                        ) AS SEGUIMIENTOS_VENCIDOS
+                FROM FIDE_SEGUIMIENTO_TB S
+                GROUP BY S.ID_ADOPCION
+            ) SG ON A.ID_ADOPCION = SG.ID_ADOPCION
+            ORDER BY A.FECHA_ADOPCION DESC, A.ID_ADOPCION DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_REPORTE_ADOPCIONES_ADMIN_FN;
+
+    FUNCTION FIDE_REPORTE_INVENTARIO_BAJO_FN(
+        P_STOCK_MINIMO IN NUMBER DEFAULT 10
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  I.ID_INVENTARIO,
+                    I.ID_PRODUCTO,
+                    P.NOMBRE AS PRODUCTO,
+                    C.NOMBRE AS CATEGORIA,
+                    M.NOMBRE AS MARCA,
+                    I.CANTIDAD,
+                    P.PRECIO,
+                    NVL(I.CANTIDAD, 0) * NVL(P.PRECIO, 0) AS VALOR_ESTIMADO,
+                    I.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_INVENTARIO_TB I
+            JOIN FIDE_PRODUCTO_TB P ON I.ID_PRODUCTO = P.ID_PRODUCTO
+            JOIN FIDE_CATEGORIA_TB C ON P.ID_CATEGORIA = C.ID_CATEGORIA
+            JOIN FIDE_MARCA_TB M ON P.ID_MARCA = M.ID_MARCA
+            JOIN FIDE_ESTADO_TB E ON I.ID_ESTADO = E.ID_ESTADO
+            WHERE I.ID_ESTADO = 1
+              AND P.ID_ESTADO = 1
+              AND NVL(I.CANTIDAD, 0) <= NVL(P_STOCK_MINIMO, 10)
+            ORDER BY I.CANTIDAD ASC, P.NOMBRE ASC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_REPORTE_INVENTARIO_BAJO_FN;
+
+    FUNCTION FIDE_ALERTAS_SEGUIMIENTO_ADMIN_FN
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  S.ID_SEGUIMIENTO,
+                    S.ID_ADOPCION,
+                    A.IDENTIFICACION,
+                    U.NOMBRE || ' ' || U.APELLIDO_PATERNO || ' ' || U.APELLIDO_MATERNO AS ADOPTANTE,
+                    A.ID_PERRITO,
+                    P.NOMBRE AS NOMBRE_PERRITO,
+                    S.ID_TIPO_SEGUIMIENTO,
+                    TS.NOMBRE AS TIPO_SEGUIMIENTO,
+                    S.FECHA_FIN,
+                    NVL(EV.CANTIDAD_EVIDENCIAS, 0) AS CANTIDAD_EVIDENCIAS,
+                    CASE
+                        WHEN TRUNC(S.FECHA_FIN) < TRUNC(SYSDATE) THEN 'vencido'
+                        WHEN TRUNC(S.FECHA_FIN) = TRUNC(SYSDATE) THEN 'vence_hoy'
+                        ELSE 'proximo'
+                    END AS PRIORIDAD,
+                    TRUNC(S.FECHA_FIN) - TRUNC(SYSDATE) AS DIAS_RESTANTES,
+                    S.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_SEGUIMIENTO_TB S
+            JOIN FIDE_ADOPCION_TB A ON S.ID_ADOPCION = A.ID_ADOPCION
+            JOIN FIDE_USUARIO_TB U ON A.IDENTIFICACION = U.IDENTIFICACION
+            JOIN FIDE_PERRITO_TB P ON A.ID_PERRITO = P.ID_PERRITO
+            JOIN FIDE_TIPO_SEGUIMIENTO_TB TS ON S.ID_TIPO_SEGUIMIENTO = TS.ID_TIPO_SEGUIMIENTO
+            JOIN FIDE_ESTADO_TB E ON S.ID_ESTADO = E.ID_ESTADO
+            LEFT JOIN (
+                SELECT  EV.ID_SEGUIMIENTO,
+                        COUNT(*) AS CANTIDAD_EVIDENCIAS
+                FROM FIDE_EVIDENCIA_TB EV
+                WHERE EV.ID_ESTADO = 1
+                GROUP BY EV.ID_SEGUIMIENTO
+            ) EV ON S.ID_SEGUIMIENTO = EV.ID_SEGUIMIENTO
+            WHERE S.ID_ESTADO = 1
+              AND TRUNC(S.FECHA_FIN) <= TRUNC(SYSDATE) + 7
+            ORDER BY CASE
+                        WHEN TRUNC(S.FECHA_FIN) < TRUNC(SYSDATE) THEN 1
+                        WHEN TRUNC(S.FECHA_FIN) = TRUNC(SYSDATE) THEN 2
+                        ELSE 3
+                     END,
+                     S.FECHA_FIN ASC,
+                     S.ID_SEGUIMIENTO ASC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_ALERTAS_SEGUIMIENTO_ADMIN_FN;
+
     /* PROCEDURE FIDE_ESTADO_TB INSERT */
 
     PROCEDURE FIDE_ESTADO_INSERT_SP(
@@ -7303,6 +7625,19 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
 
         RETURN V_TOTAL;
     END FIDE_CONTAR_FACTURAS_ACTIVAS_VENTA_FN;
+
+    FUNCTION FIDE_ALPHA_NUMERIC_SEQ_FN
+    RETURN VARCHAR2 AS
+        V_FECHA VARCHAR2(10);
+        V_LETRA CHAR(1);
+        V_VALOR VARCHAR2(30);
+    BEGIN
+        V_FECHA := TO_CHAR(SYSDATE, 'DDMMYYY');
+        V_LETRA := CHR(65 + TRUNC(DBMS_RANDOM.VALUE(0, 26)));
+        V_VALOR := V_FECHA || '-' || LPAD(FIDE_FACTURA_SEQ.NEXTVAL, 7, '0') || '-' || V_LETRA;
+
+        RETURN V_VALOR;
+    END FIDE_ALPHA_NUMERIC_SEQ_FN;
 
     PROCEDURE FIDE_RECALCULAR_TOTAL_VENTA_PR(
         P_ID_VENTA IN FIDE_VENTA_TB.ID_VENTA%TYPE

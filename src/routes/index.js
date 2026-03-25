@@ -57,5 +57,6 @@ router.use('/otp-codes', require('./otpRoutes'));
 router.use('/refresh-tokens', require('./refreshTokenRoutes'));
 router.use('/dogs', require('./dogRoutes'));
 router.use('/adoption-requests', require('./adoptionRequestRoutes'));
+router.use('/reports', require('./reportRoutes'));
 
 module.exports = router;
