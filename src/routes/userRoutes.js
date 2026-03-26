@@ -1,10 +1,18 @@
 const express = require('express');
 const userController = require('../controllers/userController');
+const profileController = require('../controllers/profileController');
 const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();
 
 router.get('/me', authenticateToken, userController.getMe);
+router.get('/profile', authenticateToken, profileController.getCurrentProfile);
+router.put(
+    '/profile',
+    authenticateToken,
+    profileController.updateCurrentProfileValidation,
+    profileController.updateCurrentProfile
+);
 router.get('/', authenticateToken, requireAdmin, userController.getUsers);
 router.get('/:identificacion', authenticateToken, requireAdmin, userController.getUserByIdentification);
 router.post('/', authenticateToken, requireAdmin, userController.dashboardUserValidation, userController.createDashboardUser);
