@@ -19,7 +19,7 @@ const INACTIVE_STATE_ID = 2;
 const PENDING_STATE_ID = 3;
 const CLIENT_USER_TYPE_ID = 2;
 const EMAIL_VERIFICATION_OTP_TYPE_ID = 1;
-const EMAIL_VERIFICATION_OTP_NAME = 'Verificación de correo';
+const EMAIL_VERIFICATION_OTP_NAME = 'Verificacion de correo';
 const userQueryCache = new MemoryCache({ defaultTtlMs: USER_CACHE_TTL_MS });
 
 function createHttpError(message, statusCode) {

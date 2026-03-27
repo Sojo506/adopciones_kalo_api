@@ -7,11 +7,36 @@ const router = express.Router();
 
 router.get('/me', authenticateToken, userController.getMe);
 router.get('/profile', authenticateToken, profileController.getCurrentProfile);
+router.get('/profile/follow-ups', authenticateToken, profileController.getCurrentProfileFollowUps);
 router.put(
     '/profile',
     authenticateToken,
     profileController.updateCurrentProfileValidation,
     profileController.updateCurrentProfile
+);
+router.post(
+    '/profile/email/request-change',
+    authenticateToken,
+    profileController.requestCurrentEmailChangeValidation,
+    profileController.requestCurrentEmailChange
+);
+router.post(
+    '/profile/email/confirm-change',
+    authenticateToken,
+    profileController.confirmCurrentEmailChangeValidation,
+    profileController.confirmCurrentEmailChange
+);
+router.post(
+    '/profile/password/request-change',
+    authenticateToken,
+    profileController.requestCurrentPasswordChangeValidation,
+    profileController.requestCurrentPasswordChange
+);
+router.post(
+    '/profile/password/confirm-change',
+    authenticateToken,
+    profileController.confirmCurrentPasswordChangeValidation,
+    profileController.confirmCurrentPasswordChange
 );
 router.get('/', authenticateToken, requireAdmin, userController.getUsers);
 router.get('/:identificacion', authenticateToken, requireAdmin, userController.getUserByIdentification);

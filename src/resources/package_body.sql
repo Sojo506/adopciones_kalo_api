@@ -1003,6 +1003,374 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
     END FIDE_VERIFICAR_PERMISO_ADMIN_FN;
 
     /* ============================================================
+       PERFIL DEL USUARIO
+       ============================================================ */
+
+    FUNCTION FIDE_OBTENER_RESUMEN_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  C.ID_CUENTA,
+                    C.IDENTIFICACION,
+                    U.NOMBRE,
+                    U.APELLIDO_PATERNO,
+                    U.APELLIDO_MATERNO,
+                    U.FECHA_REGISTRO,
+                    U.ID_DIRECCION,
+                    U.ID_TIPO_USUARIO,
+                    C.USUARIO,
+                    C.PASSWORD_HASH,
+                    U.ID_ESTADO,
+                    EU.NOMBRE_ESTADO AS ESTADO_USUARIO,
+                    C.ID_ESTADO AS ID_ESTADO_CUENTA,
+                    EC.NOMBRE_ESTADO AS ESTADO_CUENTA,
+                    COR.CORREO,
+                    COR.ID_ESTADO AS ID_ESTADO_CORREO,
+                    ECO.NOMBRE_ESTADO AS ESTADO_CORREO,
+                    TEL.TELEFONO,
+                    TEL.ID_ESTADO AS ID_ESTADO_TELEFONO,
+                    ETE.NOMBRE_ESTADO AS ESTADO_TELEFONO,
+                    DIR.ID_DISTRITO,
+                    DIR.CALLE,
+                    DIR.NUMERO,
+                    DIS.NOMBRE AS DISTRITO,
+                    CAN.ID_CANTON,
+                    CAN.NOMBRE AS CANTON,
+                    PRO.ID_PROVINCIA,
+                    PRO.NOMBRE AS PROVINCIA,
+                    PA.ID_PAIS,
+                    PA.NOMBRE AS PAIS
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_USUARIO_TB U ON C.IDENTIFICACION = U.IDENTIFICACION
+            LEFT JOIN (
+                SELECT  IDENTIFICACION,
+                        CORREO,
+                        ID_ESTADO,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY IDENTIFICACION
+                            ORDER BY CASE WHEN ID_ESTADO = 1 THEN 0 ELSE 1 END, CORREO
+                        ) AS RN
+                FROM FIDE_CORREO_TB
+            ) COR ON C.IDENTIFICACION = COR.IDENTIFICACION AND COR.RN = 1
+            LEFT JOIN FIDE_ESTADO_TB ECO ON COR.ID_ESTADO = ECO.ID_ESTADO
+            LEFT JOIN (
+                SELECT  IDENTIFICACION,
+                        TELEFONO,
+                        ID_ESTADO,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY IDENTIFICACION
+                            ORDER BY CASE WHEN ID_ESTADO = 1 THEN 0 ELSE 1 END, TELEFONO
+                        ) AS RN
+                FROM FIDE_TELEFONO_TB
+            ) TEL ON C.IDENTIFICACION = TEL.IDENTIFICACION AND TEL.RN = 1
+            LEFT JOIN FIDE_ESTADO_TB ETE ON TEL.ID_ESTADO = ETE.ID_ESTADO
+            LEFT JOIN FIDE_DIRECCION_TB DIR ON U.ID_DIRECCION = DIR.ID_DIRECCION
+            LEFT JOIN FIDE_DISTRITO_TB DIS ON DIR.ID_DISTRITO = DIS.ID_DISTRITO
+            LEFT JOIN FIDE_CANTON_TB CAN ON DIS.ID_CANTON = CAN.ID_CANTON
+            LEFT JOIN FIDE_PROVINCIA_TB PRO ON CAN.ID_PROVINCIA = PRO.ID_PROVINCIA
+            LEFT JOIN FIDE_PAIS_TB PA ON PRO.ID_PAIS = PA.ID_PAIS
+            JOIN FIDE_ESTADO_TB EU ON U.ID_ESTADO = EU.ID_ESTADO
+            JOIN FIDE_ESTADO_TB EC ON C.ID_ESTADO = EC.ID_ESTADO
+            WHERE C.ID_CUENTA = P_ID_CUENTA;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_RESUMEN_PERFIL_CUENTA_FN;
+
+    FUNCTION FIDE_OBTENER_SOLICITUDES_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  S.ID_SOLICITUD,
+                    S.IDENTIFICACION,
+                    S.ID_TIPO_SOLICITUD,
+                    TS.NOMBRE AS TIPO_SOLICITUD,
+                    S.ID_ESTADO,
+                    ES.NOMBRE_ESTADO AS ESTADO_SOLICITUD,
+                    A.ID_ADOPCION,
+                    A.ID_PERRITO,
+                    P.NOMBRE AS NOMBRE_PERRITO,
+                    A.FECHA_ADOPCION,
+                    A.ID_ESTADO AS ID_ESTADO_PROCESO,
+                    EA.NOMBRE_ESTADO AS ESTADO_PROCESO
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_SOLICITUD_TB S ON C.IDENTIFICACION = S.IDENTIFICACION
+            JOIN FIDE_TIPO_SOLICITUD_TB TS ON S.ID_TIPO_SOLICITUD = TS.ID_TIPO_SOLICITUD
+            JOIN FIDE_ESTADO_TB ES ON S.ID_ESTADO = ES.ID_ESTADO
+            LEFT JOIN FIDE_ADOPCION_TB A ON S.ID_SOLICITUD = A.ID_SOLICITUD
+            LEFT JOIN FIDE_PERRITO_TB P ON A.ID_PERRITO = P.ID_PERRITO
+            LEFT JOIN FIDE_ESTADO_TB EA ON A.ID_ESTADO = EA.ID_ESTADO
+            WHERE C.ID_CUENTA = P_ID_CUENTA
+            ORDER BY S.ID_SOLICITUD DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_SOLICITUDES_PERFIL_CUENTA_FN;
+
+    FUNCTION FIDE_OBTENER_SEGUIMIENTOS_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  SG.ID_SEGUIMIENTO,
+                    SG.ID_ADOPCION,
+                    A.ID_PERRITO,
+                    P.NOMBRE AS NOMBRE_PERRITO,
+                    SG.ID_TIPO_SEGUIMIENTO,
+                    TS.NOMBRE AS TIPO_SEGUIMIENTO,
+                    SG.FECHA_INICIO,
+                    SG.FECHA_FIN,
+                    SG.COMENTARIOS,
+                    SG.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO,
+                    NVL(EV.CANTIDAD_EVIDENCIAS, 0) AS CANTIDAD_EVIDENCIAS,
+                    EV.ULTIMA_FECHA_EVIDENCIA
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_ADOPCION_TB A ON C.IDENTIFICACION = A.IDENTIFICACION
+            JOIN FIDE_SEGUIMIENTO_TB SG ON A.ID_ADOPCION = SG.ID_ADOPCION
+            JOIN FIDE_PERRITO_TB P ON A.ID_PERRITO = P.ID_PERRITO
+            JOIN FIDE_TIPO_SEGUIMIENTO_TB TS ON SG.ID_TIPO_SEGUIMIENTO = TS.ID_TIPO_SEGUIMIENTO
+            JOIN FIDE_ESTADO_TB E ON SG.ID_ESTADO = E.ID_ESTADO
+            LEFT JOIN (
+                SELECT  EV.ID_SEGUIMIENTO,
+                        COUNT(*) AS CANTIDAD_EVIDENCIAS,
+                        MAX(EV.FECHA_EVIDENCIA) AS ULTIMA_FECHA_EVIDENCIA
+                FROM FIDE_EVIDENCIA_TB EV
+                WHERE EV.ID_ESTADO = 1
+                GROUP BY EV.ID_SEGUIMIENTO
+            ) EV ON SG.ID_SEGUIMIENTO = EV.ID_SEGUIMIENTO
+            WHERE C.ID_CUENTA = P_ID_CUENTA
+            ORDER BY NVL(EV.ULTIMA_FECHA_EVIDENCIA, SG.FECHA_FIN) DESC,
+                     SG.FECHA_FIN DESC,
+                     SG.ID_SEGUIMIENTO DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_SEGUIMIENTOS_PERFIL_CUENTA_FN;
+
+    FUNCTION FIDE_OBTENER_COMPRAS_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  V.ID_VENTA,
+                    V.IDENTIFICACION,
+                    V.TOTAL_VENTA,
+                    V.FECHA_VENTA,
+                    V.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_VENTA_TB V ON C.IDENTIFICACION = V.IDENTIFICACION
+            JOIN FIDE_ESTADO_TB E ON V.ID_ESTADO = E.ID_ESTADO
+            WHERE C.ID_CUENTA = P_ID_CUENTA
+            ORDER BY V.FECHA_VENTA DESC, V.ID_VENTA DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_COMPRAS_PERFIL_CUENTA_FN;
+
+    FUNCTION FIDE_OBTENER_PRODUCTOS_COMPRA_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  V.ID_VENTA,
+                    VP.ID_PRODUCTO,
+                    P.NOMBRE AS PRODUCTO,
+                    VP.ID_TIPO_MOVIMIENTO,
+                    TM.NOMBRE AS TIPO_MOVIMIENTO,
+                    VP.CANTIDAD,
+                    VP.PRECIO_UNITARIO,
+                    VP.TOTAL,
+                    VP.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_VENTA_TB V ON C.IDENTIFICACION = V.IDENTIFICACION
+            JOIN FIDE_VENTA_PRODUCTO_TB VP ON V.ID_VENTA = VP.ID_VENTA
+            JOIN FIDE_PRODUCTO_TB P ON VP.ID_PRODUCTO = P.ID_PRODUCTO
+            LEFT JOIN FIDE_TIPO_MOVIMIENTO_TB TM ON VP.ID_TIPO_MOVIMIENTO = TM.ID_TIPO_MOVIMIENTO
+            JOIN FIDE_ESTADO_TB E ON VP.ID_ESTADO = E.ID_ESTADO
+            WHERE C.ID_CUENTA = P_ID_CUENTA
+            ORDER BY V.FECHA_VENTA DESC, V.ID_VENTA DESC, VP.ID_PRODUCTO;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_PRODUCTOS_COMPRA_PERFIL_CUENTA_FN;
+
+    FUNCTION FIDE_OBTENER_FACTURAS_COMPRA_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  V.ID_VENTA,
+                    VF.ID_FACTURA,
+                    F.ID_MONEDA,
+                    M.NOMBRE AS MONEDA,
+                    M.SIMBOLO,
+                    F.TOTAL AS TOTAL_FACTURA,
+                    F.FECHA_FACTURA,
+                    VF.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_VENTA_TB V ON C.IDENTIFICACION = V.IDENTIFICACION
+            JOIN FIDE_VENTA_FACTURA_TB VF ON V.ID_VENTA = VF.ID_VENTA
+            JOIN FIDE_FACTURA_TB F ON VF.ID_FACTURA = F.ID_FACTURA
+            JOIN FIDE_MONEDA_TB M ON F.ID_MONEDA = M.ID_MONEDA
+            JOIN FIDE_ESTADO_TB E ON VF.ID_ESTADO = E.ID_ESTADO
+            WHERE C.ID_CUENTA = P_ID_CUENTA
+            ORDER BY V.FECHA_VENTA DESC, V.ID_VENTA DESC, F.FECHA_FACTURA DESC, VF.ID_FACTURA DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_FACTURAS_COMPRA_PERFIL_CUENTA_FN;
+
+    FUNCTION FIDE_OBTENER_CASAS_CUNA_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  CC.ID_CASA_CUNA,
+                    CC.NOMBRE,
+                    CC.ID_DIRECCION,
+                    CC.IDENTIFICACION,
+                    CC.ID_SOLICITUD,
+                    S.ID_TIPO_SOLICITUD,
+                    TS.NOMBRE AS TIPO_SOLICITUD,
+                    DIR.CALLE,
+                    DIR.NUMERO,
+                    DIR.ID_DISTRITO,
+                    DIS.NOMBRE AS DISTRITO,
+                    CAN.ID_CANTON,
+                    CAN.NOMBRE AS CANTON,
+                    PRO.ID_PROVINCIA,
+                    PRO.NOMBRE AS PROVINCIA,
+                    PA.ID_PAIS,
+                    PA.NOMBRE AS PAIS,
+                    NVL(CP.TOTAL_PERRITOS, 0) AS TOTAL_PERRITOS,
+                    CC.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_CASA_CUNA_TB CC ON C.IDENTIFICACION = CC.IDENTIFICACION
+            JOIN FIDE_DIRECCION_TB DIR ON CC.ID_DIRECCION = DIR.ID_DIRECCION
+            JOIN FIDE_DISTRITO_TB DIS ON DIR.ID_DISTRITO = DIS.ID_DISTRITO
+            JOIN FIDE_CANTON_TB CAN ON DIS.ID_CANTON = CAN.ID_CANTON
+            JOIN FIDE_PROVINCIA_TB PRO ON CAN.ID_PROVINCIA = PRO.ID_PROVINCIA
+            JOIN FIDE_PAIS_TB PA ON PRO.ID_PAIS = PA.ID_PAIS
+            LEFT JOIN FIDE_SOLICITUD_TB S ON CC.ID_SOLICITUD = S.ID_SOLICITUD
+            LEFT JOIN FIDE_TIPO_SOLICITUD_TB TS ON S.ID_TIPO_SOLICITUD = TS.ID_TIPO_SOLICITUD
+            LEFT JOIN (
+                SELECT  ID_CASA_CUNA,
+                        COUNT(*) AS TOTAL_PERRITOS
+                FROM FIDE_CASA_PERRITO_TB
+                WHERE ID_ESTADO = 1
+                GROUP BY ID_CASA_CUNA
+            ) CP ON CC.ID_CASA_CUNA = CP.ID_CASA_CUNA
+            JOIN FIDE_ESTADO_TB E ON CC.ID_ESTADO = E.ID_ESTADO
+            WHERE C.ID_CUENTA = P_ID_CUENTA
+            ORDER BY CC.ID_CASA_CUNA DESC;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_CASAS_CUNA_PERFIL_CUENTA_FN;
+
+    FUNCTION FIDE_OBTENER_PERRITOS_CASA_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        V_CURSOR_RESULTADO SYS_REFCURSOR;
+    BEGIN
+        OPEN V_CURSOR_RESULTADO FOR
+            SELECT  CC.ID_CASA_CUNA,
+                    CP.ID_PERRITO,
+                    P.NOMBRE AS NOMBRE_PERRITO,
+                    CP.ID_ESTADO,
+                    E.NOMBRE_ESTADO AS ESTADO
+            FROM FIDE_CUENTA_TB C
+            JOIN FIDE_CASA_CUNA_TB CC ON C.IDENTIFICACION = CC.IDENTIFICACION
+            JOIN FIDE_CASA_PERRITO_TB CP ON CC.ID_CASA_CUNA = CP.ID_CASA_CUNA
+            JOIN FIDE_PERRITO_TB P ON CP.ID_PERRITO = P.ID_PERRITO
+            JOIN FIDE_ESTADO_TB E ON CP.ID_ESTADO = E.ID_ESTADO
+            WHERE C.ID_CUENTA = P_ID_CUENTA
+              AND CP.ID_ESTADO = 1
+            ORDER BY CC.ID_CASA_CUNA DESC, CP.ID_PERRITO;
+
+        RETURN V_CURSOR_RESULTADO;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20004, 'No se encontraron datos con el ID indicado.');
+        WHEN TOO_MANY_ROWS THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Se encontraron datos duplicados.');
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error inesperado: ' || SQLERRM);
+    END FIDE_OBTENER_PERRITOS_CASA_PERFIL_CUENTA_FN;
+
+    /* ============================================================
        TIENDA, PRODUCTOS E INVENTARIO
        ============================================================ */
 
