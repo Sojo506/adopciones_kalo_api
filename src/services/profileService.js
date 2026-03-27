@@ -1,20 +1,28 @@
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const addressService = require('./addressService');
-const adoptionService = require('./adoptionService');
-const fosterHomeService = require('./fosterHomeService');
-const houseDogService = require('./houseDogService');
-const requestService = require('./requestService');
-const saleInvoiceService = require('./saleInvoiceService');
-const saleService = require('./saleService');
+const catalogService = require('./catalogService');
+const userService = require('./userService');
+const {
+    sendEmailChangeOtpEmail,
+    sendPasswordChangeOtpEmail
+} = require('../config/email');
 const emailRepository = require('../repositories/emailRepository');
 const locationRepository = require('../repositories/locationRepository');
 const phoneRepository = require('../repositories/phoneRepository');
-const saleProductRepository = require('../repositories/saleProductRepository');
+const profileRepository = require('../repositories/profileRepository');
+const refreshTokenRepository = require('../repositories/refreshTokenRepository');
 const userRepository = require('../repositories/userRepository');
-const userService = require('./userService');
 
 const PHONE_PATTERN = /^[0-9()+\s-]{6,20}$/;
 const ACTIVE_STATE_ID = 1;
+const INACTIVE_STATE_ID = 2;
+const PENDING_STATE_ID = 3;
+const PROFILE_SECURITY_OTP_TTL_MINUTES = Number(
+    process.env.PROFILE_SECURITY_OTP_TTL_MINUTES || 15
+);
+const EMAIL_CHANGE_OTP_NAME = 'Cambio de correo';
+const PASSWORD_CHANGE_OTP_NAME = 'Cambio de contrasena';
 
 function createHttpError(message, statusCode) {
     const error = new Error(message);
@@ -37,6 +45,14 @@ function normalizeCatalogName(value) {
 function normalizeOptionalText(value) {
     const normalizedValue = String(value || '').trim();
     return normalizedValue || null;
+}
+
+function normalizeEmailAddress(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function hasOwnProperty(target, property) {
+    return Object.prototype.hasOwnProperty.call(target || {}, property);
 }
 
 function serializeDate(value) {
@@ -76,6 +92,40 @@ function roundMoney(value) {
 function pickPreferredRecord(records) {
     const activeRecord = records.find((record) => Number(record.ID_ESTADO) === ACTIVE_STATE_ID);
     return activeRecord || records[0] || null;
+}
+
+function isBcryptHash(value) {
+    return typeof value === 'string' && /^\$2[aby]\$\d{2}\$/.test(value);
+}
+
+async function verifyStoredPassword(candidatePassword, storedPassword) {
+    if (typeof storedPassword !== 'string' || !storedPassword) {
+        return { isValid: false, needsMigration: false };
+    }
+
+    if (!isBcryptHash(storedPassword)) {
+        return {
+            isValid: storedPassword === candidatePassword,
+            needsMigration: storedPassword === candidatePassword
+        };
+    }
+
+    try {
+        return {
+            isValid: await bcrypt.compare(candidatePassword, storedPassword),
+            needsMigration: false
+        };
+    } catch (error) {
+        return { isValid: false, needsMigration: false };
+    }
+}
+
+function isRefreshTokenRecordActive(refreshTokenRecord) {
+    return (
+        Number(refreshTokenRecord?.ID_ESTADO) === ACTIVE_STATE_ID &&
+        !refreshTokenRecord?.FECHA_REVOCACION &&
+        new Date(refreshTokenRecord.FECHA_EXPIRACION).getTime() > Date.now()
+    );
 }
 
 function formatCurrentProfile({ user, email, phone }) {
@@ -135,20 +185,6 @@ function formatCurrentProfile({ user, email, phone }) {
     };
 }
 
-function formatSaleProduct(item) {
-    return {
-        idVenta: Number(item.ID_VENTA),
-        idProducto: Number(item.ID_PRODUCTO),
-        producto: item.PRODUCTO || null,
-        tipoMovimiento: item.TIPO_MOVIMIENTO || null,
-        cantidad: Number(item.CANTIDAD || 0),
-        precioUnitario: roundMoney(item.PRECIO_UNITARIO || 0),
-        total: roundMoney(item.TOTAL || 0),
-        idEstado: Number(item.ID_ESTADO),
-        estado: item.ESTADO || null
-    };
-}
-
 async function getCurrentProfileRecord(idCuenta) {
     const account = await userRepository.findAccountByIdCuenta(idCuenta);
 
@@ -160,172 +196,184 @@ async function getCurrentProfileRecord(idCuenta) {
     const [user, emails, phones] = await Promise.all([
         userRepository.findUserDetailsByIdentification(identificacion),
         emailRepository.findEmailsByIdentification(identificacion),
-        phoneRepository.findAllPhones()
+        phoneRepository.findPhonesByIdentification(identificacion)
     ]);
 
     if (!user) {
         throw createHttpError('User not found', 404);
     }
 
-    const userPhones = phones.filter(
-        (phone) => normalizeIdentification(phone.IDENTIFICACION) === identificacion
-    );
-
     return {
         account,
         identificacion,
         user,
+        emails,
         email: pickPreferredRecord(emails),
-        phone: pickPreferredRecord(userPhones)
+        phone: pickPreferredRecord(phones)
     };
 }
 
-function buildAdoptionRequests({ identificacion, requests, adoptions }) {
-    const requestsByUser = requests.filter(
-        (request) =>
-            normalizeIdentification(request.identificacion) === identificacion &&
-            (Number(request.idTipoSolicitud) === 1 ||
-                normalizeCatalogName(request.tipoSolicitud) === normalizeCatalogName('Adopcion'))
-    );
+function buildCurrentProfileFromSummaryRow(summaryRow) {
+    if (!summaryRow) {
+        return null;
+    }
 
-    const adoptionsByRequestId = new Map(
-        adoptions
-            .filter((adoption) => normalizeIdentification(adoption.identificacion) === identificacion)
-            .map((adoption) => [Number(adoption.idSolicitud), adoption])
-    );
-
-    return requestsByUser
-        .map((request) => {
-            const adoption = adoptionsByRequestId.get(Number(request.idSolicitud)) || null;
-
-            return {
-                idSolicitud: Number(request.idSolicitud),
-                tipoSolicitud: request.tipoSolicitud || null,
-                idEstadoSolicitud: Number(request.idEstado),
-                estadoSolicitud: request.estado || null,
-                idPerrito:
-                    request.idPerrito !== null && request.idPerrito !== undefined
-                        ? Number(request.idPerrito)
-                        : adoption?.idPerrito || null,
-                nombrePerrito: request.nombrePerrito || adoption?.nombrePerrito || null,
-                idAdopcion: adoption?.idAdopcion || null,
-                idEstadoProceso: adoption?.idEstado || null,
-                estadoProceso: adoption?.estado || null,
-                fechaAdopcion: adoption?.fechaAdopcion || null
-            };
-        })
-        .sort((left, right) => right.idSolicitud - left.idSolicitud);
+    return {
+        account: {
+            ID_CUENTA: summaryRow.ID_CUENTA,
+            IDENTIFICACION: summaryRow.IDENTIFICACION,
+            USUARIO: summaryRow.USUARIO,
+            PASSWORD_HASH: summaryRow.PASSWORD_HASH,
+            ID_ESTADO: summaryRow.ID_ESTADO_CUENTA
+        },
+        identificacion: normalizeIdentification(summaryRow.IDENTIFICACION),
+        user: summaryRow,
+        emails: [],
+        email: summaryRow.CORREO
+            ? {
+                  CORREO: summaryRow.CORREO,
+                  ID_ESTADO: summaryRow.ID_ESTADO_CORREO,
+                  ESTADO: summaryRow.ESTADO_CORREO
+              }
+            : null,
+        phone: summaryRow.TELEFONO
+            ? {
+                  TELEFONO: summaryRow.TELEFONO,
+                  ID_ESTADO: summaryRow.ID_ESTADO_TELEFONO,
+                  ESTADO: summaryRow.ESTADO_TELEFONO
+              }
+            : null
+    };
 }
 
-async function buildPurchases({ identificacion, sales, saleInvoices }) {
-    const userSales = sales
-        .filter((sale) => normalizeIdentification(sale.identificacion) === identificacion)
-        .sort((left, right) => {
-            const leftDate = new Date(left.fechaVenta || 0).getTime();
-            const rightDate = new Date(right.fechaVenta || 0).getTime();
-            return rightDate - leftDate;
-        });
-
-    const itemsBySaleId = new Map(
-        await Promise.all(
-            userSales.map(async (sale) => [
-                Number(sale.idVenta),
-                (await saleProductRepository.findSaleProductsBySaleId(sale.idVenta)).map(formatSaleProduct)
-            ])
+function buildAdoptionRequests(requestRows) {
+    return requestRows
+        .filter(
+            (request) =>
+                Number(request.ID_TIPO_SOLICITUD) === 1 ||
+                normalizeCatalogName(request.TIPO_SOLICITUD) === normalizeCatalogName('Adopcion')
         )
-    );
+        .map((request) => ({
+            idSolicitud: Number(request.ID_SOLICITUD),
+            tipoSolicitud: request.TIPO_SOLICITUD || null,
+            idEstadoSolicitud: Number(request.ID_ESTADO),
+            estadoSolicitud: request.ESTADO_SOLICITUD || null,
+            idPerrito:
+                request.ID_PERRITO === null || request.ID_PERRITO === undefined
+                    ? null
+                    : Number(request.ID_PERRITO),
+            nombrePerrito: request.NOMBRE_PERRITO || null,
+            idAdopcion:
+                request.ID_ADOPCION === null || request.ID_ADOPCION === undefined
+                    ? null
+                    : Number(request.ID_ADOPCION),
+            idEstadoProceso:
+                request.ID_ESTADO_PROCESO === null || request.ID_ESTADO_PROCESO === undefined
+                    ? null
+                    : Number(request.ID_ESTADO_PROCESO),
+            estadoProceso: request.ESTADO_PROCESO || null,
+            fechaAdopcion: serializeDateOnly(request.FECHA_ADOPCION)
+        }));
+}
 
-    const invoicesBySaleId = saleInvoices.reduce((accumulator, saleInvoice) => {
-        const key = Number(saleInvoice.idVenta);
-        const currentInvoices = accumulator.get(key) || [];
-        currentInvoices.push({
-            idFactura: saleInvoice.idFactura,
-            idEstado: Number(saleInvoice.idEstado),
-            estado: saleInvoice.estado || null,
-            moneda: saleInvoice.moneda || null,
-            simbolo: saleInvoice.simbolo || null,
-            totalFactura: roundMoney(saleInvoice.totalFactura || 0),
-            fechaFactura: saleInvoice.fechaFactura || null
+function buildPurchases({ purchases, purchaseItems, purchaseInvoices }) {
+    const itemsBySaleId = purchaseItems.reduce((accumulator, item) => {
+        const currentItems = accumulator.get(Number(item.ID_VENTA)) || [];
+        currentItems.push({
+            idVenta: Number(item.ID_VENTA),
+            idProducto: Number(item.ID_PRODUCTO),
+            producto: item.PRODUCTO || null,
+            tipoMovimiento: item.TIPO_MOVIMIENTO || null,
+            cantidad: Number(item.CANTIDAD || 0),
+            precioUnitario: roundMoney(item.PRECIO_UNITARIO || 0),
+            total: roundMoney(item.TOTAL || 0),
+            idEstado: Number(item.ID_ESTADO),
+            estado: item.ESTADO || null
         });
-        accumulator.set(key, currentInvoices);
+        accumulator.set(Number(item.ID_VENTA), currentItems);
         return accumulator;
     }, new Map());
 
-    return userSales.map((sale) => ({
-        idVenta: Number(sale.idVenta),
-        totalVenta: roundMoney(sale.totalVenta || 0),
-        fechaVenta: serializeDate(sale.fechaVenta),
-        idEstado: Number(sale.idEstado),
-        estado: sale.estado || null,
-        items: itemsBySaleId.get(Number(sale.idVenta)) || [],
-        facturas: invoicesBySaleId.get(Number(sale.idVenta)) || []
+    const invoicesBySaleId = purchaseInvoices.reduce((accumulator, invoice) => {
+        const currentInvoices = accumulator.get(Number(invoice.ID_VENTA)) || [];
+        currentInvoices.push({
+            idFactura: invoice.ID_FACTURA,
+            idEstado: Number(invoice.ID_ESTADO),
+            estado: invoice.ESTADO || null,
+            moneda: invoice.MONEDA || null,
+            simbolo: invoice.SIMBOLO || null,
+            totalFactura: roundMoney(invoice.TOTAL_FACTURA || 0),
+            fechaFactura: serializeDate(invoice.FECHA_FACTURA)
+        });
+        accumulator.set(Number(invoice.ID_VENTA), currentInvoices);
+        return accumulator;
+    }, new Map());
+
+    return purchases.map((purchase) => ({
+        idVenta: Number(purchase.ID_VENTA),
+        totalVenta: roundMoney(purchase.TOTAL_VENTA || 0),
+        fechaVenta: serializeDate(purchase.FECHA_VENTA),
+        idEstado: Number(purchase.ID_ESTADO),
+        estado: purchase.ESTADO || null,
+        items: itemsBySaleId.get(Number(purchase.ID_VENTA)) || [],
+        facturas: invoicesBySaleId.get(Number(purchase.ID_VENTA)) || []
     }));
 }
 
-function buildFosterHomes({ identificacion, fosterHomes, houseDogs }) {
-    const activeHouseDogsByHomeId = houseDogs.reduce((accumulator, houseDog) => {
-        if (Number(houseDog.idEstado) !== ACTIVE_STATE_ID) {
-            return accumulator;
-        }
-
-        const currentDogs = accumulator.get(Number(houseDog.idCasaCuna)) || [];
+function buildFosterHomes({ fosterHomes, fosterDogs }) {
+    const dogsByHomeId = fosterDogs.reduce((accumulator, dog) => {
+        const currentDogs = accumulator.get(Number(dog.ID_CASA_CUNA)) || [];
         currentDogs.push({
-            idPerrito: Number(houseDog.idPerrito),
-            nombrePerrito: houseDog.nombrePerrito || null,
-            idEstado: Number(houseDog.idEstado),
-            estado: houseDog.estado || null
+            idPerrito: Number(dog.ID_PERRITO),
+            nombrePerrito: dog.NOMBRE_PERRITO || null,
+            idEstado: Number(dog.ID_ESTADO),
+            estado: dog.ESTADO || null
         });
-        accumulator.set(Number(houseDog.idCasaCuna), currentDogs);
+        accumulator.set(Number(dog.ID_CASA_CUNA), currentDogs);
         return accumulator;
     }, new Map());
 
-    return fosterHomes
-        .filter((fosterHome) => normalizeIdentification(fosterHome.identificacion) === identificacion)
-        .map((fosterHome) => ({
-            idCasaCuna: Number(fosterHome.idCasaCuna),
-            nombre: fosterHome.nombre || null,
-            ubicacion: fosterHome.ubicacion || null,
-            calle: fosterHome.calle || null,
-            numero: fosterHome.numero || null,
-            distrito: fosterHome.distrito || null,
-            canton: fosterHome.canton || null,
-            provincia: fosterHome.provincia || null,
-            pais: fosterHome.pais || null,
-            idSolicitud: fosterHome.idSolicitud || null,
-            tipoSolicitud: fosterHome.tipoSolicitud || null,
-            totalPerritos: Number(fosterHome.totalPerritos || 0),
-            idEstado: Number(fosterHome.idEstado),
-            estado: fosterHome.estado || null,
-            perrosAlojados: activeHouseDogsByHomeId.get(Number(fosterHome.idCasaCuna)) || []
-        }))
-        .sort((left, right) => right.idCasaCuna - left.idCasaCuna);
+    return fosterHomes.map((fosterHome) => ({
+        idCasaCuna: Number(fosterHome.ID_CASA_CUNA),
+        nombre: fosterHome.NOMBRE || null,
+        ubicacion: [fosterHome.DISTRITO, fosterHome.CANTON, fosterHome.PROVINCIA, fosterHome.PAIS]
+            .filter(Boolean)
+            .join(', ') || null,
+        calle: fosterHome.CALLE || null,
+        numero: fosterHome.NUMERO || null,
+        distrito: fosterHome.DISTRITO || null,
+        canton: fosterHome.CANTON || null,
+        provincia: fosterHome.PROVINCIA || null,
+        pais: fosterHome.PAIS || null,
+        idSolicitud:
+            fosterHome.ID_SOLICITUD === null || fosterHome.ID_SOLICITUD === undefined
+                ? null
+                : Number(fosterHome.ID_SOLICITUD),
+        tipoSolicitud: fosterHome.TIPO_SOLICITUD || null,
+        totalPerritos: Number(fosterHome.TOTAL_PERRITOS || 0),
+        idEstado: Number(fosterHome.ID_ESTADO),
+        estado: fosterHome.ESTADO || null,
+        perrosAlojados: dogsByHomeId.get(Number(fosterHome.ID_CASA_CUNA)) || []
+    }));
 }
 
 async function buildProfileOverview(idCuenta) {
-    const currentProfile = await getCurrentProfileRecord(idCuenta);
-    const [requests, adoptions, sales, saleInvoices, fosterHomes, houseDogs] = await Promise.all([
-        requestService.getRequests(),
-        adoptionService.getAdoptions(),
-        saleService.getSales(),
-        saleInvoiceService.getSaleInvoices(),
-        fosterHomeService.getFosterHomes(),
-        houseDogService.getHouseDogs()
-    ]);
+    const overviewRows = await profileRepository.findProfileOverviewData(idCuenta);
+    const currentProfile = buildCurrentProfileFromSummaryRow(overviewRows.profile);
 
-    const adoptionRequests = buildAdoptionRequests({
-        identificacion: currentProfile.identificacion,
-        requests,
-        adoptions
-    });
-    const purchases = await buildPurchases({
-        identificacion: currentProfile.identificacion,
-        sales,
-        saleInvoices
+    if (!currentProfile) {
+        throw createHttpError('Account not found', 404);
+    }
+
+    const adoptionRequests = buildAdoptionRequests(overviewRows.requests);
+    const purchases = buildPurchases({
+        purchases: overviewRows.purchases,
+        purchaseItems: overviewRows.purchaseItems,
+        purchaseInvoices: overviewRows.purchaseInvoices
     });
     const fosterHomesSummary = buildFosterHomes({
-        identificacion: currentProfile.identificacion,
-        fosterHomes,
-        houseDogs
+        fosterHomes: overviewRows.fosterHomes,
+        fosterDogs: overviewRows.fosterDogs
     });
 
     return {
@@ -337,7 +385,10 @@ async function buildProfileOverview(idCuenta) {
             totalSolicitudesAdopcion: adoptionRequests.length,
             totalCompras: purchases.length,
             montoComprado: roundMoney(
-                purchases.reduce((accumulator, purchase) => accumulator + Number(purchase.totalVenta || 0), 0)
+                purchases.reduce(
+                    (accumulator, purchase) => accumulator + Number(purchase.totalVenta || 0),
+                    0
+                )
             ),
             totalCasasCuna: fosterHomesSummary.length,
             totalPerritosAlojados: fosterHomesSummary.reduce(
@@ -348,7 +399,127 @@ async function buildProfileOverview(idCuenta) {
     };
 }
 
+async function getOtpTypeIdByName(expectedName) {
+    const normalizedExpectedName = normalizeCatalogName(expectedName);
+    const otpTypes = await catalogService.getOtpTypes();
+    const matchingOtpType = otpTypes.find(
+        (otpType) => normalizeCatalogName(otpType.nombre) === normalizedExpectedName
+    );
+
+    if (!matchingOtpType) {
+        throw createHttpError(`OTP type "${expectedName}" is not configured`, 500);
+    }
+
+    return matchingOtpType.idTipoOtp;
+}
+
+async function getEmailChangeOtpTypeId() {
+    return getOtpTypeIdByName(EMAIL_CHANGE_OTP_NAME);
+}
+
+async function getPasswordChangeOtpTypeId() {
+    return getOtpTypeIdByName(PASSWORD_CHANGE_OTP_NAME);
+}
+
+async function createAndSendOtp({ idCuenta, idTipoOtp, sendEmail }) {
+    await userRepository.deactivateActiveOtpsByCuenta(idCuenta, idTipoOtp);
+
+    const verificationCode = crypto.randomInt(100000, 999999).toString();
+    const hashedCode = await bcrypt.hash(verificationCode, 10);
+
+    await userRepository.createOTP({
+        idCuenta,
+        idTipoOtp,
+        codigoHash: hashedCode,
+        fechaExpiracion: new Date(Date.now() + PROFILE_SECURITY_OTP_TTL_MINUTES * 60 * 1000),
+        fechaUso: null,
+        intentos: 0,
+        fechaCreacion: new Date(),
+        idEstado: ACTIVE_STATE_ID
+    });
+
+    const emailSent = await sendEmail(verificationCode);
+
+    if (!emailSent) {
+        throw createHttpError('Failed to send verification email', 502);
+    }
+
+    return { emailSent: true };
+}
+
+async function assertValidCurrentPassword(account, currentPassword) {
+    const passwordValidation = await verifyStoredPassword(currentPassword, account.PASSWORD_HASH);
+
+    if (!passwordValidation.isValid) {
+        throw createHttpError('Current password is incorrect', 401);
+    }
+
+    if (passwordValidation.needsMigration) {
+        const migratedHash = await bcrypt.hash(currentPassword, 10);
+        await userRepository.updateAccount({
+            idCuenta: Number(account.ID_CUENTA),
+            identificacion: normalizeIdentification(account.IDENTIFICACION),
+            usuario: account.USUARIO,
+            passwordHash: migratedHash,
+            idEstado: Number(account.ID_ESTADO)
+        });
+
+        return {
+            ...account,
+            PASSWORD_HASH: migratedHash
+        };
+    }
+
+    return account;
+}
+
+function getVerifiedEmailRecord(currentProfile) {
+    if (!currentProfile.email || Number(currentProfile.email.ID_ESTADO) !== ACTIVE_STATE_ID) {
+        throw createHttpError(
+            'You need a verified email before changing your password',
+            409
+        );
+    }
+
+    return currentProfile.email;
+}
+
+async function revokeStoredRefreshToken(refreshTokenRecord) {
+    if (!refreshTokenRecord || Number(refreshTokenRecord.ID_ESTADO) !== ACTIVE_STATE_ID) {
+        return;
+    }
+
+    await refreshTokenRepository.updateRefreshToken({
+        idRefreshToken: refreshTokenRecord.ID_REFRESH_TOKEN,
+        idCuenta: refreshTokenRecord.ID_CUENTA,
+        tokenHash: refreshTokenRecord.TOKEN_HASH,
+        jti: refreshTokenRecord.JTI,
+        ipAddress: refreshTokenRecord.IP_ADDRESS,
+        userAgent: refreshTokenRecord.USER_AGENT,
+        fechaExpiracion: refreshTokenRecord.FECHA_EXPIRACION,
+        fechaRevocacion: new Date(),
+        idEstado: INACTIVE_STATE_ID
+    });
+}
+
+async function revokeAllRefreshTokensByAccount(idCuenta) {
+    const refreshTokens = await refreshTokenRepository.findRefreshTokensByCuenta(idCuenta);
+
+    for (const refreshTokenRecord of refreshTokens) {
+        if (isRefreshTokenRecordActive(refreshTokenRecord)) {
+            await revokeStoredRefreshToken(refreshTokenRecord);
+        }
+    }
+}
+
 async function updateCurrentProfile(idCuenta, profileData) {
+    if (hasOwnProperty(profileData, 'correo') || hasOwnProperty(profileData, 'password')) {
+        throw createHttpError(
+            'Email and password must be changed through the verification flows',
+            400
+        );
+    }
+
     const currentProfile = await getCurrentProfileRecord(idCuenta);
     const normalizedUsername = String(profileData.usuario || '').trim();
     const normalizedPhone = String(profileData.telefono || '').trim();
@@ -421,13 +592,14 @@ async function updateCurrentProfile(idCuenta, profileData) {
         idCuenta: Number(currentProfile.account.ID_CUENTA),
         identificacion: currentProfile.identificacion,
         usuario: normalizedUsername,
-        passwordHash: profileData.password
-            ? await bcrypt.hash(String(profileData.password), 10)
-            : currentProfile.account.PASSWORD_HASH,
+        passwordHash: currentProfile.account.PASSWORD_HASH,
         idEstado: Number(currentProfile.account.ID_ESTADO)
     });
 
-    if (existingPhoneRecord && normalizeIdentification(existingPhoneRecord.IDENTIFICACION) === currentProfile.identificacion) {
+    if (
+        existingPhoneRecord &&
+        normalizeIdentification(existingPhoneRecord.IDENTIFICACION) === currentProfile.identificacion
+    ) {
         if (
             currentProfile.phone &&
             String(currentProfile.phone.TELEFONO || '').trim() !== normalizedPhone
@@ -471,7 +643,235 @@ async function updateCurrentProfile(idCuenta, profileData) {
     return buildProfileOverview(idCuenta);
 }
 
+async function requestCurrentEmailChange(idCuenta, payload) {
+    const currentProfile = await getCurrentProfileRecord(idCuenta);
+    const normalizedNewEmail = normalizeEmailAddress(payload.nuevoCorreo);
+    const currentActiveEmail = (currentProfile.emails || []).find(
+        (emailRecord) => Number(emailRecord.ID_ESTADO) === ACTIVE_STATE_ID
+    );
+    const currentEmail = normalizeEmailAddress(currentActiveEmail?.CORREO);
+
+    if (!normalizedNewEmail) {
+        throw createHttpError('Valid email is required', 400);
+    }
+
+    if (normalizedNewEmail === currentEmail) {
+        throw createHttpError('The new email must be different from the current one', 409);
+    }
+
+    const emailWithSameAddress = await emailRepository.findEmailByAddress(normalizedNewEmail);
+
+    if (
+        emailWithSameAddress &&
+        normalizeIdentification(emailWithSameAddress.IDENTIFICACION) !== currentProfile.identificacion
+    ) {
+        throw createHttpError('Email already exists', 409);
+    }
+
+    for (const emailRecord of currentProfile.emails || []) {
+        if (
+            Number(emailRecord.ID_ESTADO) === PENDING_STATE_ID &&
+            normalizeEmailAddress(emailRecord.CORREO) !== normalizedNewEmail
+        ) {
+            await emailRepository.deleteEmail(currentProfile.identificacion, emailRecord.CORREO);
+        }
+    }
+
+    let createdPendingEmail = false;
+    let previousEmailState = null;
+    let targetEmailAddress = normalizedNewEmail;
+
+    if (
+        emailWithSameAddress &&
+        normalizeIdentification(emailWithSameAddress.IDENTIFICACION) === currentProfile.identificacion
+    ) {
+        previousEmailState = Number(emailWithSameAddress.ID_ESTADO);
+        targetEmailAddress = emailWithSameAddress.CORREO;
+        if (previousEmailState === ACTIVE_STATE_ID) {
+            throw createHttpError('Email already exists', 409);
+        }
+
+        await emailRepository.updateEmail({
+            identificacion: currentProfile.identificacion,
+            correo: targetEmailAddress,
+            idEstado: PENDING_STATE_ID
+        });
+    } else {
+        await emailRepository.createEmail({
+            identificacion: currentProfile.identificacion,
+            correo: normalizedNewEmail,
+            idEstado: PENDING_STATE_ID
+        });
+        createdPendingEmail = true;
+    }
+
+    try {
+        await createAndSendOtp({
+            idCuenta: Number(currentProfile.account.ID_CUENTA),
+            idTipoOtp: await getEmailChangeOtpTypeId(),
+            sendEmail: (code) =>
+                sendEmailChangeOtpEmail(
+                    normalizedNewEmail,
+                    code,
+                    PROFILE_SECURITY_OTP_TTL_MINUTES
+                )
+        });
+    } catch (error) {
+        if (createdPendingEmail) {
+            await emailRepository.deleteEmail(currentProfile.identificacion, normalizedNewEmail);
+        } else if (
+            previousEmailState !== null &&
+            previousEmailState !== PENDING_STATE_ID
+        ) {
+            await emailRepository.updateEmail({
+                identificacion: currentProfile.identificacion,
+                correo: targetEmailAddress,
+                idEstado: previousEmailState
+            });
+        }
+
+        throw error;
+    }
+
+    userService.invalidateAllUserCaches?.();
+
+    return {
+        emailSent: true,
+        nuevoCorreo: normalizedNewEmail
+    };
+}
+
+async function confirmCurrentEmailChange(idCuenta, payload) {
+    const currentProfile = await getCurrentProfileRecord(idCuenta);
+    const normalizedNewEmail = normalizeEmailAddress(payload.nuevoCorreo);
+    const verificationCode = String(payload.codigo || '').trim();
+
+    const pendingEmail = await emailRepository.findEmailByAddress(normalizedNewEmail);
+
+    if (
+        !pendingEmail ||
+        normalizeIdentification(pendingEmail.IDENTIFICACION) !== currentProfile.identificacion ||
+        Number(pendingEmail.ID_ESTADO) !== PENDING_STATE_ID
+    ) {
+        throw createHttpError('No pending email change was found for this address', 404);
+    }
+
+    const otp = await userRepository.findOTPByCodeAndCuenta(
+        verificationCode,
+        Number(currentProfile.account.ID_CUENTA),
+        await getEmailChangeOtpTypeId()
+    );
+
+    if (!otp) {
+        throw createHttpError('Invalid or expired verification code', 400);
+    }
+
+    await userRepository.markOTPAsUsed(otp.ID_CODIGO_OTP);
+
+    if (
+        currentProfile.email &&
+        Number(currentProfile.email.ID_ESTADO) === ACTIVE_STATE_ID &&
+        normalizeEmailAddress(currentProfile.email.CORREO) !== normalizedNewEmail
+    ) {
+        await emailRepository.updateEmail({
+            identificacion: currentProfile.identificacion,
+            correo: currentProfile.email.CORREO,
+            idEstado: INACTIVE_STATE_ID
+        });
+    }
+
+    await emailRepository.updateEmail({
+        identificacion: currentProfile.identificacion,
+        correo: pendingEmail.CORREO,
+        idEstado: ACTIVE_STATE_ID
+    });
+
+    userService.invalidateAllUserCaches?.();
+
+    return buildProfileOverview(idCuenta);
+}
+
+async function requestCurrentPasswordChange(idCuenta, payload) {
+    const currentProfile = await getCurrentProfileRecord(idCuenta);
+    const verifiedEmail = getVerifiedEmailRecord(currentProfile);
+    const currentPassword = String(payload.currentPassword || '');
+    const newPassword = String(payload.newPassword || '');
+
+    if (currentPassword === newPassword) {
+        throw createHttpError(
+            'The new password must be different from the current password',
+            400
+        );
+    }
+
+    await assertValidCurrentPassword(currentProfile.account, currentPassword);
+
+    await createAndSendOtp({
+        idCuenta: Number(currentProfile.account.ID_CUENTA),
+        idTipoOtp: await getPasswordChangeOtpTypeId(),
+        sendEmail: (code) =>
+            sendPasswordChangeOtpEmail(
+                verifiedEmail.CORREO,
+                code,
+                PROFILE_SECURITY_OTP_TTL_MINUTES
+            )
+    });
+
+    return {
+        emailSent: true
+    };
+}
+
+async function confirmCurrentPasswordChange(idCuenta, payload) {
+    const currentProfile = await getCurrentProfileRecord(idCuenta);
+    getVerifiedEmailRecord(currentProfile);
+
+    const currentPassword = String(payload.currentPassword || '');
+    const newPassword = String(payload.newPassword || '');
+    const verificationCode = String(payload.codigo || '').trim();
+
+    if (currentPassword === newPassword) {
+        throw createHttpError(
+            'The new password must be different from the current password',
+            400
+        );
+    }
+
+    await assertValidCurrentPassword(currentProfile.account, currentPassword);
+
+    const otp = await userRepository.findOTPByCodeAndCuenta(
+        verificationCode,
+        Number(currentProfile.account.ID_CUENTA),
+        await getPasswordChangeOtpTypeId()
+    );
+
+    if (!otp) {
+        throw createHttpError('Invalid or expired verification code', 400);
+    }
+
+    await userRepository.markOTPAsUsed(otp.ID_CODIGO_OTP);
+
+    await userRepository.updateAccount({
+        idCuenta: Number(currentProfile.account.ID_CUENTA),
+        identificacion: currentProfile.identificacion,
+        usuario: currentProfile.account.USUARIO,
+        passwordHash: await bcrypt.hash(newPassword, 10),
+        idEstado: Number(currentProfile.account.ID_ESTADO)
+    });
+
+    await revokeAllRefreshTokensByAccount(Number(currentProfile.account.ID_CUENTA));
+    userService.invalidateAllUserCaches?.();
+
+    return {
+        requiresReauth: true
+    };
+}
+
 module.exports = {
     getCurrentProfileOverview: buildProfileOverview,
-    updateCurrentProfile
+    updateCurrentProfile,
+    requestCurrentEmailChange,
+    confirmCurrentEmailChange,
+    requestCurrentPasswordChange,
+    confirmCurrentPasswordChange
 };

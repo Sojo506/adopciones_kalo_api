@@ -25,7 +25,7 @@ const createAccountValidation = [
         .trim()
         .isLength({ min: 1, max: 100 })
         .withMessage('Usuario is required and must be at most 100 characters'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
     body('idEstado').isInt({ min: 1 }).withMessage('ID Estado must be a positive number')
 ];
 
@@ -37,8 +37,8 @@ const updateAccountValidation = [
         .withMessage('Usuario is required and must be at most 100 characters'),
     body('password')
         .optional({ values: 'falsy' })
-        .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters'),
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters'),
     body('idEstado').isInt({ min: 1 }).withMessage('ID Estado must be a positive number')
 ];
 

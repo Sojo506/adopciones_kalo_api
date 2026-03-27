@@ -448,6 +448,8 @@ BEGIN
     -- ============================================================
     FIDE_TIPO_OTP_INSERT_SP( 'Verificación de correo',          1);
     FIDE_TIPO_OTP_INSERT_SP( 'Recuperación de contraseña',      1);
+    FIDE_TIPO_OTP_INSERT_SP( 'Cambio de correo',                1);
+    FIDE_TIPO_OTP_INSERT_SP( 'Cambio de contraseña',            1);
     FIDE_TIPO_OTP_INSERT_SP( 'Doble factor de autenticación',   1);
     FIDE_TIPO_OTP_INSERT_SP( 'Confirmación de operación',       1);
     FIDE_TIPO_OTP_INSERT_SP( 'Validación de nuevo dispositivo', 1);

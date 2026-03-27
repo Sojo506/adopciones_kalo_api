@@ -18,6 +18,17 @@ function validationErrorResponse(req, res) {
 }
 
 const updateCurrentProfileValidation = [
+    body().custom((value, { req }) => {
+        if (Object.prototype.hasOwnProperty.call(req.body || {}, 'correo')) {
+            throw new Error('Correo must be updated through the verification flow');
+        }
+
+        if (Object.prototype.hasOwnProperty.call(req.body || {}, 'password')) {
+            throw new Error('Password must be updated through the verification flow');
+        }
+
+        return true;
+    }),
     body('usuario').trim().isLength({ min: 1 }).withMessage('Usuario is required'),
     body('nombre').trim().isLength({ min: 1 }).withMessage('Nombre is required'),
     body('apellidoPaterno')
@@ -32,10 +43,6 @@ const updateCurrentProfileValidation = [
         .trim()
         .matches(PHONE_PATTERN)
         .withMessage('Valid phone is required'),
-    body('password')
-        .optional({ values: 'falsy' })
-        .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters'),
     body('idPais').isNumeric().withMessage('ID Pais must be a number'),
     body('idProvincia').isNumeric().withMessage('ID Provincia must be a number'),
     body('idCanton').isNumeric().withMessage('ID Canton must be a number'),
@@ -48,6 +55,46 @@ const updateCurrentProfileValidation = [
         .optional({ values: 'falsy' })
         .isLength({ max: 100 })
         .withMessage('Numero must be at most 100 characters')
+];
+
+const requestCurrentEmailChangeValidation = [
+    body('nuevoCorreo').trim().isEmail().withMessage('Valid email is required')
+];
+
+const confirmCurrentEmailChangeValidation = [
+    body('nuevoCorreo').trim().isEmail().withMessage('Valid email is required'),
+    body('codigo')
+        .trim()
+        .isLength({ min: 6, max: 6 })
+        .withMessage('Codigo must contain 6 digits')
+        .isNumeric()
+        .withMessage('Codigo must contain only digits')
+];
+
+const requestCurrentPasswordChangeValidation = [
+    body('currentPassword')
+        .trim()
+        .isLength({ min: 1 })
+        .withMessage('Current password is required'),
+    body('newPassword')
+        .isLength({ min: 8 })
+        .withMessage('New password must be at least 8 characters')
+];
+
+const confirmCurrentPasswordChangeValidation = [
+    body('currentPassword')
+        .trim()
+        .isLength({ min: 1 })
+        .withMessage('Current password is required'),
+    body('newPassword')
+        .isLength({ min: 8 })
+        .withMessage('New password must be at least 8 characters'),
+    body('codigo')
+        .trim()
+        .isLength({ min: 6, max: 6 })
+        .withMessage('Codigo must contain 6 digits')
+        .isNumeric()
+        .withMessage('Codigo must contain only digits')
 ];
 
 async function getCurrentProfile(req, res, next) {
@@ -84,8 +131,97 @@ async function updateCurrentProfile(req, res, next) {
     }
 }
 
+async function requestCurrentEmailChange(req, res, next) {
+    try {
+        if (validationErrorResponse(req, res)) {
+            return;
+        }
+
+        const result = await profileService.requestCurrentEmailChange(req.user.idCuenta, req.body);
+
+        res.status(200).json({
+            ok: true,
+            message: 'A verification code has been sent to the new email address',
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function confirmCurrentEmailChange(req, res, next) {
+    try {
+        if (validationErrorResponse(req, res)) {
+            return;
+        }
+
+        const profileOverview = await profileService.confirmCurrentEmailChange(
+            req.user.idCuenta,
+            req.body
+        );
+
+        res.status(200).json({
+            ok: true,
+            message: 'Email updated successfully',
+            data: profileOverview
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function requestCurrentPasswordChange(req, res, next) {
+    try {
+        if (validationErrorResponse(req, res)) {
+            return;
+        }
+
+        const result = await profileService.requestCurrentPasswordChange(
+            req.user.idCuenta,
+            req.body
+        );
+
+        res.status(200).json({
+            ok: true,
+            message: 'A verification code has been sent to your email',
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function confirmCurrentPasswordChange(req, res, next) {
+    try {
+        if (validationErrorResponse(req, res)) {
+            return;
+        }
+
+        const result = await profileService.confirmCurrentPasswordChange(
+            req.user.idCuenta,
+            req.body
+        );
+
+        res.status(200).json({
+            ok: true,
+            message: 'Password updated successfully',
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getCurrentProfile,
     updateCurrentProfile,
-    updateCurrentProfileValidation
+    updateCurrentProfileValidation,
+    requestCurrentEmailChange,
+    requestCurrentEmailChangeValidation,
+    confirmCurrentEmailChange,
+    confirmCurrentEmailChangeValidation,
+    requestCurrentPasswordChange,
+    requestCurrentPasswordChangeValidation,
+    confirmCurrentPasswordChange,
+    confirmCurrentPasswordChangeValidation
 };
