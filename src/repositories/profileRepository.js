@@ -65,6 +65,25 @@ async function findProfileOverviewData(idCuenta) {
     }
 }
 
+async function findProfileFollowUpsData(idCuenta) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        return await executeProfileCursorFunction(
+            connection,
+            `${PACKAGE_NAME}.FIDE_OBTENER_SEGUIMIENTOS_PERFIL_CUENTA_FN(:idCuenta)`,
+            { idCuenta }
+        );
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
 module.exports = {
-    findProfileOverviewData
+    findProfileOverviewData,
+    findProfileFollowUpsData
 };

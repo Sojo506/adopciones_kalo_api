@@ -184,6 +184,11 @@ CREATE OR REPLACE PACKAGE FIDE_KALO_PKG IS
     )
     RETURN SYS_REFCURSOR;
 
+    FUNCTION FIDE_OBTENER_SEGUIMIENTOS_PERFIL_CUENTA_FN(
+        P_ID_CUENTA IN FIDE_CUENTA_TB.ID_CUENTA%TYPE
+    )
+    RETURN SYS_REFCURSOR;
+
     /* ============================================================
        TIENDA, PRODUCTOS E INVENTARIO
        ============================================================ */

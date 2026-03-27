@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.get('/me', authenticateToken, userController.getMe);
 router.get('/profile', authenticateToken, profileController.getCurrentProfile);
+router.get('/profile/follow-ups', authenticateToken, profileController.getCurrentProfileFollowUps);
 router.put(
     '/profile',
     authenticateToken,

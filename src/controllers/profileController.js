@@ -110,6 +110,20 @@ async function getCurrentProfile(req, res, next) {
     }
 }
 
+async function getCurrentProfileFollowUps(req, res, next) {
+    try {
+        const followUps = await profileService.getCurrentProfileFollowUps(req.user.idCuenta);
+
+        res.status(200).json({
+            ok: true,
+            count: followUps.length,
+            data: followUps
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 async function updateCurrentProfile(req, res, next) {
     try {
         if (validationErrorResponse(req, res)) {
@@ -214,6 +228,7 @@ async function confirmCurrentPasswordChange(req, res, next) {
 
 module.exports = {
     getCurrentProfile,
+    getCurrentProfileFollowUps,
     updateCurrentProfile,
     updateCurrentProfileValidation,
     requestCurrentEmailChange,
