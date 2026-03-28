@@ -55,6 +55,23 @@ async function findEvidenceById(idEvidencia) {
     }
 }
 
+async function findEvidencesByAccountId(idCuenta) {
+    let connection;
+
+    try {
+        connection = await getConnection();
+        return await executeCursorFunctionWithConnection(
+            connection,
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_EVIDENCIAS_PERFIL_CUENTA_FN(:idCuenta)',
+            { idCuenta }
+        );
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
 async function createEvidence(evidenceData) {
     let connection;
 
@@ -167,6 +184,7 @@ module.exports = {
     findAllEvidences,
     findEvidencesByFollowUpId,
     findEvidenceById,
+    findEvidencesByAccountId,
     createEvidence,
     updateEvidence,
     deleteEvidence

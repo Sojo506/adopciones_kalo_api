@@ -45,7 +45,8 @@ async function findAdoptionByRequestId(idSolicitud, { excludeId = null } = {}) {
         connection = await getConnection();
         const adoptions = await executeCursorFunctionWithConnection(
             connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_ADOPCIONES_FN()'
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_ADOPCION_POR_SOLICITUD_FN(:idSolicitud)',
+            { idSolicitud }
         );
         return (
             adoptions.find(
@@ -70,13 +71,12 @@ async function findActiveAdoptionByDogId(idPerrito, { excludeId = null } = {}) {
         connection = await getConnection();
         const adoptions = await executeCursorFunctionWithConnection(
             connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_ADOPCIONES_FN()'
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_ADOPCION_ACTIVA_POR_PERRITO_FN(:idPerrito)',
+            { idPerrito }
         );
         return (
             adoptions.find(
                 (adoption) =>
-                    Number(adoption.ID_PERRITO) === Number(idPerrito) &&
-                    Number(adoption.ID_ESTADO) === 1 &&
                     (excludeId === null ||
                         excludeId === undefined ||
                         Number(adoption.ID_ADOPCION) !== Number(excludeId))

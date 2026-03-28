@@ -25,15 +25,12 @@ async function findFollowUpById(idSeguimiento) {
 
     try {
         connection = await getConnection();
-        const followUps = await executeCursorFunctionWithConnection(
+        const rows = await executeCursorFunctionWithConnection(
             connection,
-            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SEGUIMIENTOS_FN()'
+            'KALO.FIDE_KALO_PKG.FIDE_OBTENER_SEGUIMIENTO_POR_ID_FN(:idSeguimiento)',
+            { idSeguimiento }
         );
-        return (
-            followUps.find(
-                (followUp) => Number(followUp.ID_SEGUIMIENTO) === Number(idSeguimiento)
-            ) || null
-        );
+        return rows[0] || null;
     } finally {
         if (connection) {
             await connection.close();

@@ -160,28 +160,48 @@ function isAdminAccount(account) {
     return Number(account?.ID_TIPO_USUARIO) === 1;
 }
 
+function pickFirstDefined(...values) {
+    return values.find((value) => value !== undefined && value !== null);
+}
+
 function formatEvidence(evidence, followUp = null) {
+    const sourceFollowUp = followUp || evidence;
+    const rawIdAdopcion = pickFirstDefined(sourceFollowUp?.idAdopcion, sourceFollowUp?.ID_ADOPCION);
+    const rawIdentificacion = pickFirstDefined(
+        sourceFollowUp?.identificacion,
+        sourceFollowUp?.IDENTIFICACION
+    );
+    const rawIdPerrito = pickFirstDefined(sourceFollowUp?.idPerrito, sourceFollowUp?.ID_PERRITO);
+    const rawIdTipoSeguimiento = pickFirstDefined(
+        sourceFollowUp?.idTipoSeguimiento,
+        sourceFollowUp?.ID_TIPO_SEGUIMIENTO
+    );
+    const fechaInicioSeguimiento = pickFirstDefined(
+        sourceFollowUp?.fechaInicio,
+        serializeDateOnly(sourceFollowUp?.FECHA_INICIO)
+    );
+    const fechaFinSeguimiento = pickFirstDefined(
+        sourceFollowUp?.fechaFin,
+        serializeDateOnly(sourceFollowUp?.FECHA_FIN)
+    );
+
     return {
         idEvidencia: Number(evidence.ID_EVIDENCIA),
         idSeguimiento: Number(evidence.ID_SEGUIMIENTO),
-        idAdopcion:
-            followUp?.idAdopcion === undefined || followUp?.idAdopcion === null
-                ? null
-                : Number(followUp.idAdopcion),
-        identificacion: followUp?.identificacion ? String(followUp.identificacion) : null,
-        adoptante: followUp?.adoptante || null,
-        idPerrito:
-            followUp?.idPerrito === undefined || followUp?.idPerrito === null
-                ? null
-                : Number(followUp.idPerrito),
-        nombrePerrito: followUp?.nombrePerrito || null,
+        idAdopcion: rawIdAdopcion === undefined || rawIdAdopcion === null ? null : Number(rawIdAdopcion),
+        identificacion: rawIdentificacion ? String(rawIdentificacion) : null,
+        adoptante: pickFirstDefined(sourceFollowUp?.adoptante, sourceFollowUp?.ADOPTANTE) || null,
+        idPerrito: rawIdPerrito === undefined || rawIdPerrito === null ? null : Number(rawIdPerrito),
+        nombrePerrito:
+            pickFirstDefined(sourceFollowUp?.nombrePerrito, sourceFollowUp?.NOMBRE_PERRITO) || null,
         idTipoSeguimiento:
-            followUp?.idTipoSeguimiento === undefined || followUp?.idTipoSeguimiento === null
+            rawIdTipoSeguimiento === undefined || rawIdTipoSeguimiento === null
                 ? null
-                : Number(followUp.idTipoSeguimiento),
-        tipoSeguimiento: followUp?.tipoSeguimiento || null,
-        fechaInicioSeguimiento: followUp?.fechaInicio || null,
-        fechaFinSeguimiento: followUp?.fechaFin || null,
+                : Number(rawIdTipoSeguimiento),
+        tipoSeguimiento:
+            pickFirstDefined(sourceFollowUp?.tipoSeguimiento, sourceFollowUp?.TIPO_SEGUIMIENTO) || null,
+        fechaInicioSeguimiento: fechaInicioSeguimiento || null,
+        fechaFinSeguimiento: fechaFinSeguimiento || null,
         imageUrl: evidence.IMAGEN_URL || null,
         comentarios: evidence.COMENTARIOS || '',
         fechaEvidencia: serializeDateOnly(evidence.FECHA_EVIDENCIA),
@@ -357,26 +377,10 @@ async function getEvidences(idCuenta) {
     return evidenceQueryCache.getOrSet(
         getAccountListCacheKey(actorAccount.ID_CUENTA),
         async () => {
-            const [evidences, followUps] = await Promise.all([
-                evidenceRepository.findAllEvidences(),
-                followUpService.getFollowUps()
-            ]);
-            const ownedFollowUps = followUps.filter(
-                (followUp) =>
-                    String(followUp.identificacion) === String(actorAccount.IDENTIFICACION)
+            const evidences = await evidenceRepository.findEvidencesByAccountId(
+                actorAccount.ID_CUENTA
             );
-            const followUpById = new Map(
-                ownedFollowUps.map((followUp) => [Number(followUp.idSeguimiento), followUp])
-            );
-
-            return evidences
-                .filter((evidence) => followUpById.has(Number(evidence.ID_SEGUIMIENTO)))
-                .map((evidence) =>
-                    formatEvidence(
-                        evidence,
-                        followUpById.get(Number(evidence.ID_SEGUIMIENTO)) || null
-                    )
-                );
+            return evidences.map((evidence) => formatEvidence(evidence));
         }
     );
 }
