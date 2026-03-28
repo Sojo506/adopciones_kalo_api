@@ -1,6 +1,7 @@
 const catalogService = require('../services/catalogService');
 
 const PUBLIC_CACHE_CONTROL = 'public, max-age=3600';
+const NO_STORE_CACHE_CONTROL = 'no-store';
 
 async function getUserTypes(req, res, next) {
     try {
@@ -64,8 +65,11 @@ async function getMovementTypes(req, res, next) {
 
 async function getProducts(req, res, next) {
     try {
-        const products = await catalogService.getProducts();
-        res.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+        const forceRefresh = ['1', 'true'].includes(
+            String(req.query.force || '').trim().toLowerCase()
+        );
+        const products = await catalogService.getProducts({ force: forceRefresh });
+        res.set('Cache-Control', forceRefresh ? NO_STORE_CACHE_CONTROL : PUBLIC_CACHE_CONTROL);
         res.status(200).json({ ok: true, data: products });
     } catch (error) {
         next(error);

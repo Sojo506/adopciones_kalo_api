@@ -84,24 +84,33 @@ async function getMovementTypes() {
     });
 }
 
-async function getProducts() {
+function formatCatalogProduct(product) {
+    return {
+        idProducto: product.ID_PRODUCTO,
+        nombre: product.NOMBRE,
+        descripcion: product.DESCRIPCION || null,
+        precio: product.PRECIO === null || product.PRECIO === undefined
+            ? null
+            : Number(product.PRECIO),
+        idCategoria: product.ID_CATEGORIA,
+        categoria: product.CATEGORIA || null,
+        idMarca: product.ID_MARCA,
+        marca: product.MARCA || null,
+        stock: Number(product.STOCK || 0),
+        imageUrl: product.IMAGE_URL || null,
+        idEstado: product.ID_ESTADO
+    };
+}
+
+async function getProducts({ force = false } = {}) {
+    if (force) {
+        const products = await catalogRepository.findProducts();
+        return products.map(formatCatalogProduct);
+    }
+
     return catalogCache.getOrSet('catalog:products', async () => {
         const products = await catalogRepository.findProducts();
-        return products.map((product) => ({
-            idProducto: product.ID_PRODUCTO,
-            nombre: product.NOMBRE,
-            descripcion: product.DESCRIPCION || null,
-            precio: product.PRECIO === null || product.PRECIO === undefined
-                ? null
-                : Number(product.PRECIO),
-            idCategoria: product.ID_CATEGORIA,
-            categoria: product.CATEGORIA || null,
-            idMarca: product.ID_MARCA,
-            marca: product.MARCA || null,
-            stock: Number(product.STOCK || 0),
-            imageUrl: product.IMAGE_URL || null,
-            idEstado: product.ID_ESTADO
-        }));
+        return products.map(formatCatalogProduct);
     });
 }
 
