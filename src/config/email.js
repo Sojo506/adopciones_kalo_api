@@ -98,9 +98,44 @@ async function sendPasswordChangeOtpEmail(to, code, ttlMinutes) {
     });
 }
 
+async function sendInvoiceEmail(to, pdfBuffer, invoiceId) {
+    const mailOptions = {
+        from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM}>`,
+        to,
+        subject: `Factura #${invoiceId} — Adopciones KALO`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #11253d;">Gracias por tu compra</h2>
+                <p>Hola,</p>
+                <p>Adjuntamos la factura <strong>#${invoiceId}</strong> correspondiente a tu compra en la tienda de Adopciones KALO.</p>
+                <p>Cada compra apoya directamente a los perritos que esperan un hogar.</p>
+                <br>
+                <p>Saludos,<br>Equipo de Adopciones KALO</p>
+            </div>
+        `,
+        attachments: [
+            {
+                filename: `factura-${invoiceId}.pdf`,
+                content: pdfBuffer,
+                contentType: 'application/pdf'
+            }
+        ]
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Invoice email sent:', info.messageId);
+        return true;
+    } catch (error) {
+        console.error('Error sending invoice email:', error);
+        return false;
+    }
+}
+
 module.exports = {
     sendOtpEmail,
     sendVerificationEmail,
     sendEmailChangeOtpEmail,
-    sendPasswordChangeOtpEmail
+    sendPasswordChangeOtpEmail,
+    sendInvoiceEmail
 };
