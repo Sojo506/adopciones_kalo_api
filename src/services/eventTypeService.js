@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const eventTypeRepository = require('../repositories/eventTypeRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const EVENT_TYPE_LIST_CACHE_KEY = 'event-type:list';
 const EVENT_TYPE_DETAIL_CACHE_PREFIX = 'event-type:detail:';
@@ -72,11 +73,11 @@ async function ensureEventTypeNameIsAvailable(nombre, { excludeId = null } = {})
 }
 
 async function ensureEventTypeCanBeDisabled(existingEventType, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingEventType.idEstado) !== 1) {
+    if (isInactiveState(existingEventType.idEstado)) {
         return;
     }
 
@@ -93,7 +94,7 @@ async function ensureEventTypeCanBeDisabled(existingEventType, nextState) {
 }
 
 async function ensureEventTypeCanBeDeleted(existingEventType) {
-    if (Number(existingEventType.idEstado) !== 1) {
+    if (isInactiveState(existingEventType.idEstado)) {
         throw createHttpError('Event type is already inactive', 409);
     }
 

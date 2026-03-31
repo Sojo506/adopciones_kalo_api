@@ -4,6 +4,7 @@ const locationService = require('./locationService');
 const userService = require('./userService');
 const countryRepository = require('../repositories/countryRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const COUNTRY_LIST_CACHE_KEY = 'country:list';
 const COUNTRY_DETAIL_CACHE_PREFIX = 'country:detail:';
@@ -79,11 +80,11 @@ async function getActiveProvincesCount(idPais) {
 }
 
 async function ensureCountryCanBeDisabled(existingCountry, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingCountry.idEstado) !== 1) {
+    if (isInactiveState(existingCountry.idEstado)) {
         return;
     }
 
@@ -97,7 +98,7 @@ async function ensureCountryCanBeDisabled(existingCountry, nextState) {
 }
 
 async function ensureCountryCanBeDeleted(existingCountry) {
-    if (Number(existingCountry.idEstado) !== 1) {
+    if (isInactiveState(existingCountry.idEstado)) {
         throw createHttpError('Country is already inactive', 409);
     }
 

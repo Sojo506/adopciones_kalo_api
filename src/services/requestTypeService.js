@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const requestTypeRepository = require('../repositories/requestTypeRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const REQUEST_TYPE_LIST_CACHE_KEY = 'request-type:list';
 const REQUEST_TYPE_DETAIL_CACHE_PREFIX = 'request-type:detail:';
@@ -72,11 +73,11 @@ async function ensureRequestTypeNameIsAvailable(nombre, { excludeId = null } = {
 }
 
 async function ensureRequestTypeCanBeDisabled(existingRequestType, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingRequestType.idEstado) !== 1) {
+    if (isInactiveState(existingRequestType.idEstado)) {
         return;
     }
 
@@ -93,7 +94,7 @@ async function ensureRequestTypeCanBeDisabled(existingRequestType, nextState) {
 }
 
 async function ensureRequestTypeCanBeDeleted(existingRequestType) {
-    if (Number(existingRequestType.idEstado) !== 1) {
+    if (isInactiveState(existingRequestType.idEstado)) {
         throw createHttpError('Request type is already inactive', 409);
     }
 

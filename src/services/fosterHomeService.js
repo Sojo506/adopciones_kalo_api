@@ -4,6 +4,7 @@ const requestService = require('./requestService');
 const userService = require('./userService');
 const fosterHomeRepository = require('../repositories/fosterHomeRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const FOSTER_HOME_LIST_CACHE_KEY = 'foster-home:list';
 const FOSTER_HOME_DETAIL_CACHE_PREFIX = 'foster-home:detail:';
@@ -222,11 +223,11 @@ async function getActiveDogAssignmentsCount(idCasaCuna) {
 }
 
 async function ensureFosterHomeCanBeDisabled(existingFosterHome, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingFosterHome.idEstado) !== 1) {
+    if (isInactiveState(existingFosterHome.idEstado)) {
         return;
     }
 
@@ -243,7 +244,7 @@ async function ensureFosterHomeCanBeDisabled(existingFosterHome, nextState) {
 }
 
 async function ensureFosterHomeCanBeDeleted(existingFosterHome) {
-    if (Number(existingFosterHome.idEstado) !== 1) {
+    if (isInactiveState(existingFosterHome.idEstado)) {
         throw createHttpError('Foster home is already inactive', 409);
     }
 

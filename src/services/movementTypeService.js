@@ -2,6 +2,7 @@ const catalogService = require('./catalogService');
 const inventoryMovementService = require('./inventoryMovementService');
 const movementTypeRepository = require('../repositories/movementTypeRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const MOVEMENT_TYPE_LIST_CACHE_KEY = 'movement-type:list';
 const MOVEMENT_TYPE_DETAIL_CACHE_PREFIX = 'movement-type:detail:';
@@ -101,11 +102,11 @@ function createDependencyErrorMessage(action, dependencyCounts) {
 }
 
 async function ensureMovementTypeCanBeDisabled(existingMovementType, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingMovementType.idEstado) !== 1) {
+    if (isInactiveState(existingMovementType.idEstado)) {
         return;
     }
 
@@ -122,7 +123,7 @@ async function ensureMovementTypeCanBeDisabled(existingMovementType, nextState) 
 }
 
 async function ensureMovementTypeCanBeDeleted(existingMovementType) {
-    if (Number(existingMovementType.idEstado) !== 1) {
+    if (isInactiveState(existingMovementType.idEstado)) {
         throw createHttpError('Movement type is already inactive', 409);
     }
 

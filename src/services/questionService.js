@@ -2,6 +2,7 @@ const catalogService = require('./catalogService');
 const questionRepository = require('../repositories/questionRepository');
 const responseTypeRepository = require('../repositories/responseTypeRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const QUESTION_LIST_CACHE_KEY = 'question:list';
 const QUESTION_DETAIL_CACHE_PREFIX = 'question:detail:';
@@ -106,11 +107,11 @@ async function getActiveAssignmentsCount(idPregunta) {
 }
 
 async function ensureQuestionCanBeDisabled(existingQuestion, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingQuestion.idEstado) !== 1) {
+    if (isInactiveState(existingQuestion.idEstado)) {
         return;
     }
 
@@ -149,7 +150,7 @@ async function ensureQuestionResponseTypeCanChange(existingQuestion, nextRespons
 }
 
 async function ensureQuestionCanBeDeleted(existingQuestion) {
-    if (Number(existingQuestion.idEstado) !== 1) {
+    if (isInactiveState(existingQuestion.idEstado)) {
         throw createHttpError('Question is already inactive', 409);
     }
 

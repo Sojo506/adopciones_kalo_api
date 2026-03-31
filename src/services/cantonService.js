@@ -5,6 +5,7 @@ const provinceService = require('./provinceService');
 const cantonRepository = require('../repositories/cantonRepository');
 const userService = require('./userService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const CANTON_LIST_CACHE_KEY = 'canton:list';
 const CANTON_DETAIL_CACHE_PREFIX = 'canton:detail:';
@@ -115,11 +116,11 @@ async function ensureCantonProvinceChangeIsSafe(existingCanton, nextProvinceId) 
 }
 
 async function ensureCantonCanBeDisabled(existingCanton, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingCanton.idEstado) !== 1) {
+    if (isInactiveState(existingCanton.idEstado)) {
         return;
     }
 
@@ -133,7 +134,7 @@ async function ensureCantonCanBeDisabled(existingCanton, nextState) {
 }
 
 async function ensureCantonCanBeDeleted(existingCanton) {
-    if (Number(existingCanton.idEstado) !== 1) {
+    if (isInactiveState(existingCanton.idEstado)) {
         throw createHttpError('Canton is already inactive', 409);
     }
 

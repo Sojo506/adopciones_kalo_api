@@ -8,6 +8,7 @@ const MemoryCache = require('../utils/memoryCache');
 const ACCOUNT_LIST_CACHE_KEY = 'account:list';
 const ACCOUNT_DETAIL_CACHE_PREFIX = 'account:detail:';
 const ACCOUNT_CACHE_TTL_MS = Number(process.env.ACCOUNT_CACHE_TTL_MS || 15000);
+const INACTIVE_STATE_ID = 2;
 const accountQueryCache = new MemoryCache({ defaultTtlMs: ACCOUNT_CACHE_TTL_MS });
 
 function createHttpError(message, statusCode) {
@@ -187,6 +188,13 @@ async function updateAccount(idCuenta, accountData, actorAccount) {
         idEstado: payload.idEstado
     });
 
+    if (
+        Number(payload.idEstado) === INACTIVE_STATE_ID &&
+        Number(existingAccount.ID_ESTADO) !== INACTIVE_STATE_ID
+    ) {
+        await userService.forceLogoutAccountSessions(payload.idCuenta, 'account_inactivated');
+    }
+
     await invalidateRelatedCaches(payload.idCuenta);
     return getAccountById(payload.idCuenta);
 }
@@ -199,6 +207,7 @@ async function deleteAccount(idCuenta, actorAccount) {
 
     ensureActiveAdminIsNotEditingSelf(actorAccount, existingAccount);
 
+    await userService.forceLogoutAccountSessions(existingAccount.ID_CUENTA, 'account_deleted');
     await accountRepository.deleteAccount(idCuenta);
     await invalidateRelatedCaches(idCuenta);
 }

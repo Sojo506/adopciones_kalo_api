@@ -7,6 +7,7 @@ const {
     getRefreshTokenCookieOptions,
     getRequestMetadata
 } = require('../utils/authCookies');
+const authEventHub = require('../utils/authEventHub');
 const PHONE_PATTERN = /^[0-9()+\s-]{6,20}$/;
 
 async function getUsers(req, res, next) {
@@ -253,6 +254,27 @@ async function refreshSession(req, res, next) {
     }
 }
 
+async function sessionEvents(req, res, next) {
+    try {
+        const account = await userService.getAccountForActiveRefreshSession(
+            getCookieValue(req, REFRESH_TOKEN_COOKIE_NAME)
+        );
+
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+        res.flushHeaders?.();
+        res.write('retry: 10000\n\n');
+
+        const disconnect = authEventHub.registerAccountConnection(account.ID_CUENTA, res);
+        req.on('close', disconnect);
+    } catch (error) {
+        res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, getRefreshTokenClearCookieOptions());
+        next(error);
+    }
+}
+
 async function logout(req, res, next) {
     try {
         await userService.logout(getCookieValue(req, REFRESH_TOKEN_COOKIE_NAME));
@@ -334,6 +356,7 @@ module.exports = {
     deleteDashboardUser,
     signIn,
     refreshSession,
+    sessionEvents,
     logout,
     verifyEmail,
     resendVerificationEmail,

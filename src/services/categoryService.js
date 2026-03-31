@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const categoryRepository = require('../repositories/categoryRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const CATEGORY_LIST_CACHE_KEY = 'category:list';
 const CATEGORY_DETAIL_CACHE_PREFIX = 'category:detail:';
@@ -70,11 +71,11 @@ async function ensureCategoryNameIsAvailable(nombre, { excludeId = null } = {}) 
 }
 
 async function ensureCategoryCanBeDisabled(existingCategory, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingCategory.idEstado) !== 1) {
+    if (isInactiveState(existingCategory.idEstado)) {
         return;
     }
 
@@ -91,7 +92,7 @@ async function ensureCategoryCanBeDisabled(existingCategory, nextState) {
 }
 
 async function ensureCategoryCanBeDeleted(existingCategory) {
-    if (Number(existingCategory.idEstado) !== 1) {
+    if (isInactiveState(existingCategory.idEstado)) {
         throw createHttpError('Category is already inactive', 409);
     }
 

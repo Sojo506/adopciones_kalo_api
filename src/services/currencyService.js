@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const currencyRepository = require('../repositories/currencyRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const CURRENCY_LIST_CACHE_KEY = 'currency:list';
 const CURRENCY_DETAIL_CACHE_PREFIX = 'currency:detail:';
@@ -71,11 +72,11 @@ async function ensureCurrencyNameIsAvailable(nombre, { excludeId = null } = {}) 
 }
 
 async function ensureCurrencyCanBeDisabled(existingCurrency, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingCurrency.idEstado) !== 1) {
+    if (isInactiveState(existingCurrency.idEstado)) {
         return;
     }
 
@@ -92,7 +93,7 @@ async function ensureCurrencyCanBeDisabled(existingCurrency, nextState) {
 }
 
 async function ensureCurrencyCanBeDeleted(existingCurrency) {
-    if (Number(existingCurrency.idEstado) !== 1) {
+    if (isInactiveState(existingCurrency.idEstado)) {
         throw createHttpError('Currency is already inactive', 409);
     }
 

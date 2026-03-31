@@ -208,9 +208,8 @@ function buildInvoiceReportDefinition(rows) {
         title: 'Reporte administrativo de facturas',
         subtitle: 'Consolidado financiero de facturas emitidas en el sistema.',
         columns: [
-            { header: 'Factura', key: 'idFactura', width: 1.6 },
             { header: 'Fecha', key: 'fechaFactura', width: 1.2 },
-            { header: 'Moneda', key: 'moneda', width: 1.3 },
+            { header: 'Moneda', key: 'moneda', width: 1.5 },
             { header: 'Subtotal', key: 'subtotal', width: 1.2, align: 'right' },
             { header: 'Impuesto', key: 'impuesto', width: 1.2, align: 'right' },
             { header: 'Total', key: 'total', width: 1.2, align: 'right' },
@@ -238,10 +237,9 @@ function buildDonationReportDefinition(rows) {
         title: 'Reporte administrativo de donaciones',
         subtitle: 'Detalle de donaciones, campanias y trazabilidad de facturas relacionadas.',
         columns: [
-            { header: 'Donacion', key: 'idDonacion', width: 1 },
             { header: 'Fecha', key: 'fechaDonacion', width: 1.1 },
-            { header: 'Donador', key: 'donador', width: 2.3 },
-            { header: 'Campania', key: 'campania', width: 1.8 },
+            { header: 'Donador', key: 'donador', width: 2.5 },
+            { header: 'Campania', key: 'campania', width: 2 },
             { header: 'Monto', key: 'monto', width: 1.1, align: 'right' },
             { header: 'Facturas', key: 'cantidadFacturas', width: 1, align: 'right' },
             { header: 'Estado', key: 'estado', width: 1.1 }
@@ -265,11 +263,9 @@ function buildAdoptionReportDefinition(rows) {
         title: 'Reporte administrativo de adopciones',
         subtitle: 'Seguimiento general del proceso de adopcion y su carga operativa.',
         columns: [
-            { header: 'Adopcion', key: 'idAdopcion', width: 1 },
             { header: 'Fecha', key: 'fechaAdopcion', width: 1.1 },
-            { header: 'Adoptante', key: 'adoptante', width: 2.2 },
-            { header: 'Perrito', key: 'nombrePerrito', width: 1.5 },
-            { header: 'Solicitud', key: 'idSolicitud', width: 1, align: 'right' },
+            { header: 'Adoptante', key: 'adoptante', width: 2.5 },
+            { header: 'Perrito', key: 'nombrePerrito', width: 1.8 },
             { header: 'Seg. total', key: 'totalSeguimientos', width: 1, align: 'right' },
             { header: 'Seg. activos', key: 'seguimientosActivos', width: 1.1, align: 'right' },
             { header: 'Seg. vencidos', key: 'seguimientosVencidos', width: 1.1, align: 'right' },
@@ -294,8 +290,7 @@ function buildLowInventoryReportDefinition(rows) {
         title: 'Reporte de inventario bajo',
         subtitle: `Productos con existencias menores o iguales a ${LOW_STOCK_THRESHOLD} unidades.`,
         columns: [
-            { header: 'Inventario', key: 'idInventario', width: 1 },
-            { header: 'Producto', key: 'producto', width: 2.2 },
+            { header: 'Producto', key: 'producto', width: 2.5 },
             { header: 'Categoria', key: 'categoria', width: 1.5 },
             { header: 'Marca', key: 'marca', width: 1.4 },
             { header: 'Cantidad', key: 'cantidad', width: 0.9, align: 'right' },

@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const responseTypeRepository = require('../repositories/responseTypeRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const RESPONSE_TYPE_LIST_CACHE_KEY = 'response-type:list';
 const RESPONSE_TYPE_DETAIL_CACHE_PREFIX = 'response-type:detail:';
@@ -72,11 +73,11 @@ async function ensureResponseTypeNameIsAvailable(nombre, { excludeId = null } = 
 }
 
 async function ensureResponseTypeCanBeDisabled(existingResponseType, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingResponseType.idEstado) !== 1) {
+    if (isInactiveState(existingResponseType.idEstado)) {
         return;
     }
 
@@ -94,7 +95,7 @@ async function ensureResponseTypeCanBeDisabled(existingResponseType, nextState) 
 }
 
 async function ensureResponseTypeCanBeDeleted(existingResponseType) {
-    if (Number(existingResponseType.idEstado) !== 1) {
+    if (isInactiveState(existingResponseType.idEstado)) {
         throw createHttpError('Response type is already inactive', 409);
     }
 

@@ -3,6 +3,7 @@ const catalogService = require('./catalogService');
 const followUpRepository = require('../repositories/followUpRepository');
 const trackingTypeService = require('./trackingTypeService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const FOLLOW_UP_LIST_CACHE_KEY = 'follow-up:list';
 const FOLLOW_UP_DETAIL_CACHE_PREFIX = 'follow-up:detail:';
@@ -194,11 +195,11 @@ function ensureActiveFollowUpCanUseAssignments({ adoption, trackingType, nextSta
 }
 
 async function ensureFollowUpCanBeDisabled(existingFollowUp, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingFollowUp.idEstado) !== 1) {
+    if (isInactiveState(existingFollowUp.idEstado)) {
         return;
     }
 
@@ -240,7 +241,7 @@ async function ensureStructuralChangesAreAllowed(existingFollowUp, payload) {
 }
 
 async function ensureFollowUpCanBeDeleted(existingFollowUp) {
-    if (Number(existingFollowUp.idEstado) !== 1) {
+    if (isInactiveState(existingFollowUp.idEstado)) {
         throw createHttpError('Follow-up is already inactive', 409);
     }
 

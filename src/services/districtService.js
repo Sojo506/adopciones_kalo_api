@@ -5,6 +5,7 @@ const locationService = require('./locationService');
 const districtRepository = require('../repositories/districtRepository');
 const userService = require('./userService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const DISTRICT_LIST_CACHE_KEY = 'district:list';
 const DISTRICT_DETAIL_CACHE_PREFIX = 'district:detail:';
@@ -120,11 +121,11 @@ async function ensureDistrictCantonChangeIsSafe(existingDistrict, nextCantonId) 
 }
 
 async function ensureDistrictCanBeDisabled(existingDistrict, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingDistrict.idEstado) !== 1) {
+    if (isInactiveState(existingDistrict.idEstado)) {
         return;
     }
 
@@ -138,7 +139,7 @@ async function ensureDistrictCanBeDisabled(existingDistrict, nextState) {
 }
 
 async function ensureDistrictCanBeDeleted(existingDistrict) {
-    if (Number(existingDistrict.idEstado) !== 1) {
+    if (isInactiveState(existingDistrict.idEstado)) {
         throw createHttpError('District is already inactive', 409);
     }
 

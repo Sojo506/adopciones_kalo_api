@@ -20,13 +20,13 @@ router.get(
 );
 router.post(
     '/',
-    evidenceImageUpload.single('image'),
+    evidenceImageUpload.none(),
     evidenceController.createEvidenceValidation,
     evidenceController.createEvidence
 );
 router.put(
     '/:idEvidencia',
-    evidenceImageUpload.single('image'),
+    evidenceImageUpload.none(),
     [
         ...evidenceController.evidenceIdValidation,
         ...evidenceController.updateEvidenceValidation

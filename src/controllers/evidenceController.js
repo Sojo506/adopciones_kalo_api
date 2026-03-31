@@ -27,6 +27,31 @@ const followUpIdValidation = [
         .withMessage('ID Seguimiento must be a positive number')
 ];
 
+const imageUrlValidation = () =>
+    body('imageUrl')
+        .optional({ values: 'falsy' })
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Image URL must be at most 500 characters')
+        .bail()
+        .isURL({
+            protocols: ['http', 'https'],
+            require_protocol: true
+        })
+        .withMessage('Image URL must be a valid http or https URL');
+
+const evidenceContentValidation = () =>
+    body().custom((_, { req }) => {
+        const comentarios = String(req.body?.comentarios || '').trim();
+        const imageUrl = String(req.body?.imageUrl || '').trim();
+
+        if (!comentarios && !imageUrl) {
+            throw new Error('An evidence must include comments or an image URL');
+        }
+
+        return true;
+    });
+
 const createEvidenceValidation = [
     body('idSeguimiento')
         .isInt({ min: 1 })
@@ -36,18 +61,15 @@ const createEvidenceValidation = [
         .trim()
         .isLength({ max: 500 })
         .withMessage('Comentarios must be at most 500 characters'),
-    body('imageUrl')
-        .optional({ values: 'falsy' })
-        .trim()
-        .isLength({ max: 500 })
-        .withMessage('Image URL must be at most 500 characters'),
+    imageUrlValidation(),
     body('fechaEvidencia')
         .isISO8601()
         .withMessage('Evidence date must be a valid ISO-8601 date'),
     body('idEstado')
         .optional({ values: 'falsy' })
         .isInt({ min: 1 })
-        .withMessage('ID Estado must be a positive number')
+        .withMessage('ID Estado must be a positive number'),
+    evidenceContentValidation()
 ];
 
 const updateEvidenceValidation = [
@@ -59,21 +81,14 @@ const updateEvidenceValidation = [
         .trim()
         .isLength({ max: 500 })
         .withMessage('Comentarios must be at most 500 characters'),
-    body('imageUrl')
-        .optional()
-        .trim()
-        .isLength({ max: 500 })
-        .withMessage('Image URL must be at most 500 characters'),
+    imageUrlValidation(),
     body('fechaEvidencia')
         .isISO8601()
         .withMessage('Evidence date must be a valid ISO-8601 date'),
     body('idEstado')
         .isInt({ min: 1 })
         .withMessage('ID Estado must be a positive number'),
-    body('clearImage')
-        .optional({ values: 'falsy' })
-        .isIn(['true', 'false', '1', '0', 'yes', 'no', 'on', 'off'])
-        .withMessage('clearImage must be a boolean-like value')
+    evidenceContentValidation()
 ];
 
 async function getEvidences(req, res, next) {
@@ -139,7 +154,6 @@ async function createEvidence(req, res, next) {
 
         const evidence = await evidenceService.createEvidence(
             req.body,
-            req.file,
             req.user.idCuenta
         );
 
@@ -162,7 +176,6 @@ async function updateEvidence(req, res, next) {
         const evidence = await evidenceService.updateEvidence(
             req.params.idEvidencia,
             req.body,
-            req.file,
             req.user.idCuenta
         );
 
