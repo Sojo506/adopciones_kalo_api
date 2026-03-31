@@ -1,11 +1,13 @@
 const catalogService = require('./catalogService');
 const emailRepository = require('../repositories/emailRepository');
 const userRepository = require('../repositories/userRepository');
+const userService = require('./userService');
 const MemoryCache = require('../utils/memoryCache');
 
 const EMAIL_LIST_CACHE_KEY = 'email:list';
 const EMAIL_DETAIL_CACHE_PREFIX = 'email:detail:';
 const EMAIL_CACHE_TTL_MS = Number(process.env.EMAIL_CACHE_TTL_MS || 15000);
+const INACTIVE_STATE_ID = 2;
 const emailQueryCache = new MemoryCache({ defaultTtlMs: EMAIL_CACHE_TTL_MS });
 
 function createHttpError(message, statusCode) {
@@ -124,9 +126,20 @@ async function updateEmail(identificacion, correo, emailData) {
         idEstado: Number(emailData.idEstado)
     };
 
-    await getEmailByPk(normalizedIdentificacion, normalizedCorreo);
+    const existingEmail = await getEmailByPk(normalizedIdentificacion, normalizedCorreo);
+    const linkedAccount = await userRepository.findAccountByIdentification(normalizedIdentificacion);
+
     await ensureStateExists(payload.idEstado);
     await emailRepository.updateEmail(payload);
+
+    if (
+        linkedAccount &&
+        Number(payload.idEstado) === INACTIVE_STATE_ID &&
+        Number(existingEmail.idEstado) !== INACTIVE_STATE_ID
+    ) {
+        await userService.forceLogoutAccountSessions(linkedAccount.ID_CUENTA, 'email_inactivated');
+    }
+
     invalidateEmailCache(normalizedIdentificacion, normalizedCorreo);
 
     return getEmailByPk(normalizedIdentificacion, normalizedCorreo);
@@ -135,9 +148,15 @@ async function updateEmail(identificacion, correo, emailData) {
 async function deleteEmail(identificacion, correo) {
     const normalizedIdentificacion = Number(identificacion);
     const normalizedCorreo = String(correo || '').trim();
+    const existingEmail = await getEmailByPk(normalizedIdentificacion, normalizedCorreo);
+    const linkedAccount = await userRepository.findAccountByIdentification(normalizedIdentificacion);
 
-    await getEmailByPk(normalizedIdentificacion, normalizedCorreo);
     await emailRepository.deleteEmail(normalizedIdentificacion, normalizedCorreo);
+
+    if (linkedAccount && Number(existingEmail.idEstado) !== INACTIVE_STATE_ID) {
+        await userService.forceLogoutAccountSessions(linkedAccount.ID_CUENTA, 'email_inactivated');
+    }
+
     invalidateEmailCache(normalizedIdentificacion, normalizedCorreo);
 }
 

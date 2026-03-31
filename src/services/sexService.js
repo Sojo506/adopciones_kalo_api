@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const sexRepository = require('../repositories/sexRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const SEX_LIST_CACHE_KEY = 'sex:list';
 const SEX_DETAIL_CACHE_PREFIX = 'sex:detail:';
@@ -70,11 +71,11 @@ async function ensureSexNameIsAvailable(nombre, { excludeId = null } = {}) {
 }
 
 async function ensureSexCanBeDisabled(existingSex, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingSex.idEstado) !== 1) {
+    if (isInactiveState(existingSex.idEstado)) {
         return;
     }
 
@@ -89,7 +90,7 @@ async function ensureSexCanBeDisabled(existingSex, nextState) {
 }
 
 async function ensureSexCanBeDeleted(existingSex) {
-    if (Number(existingSex.idEstado) !== 1) {
+    if (isInactiveState(existingSex.idEstado)) {
         throw createHttpError('Sex is already inactive', 409);
     }
 

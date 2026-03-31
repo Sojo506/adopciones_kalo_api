@@ -3,6 +3,7 @@ const donationRepository = require('../repositories/donationRepository');
 const userRepository = require('../repositories/userRepository');
 const catalogService = require('./catalogService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const DONATION_LIST_CACHE_KEY = 'donation:list';
 const DONATION_DETAIL_CACHE_PREFIX = 'donation:detail:';
@@ -178,11 +179,11 @@ function ensureDonationDateFitsCampaign(campaign, fechaDonacion) {
 }
 
 async function ensureDonationCanBeDisabled(existingDonation, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingDonation.idEstado) !== 1) {
+    if (isInactiveState(existingDonation.idEstado)) {
         return;
     }
 
@@ -216,7 +217,7 @@ async function ensureDonationAmountCanBeChanged(existingDonation, nextAmount) {
 }
 
 async function ensureDonationCanBeDeleted(existingDonation) {
-    if (Number(existingDonation.idEstado) !== 1) {
+    if (isInactiveState(existingDonation.idEstado)) {
         throw createHttpError('Donation is already inactive', 409);
     }
 

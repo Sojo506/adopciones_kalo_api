@@ -1,6 +1,7 @@
 const breedRepository = require('../repositories/breedRepository');
 const catalogService = require('./catalogService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const BREED_LIST_CACHE_KEY = 'breed:list';
 const BREED_DETAIL_CACHE_PREFIX = 'breed:detail:';
@@ -70,11 +71,11 @@ async function ensureBreedNameIsAvailable(nombre, { excludeId = null } = {}) {
 }
 
 async function ensureBreedCanBeDisabled(existingBreed, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingBreed.idEstado) !== 1) {
+    if (isInactiveState(existingBreed.idEstado)) {
         return;
     }
 
@@ -89,7 +90,7 @@ async function ensureBreedCanBeDisabled(existingBreed, nextState) {
 }
 
 async function ensureBreedCanBeDeleted(existingBreed) {
-    if (Number(existingBreed.idEstado) !== 1) {
+    if (isInactiveState(existingBreed.idEstado)) {
         throw createHttpError('Breed is already inactive', 409);
     }
 

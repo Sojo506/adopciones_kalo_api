@@ -3,6 +3,7 @@ const brandRepository = require('../repositories/brandRepository');
 const productRepository = require('../repositories/productRepository');
 const catalogService = require('./catalogService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const PRODUCT_LIST_CACHE_KEY = 'product:list';
 const PRODUCT_DETAIL_CACHE_PREFIX = 'product:detail:';
@@ -110,11 +111,11 @@ function ensureValidPrice(precio) {
 }
 
 async function ensureProductCanBeDisabled(existingProduct, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingProduct.idEstado) !== 1) {
+    if (isInactiveState(existingProduct.idEstado)) {
         return;
     }
 
@@ -127,7 +128,7 @@ async function ensureProductCanBeDisabled(existingProduct, nextState) {
 }
 
 async function ensureProductCanBeDeleted(existingProduct) {
-    if (Number(existingProduct.idEstado) !== 1) {
+    if (isInactiveState(existingProduct.idEstado)) {
         throw createHttpError('Product is already inactive', 409);
     }
 

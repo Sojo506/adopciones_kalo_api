@@ -8,6 +8,7 @@ const houseDogRepository = require('../repositories/houseDogRepository');
 const sexRepository = require('../repositories/sexRepository');
 const catalogService = require('./catalogService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const DOG_PUBLIC_LIST_CACHE_KEY = 'dog:public:list';
 const DOG_PUBLIC_DETAIL_CACHE_PREFIX = 'dog:public:detail:';
@@ -220,11 +221,11 @@ async function ensureDogRelationsAllowDeactivation(idPerrito) {
 }
 
 async function ensureDogCanBeDisabled(existingDog, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingDog.idEstado) !== 1) {
+    if (isInactiveState(existingDog.idEstado)) {
         return;
     }
 
@@ -232,7 +233,7 @@ async function ensureDogCanBeDisabled(existingDog, nextState) {
 }
 
 async function ensureDogCanBeDeleted(existingDog) {
-    if (Number(existingDog.idEstado) !== 1) {
+    if (isInactiveState(existingDog.idEstado)) {
         throw createHttpError('Dog is already inactive', 409);
     }
 

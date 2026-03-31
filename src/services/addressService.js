@@ -4,6 +4,7 @@ const districtService = require('./districtService');
 const fosterHomeRepository = require('../repositories/fosterHomeRepository');
 const userRepository = require('../repositories/userRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const ADDRESS_LIST_CACHE_KEY = 'address:list';
 const ADDRESS_DETAIL_CACHE_PREFIX = 'address:detail:';
@@ -108,11 +109,11 @@ async function ensureAddressDistrictAssignmentIsValid(district, nextState) {
 }
 
 async function ensureAddressCanBeDisabled(existingAddress, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingAddress.idEstado) !== 1) {
+    if (isInactiveState(existingAddress.idEstado)) {
         return;
     }
 
@@ -130,7 +131,7 @@ async function ensureAddressCanBeDisabled(existingAddress, nextState) {
 }
 
 async function ensureAddressCanBeDeleted(existingAddress) {
-    if (Number(existingAddress.idEstado) !== 1) {
+    if (isInactiveState(existingAddress.idEstado)) {
         throw createHttpError('Address is already inactive', 409);
     }
 

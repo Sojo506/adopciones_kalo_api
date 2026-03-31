@@ -2,6 +2,7 @@ const saleRepository = require('../repositories/saleRepository');
 const userRepository = require('../repositories/userRepository');
 const catalogService = require('./catalogService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const SALE_LIST_CACHE_KEY = 'sale:list';
 const SALE_DETAIL_CACHE_PREFIX = 'sale:detail:';
@@ -125,11 +126,11 @@ function createDependencyErrorMessage(action, dependencyCounts) {
 }
 
 async function ensureSaleCanBeDisabled(existingSale, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingSale.idEstado) !== 1) {
+    if (isInactiveState(existingSale.idEstado)) {
         return;
     }
 
@@ -141,7 +142,7 @@ async function ensureSaleCanBeDisabled(existingSale, nextState) {
 }
 
 async function ensureSaleCanBeDeleted(existingSale) {
-    if (Number(existingSale.idEstado) !== 1) {
+    if (isInactiveState(existingSale.idEstado)) {
         throw createHttpError('Sale is already inactive', 409);
     }
 

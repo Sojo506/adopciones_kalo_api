@@ -1,4 +1,3 @@
-const cloudinary = require('../config/cloudinary');
 const userRepository = require('../repositories/userRepository');
 const evidenceRepository = require('../repositories/evidenceRepository');
 const followUpService = require('./followUpService');
@@ -119,41 +118,6 @@ function toComparableDate(value, fieldLabel) {
 function normalizeOptionalText(value) {
     const normalizedValue = String(value || '').trim();
     return normalizedValue || null;
-}
-
-function sanitizeFileName(fileName) {
-    return String(fileName || 'evidence')
-        .replace(/\.[^.]+$/, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 40) || 'evidence';
-}
-
-function ensureCloudinaryConfiguration() {
-    const missingConfigKeys = [
-        ['CLOUDINARY_CLOUD_NAME', 'CLOUD_NAME'],
-        ['CLOUDINARY_API_KEY', 'CLOUD_API_KEY'],
-        ['CLOUDINARY_API_SECRET', 'CLOUD_API_SECRET']
-    ]
-        .filter(([primaryKey, fallbackKey]) => !process.env[primaryKey] && !process.env[fallbackKey])
-        .map(([primaryKey, fallbackKey]) => `${primaryKey} (or ${fallbackKey})`);
-
-    if (missingConfigKeys.length) {
-        throw createHttpError(
-            `Missing Cloudinary configuration: ${missingConfigKeys.join(', ')}`,
-            500
-        );
-    }
-}
-
-function parseBooleanLike(value) {
-    if (typeof value === 'boolean') {
-        return value;
-    }
-
-    const normalizedValue = String(value || '').trim().toLowerCase();
-    return ['1', 'true', 'yes', 'on'].includes(normalizedValue);
 }
 
 function isAdminAccount(account) {
@@ -293,45 +257,6 @@ function ensureEvidenceHasContent({ imageUrl, comentarios }) {
     }
 }
 
-async function uploadImageToCloudinary(file, idSeguimiento) {
-    ensureCloudinaryConfiguration();
-
-    const folder = process.env.CLOUDINARY_EVIDENCE_IMAGES_FOLDER || 'kalo/evidence-images';
-    const publicId = `follow-up-${idSeguimiento}-${Date.now()}-${sanitizeFileName(file.originalname)}`;
-
-    return new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-            {
-                folder,
-                public_id: publicId,
-                resource_type: 'image'
-            },
-            (error, result) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-
-                resolve(result);
-            }
-        );
-
-        uploadStream.end(file.buffer);
-    });
-}
-
-async function destroyCloudinaryAsset(publicId) {
-    if (!publicId) {
-        return;
-    }
-
-    try {
-        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
-    } catch (error) {
-        console.error('Failed to clean Cloudinary asset:', error);
-    }
-}
-
 async function getEvidenceById(idEvidencia, idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
     const evidence = await evidenceQueryCache.getOrSet(
@@ -398,7 +323,7 @@ async function getEvidencesByFollowUp(idSeguimiento, idCuenta) {
     );
 }
 
-async function createEvidence(evidenceData, file, idCuenta) {
+async function createEvidence(evidenceData, idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
     const requestedState =
         evidenceData.idEstado === undefined ||
@@ -426,35 +351,23 @@ async function createEvidence(evidenceData, file, idCuenta) {
     });
     ensureEvidenceDateFitsFollowUp(followUp, payload.fechaEvidencia);
 
-    const imageUrlFromBody = normalizeOptionalText(evidenceData.imageUrl);
-    let uploadedImage = null;
-    let imageUrl = imageUrlFromBody;
-
-    if (file?.buffer) {
-        uploadedImage = await uploadImageToCloudinary(file, payload.idSeguimiento);
-        imageUrl = uploadedImage.secure_url;
-    }
+    const imageUrl = normalizeOptionalText(evidenceData.imageUrl);
 
     ensureEvidenceHasContent({
         imageUrl,
         comentarios: payload.comentarios
     });
 
-    try {
-        const result = await evidenceRepository.createEvidence({
-            ...payload,
-            imageUrl
-        });
+    const result = await evidenceRepository.createEvidence({
+        ...payload,
+        imageUrl
+    });
 
-        invalidateEvidenceCache(result.idEvidencia, [payload.idSeguimiento]);
-        return getEvidenceById(result.idEvidencia, idCuenta);
-    } catch (error) {
-        await destroyCloudinaryAsset(uploadedImage?.public_id);
-        throw error;
-    }
+    invalidateEvidenceCache(result.idEvidencia, [payload.idSeguimiento]);
+    return getEvidenceById(result.idEvidencia, idCuenta);
 }
 
-async function updateEvidence(idEvidencia, evidenceData, file, idCuenta) {
+async function updateEvidence(idEvidencia, evidenceData, idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
     const existingEvidence = await getEvidenceById(idEvidencia, idCuenta);
     const payload = {
@@ -478,18 +391,10 @@ async function updateEvidence(idEvidencia, evidenceData, file, idCuenta) {
         'imageUrl'
     );
     const nextManualImageUrl = normalizeOptionalText(evidenceData.imageUrl);
-    const shouldClearImage = parseBooleanLike(evidenceData.clearImage);
-
-    let uploadedImage = null;
     let nextImageUrl = existingEvidence.imageUrl;
 
-    if (file?.buffer) {
-        uploadedImage = await uploadImageToCloudinary(file, payload.idSeguimiento);
-        nextImageUrl = uploadedImage.secure_url;
-    } else if (hasImageUrlField) {
+    if (hasImageUrlField) {
         nextImageUrl = nextManualImageUrl;
-    } else if (shouldClearImage) {
-        nextImageUrl = null;
     }
 
     ensureEvidenceHasContent({
@@ -497,22 +402,17 @@ async function updateEvidence(idEvidencia, evidenceData, file, idCuenta) {
         comentarios: payload.comentarios
     });
 
-    try {
-        await evidenceRepository.updateEvidence({
-            ...payload,
-            imageUrl: nextImageUrl
-        });
+    await evidenceRepository.updateEvidence({
+        ...payload,
+        imageUrl: nextImageUrl
+    });
 
-        invalidateEvidenceCache(payload.idEvidencia, [
-            existingEvidence.idSeguimiento,
-            payload.idSeguimiento
-        ]);
+    invalidateEvidenceCache(payload.idEvidencia, [
+        existingEvidence.idSeguimiento,
+        payload.idSeguimiento
+    ]);
 
-        return getEvidenceById(payload.idEvidencia, idCuenta);
-    } catch (error) {
-        await destroyCloudinaryAsset(uploadedImage?.public_id);
-        throw error;
-    }
+    return getEvidenceById(payload.idEvidencia, idCuenta);
 }
 
 async function deleteEvidence(idEvidencia, idCuenta) {

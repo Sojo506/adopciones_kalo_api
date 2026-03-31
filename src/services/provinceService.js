@@ -5,6 +5,7 @@ const locationService = require('./locationService');
 const provinceRepository = require('../repositories/provinceRepository');
 const userService = require('./userService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const PROVINCE_LIST_CACHE_KEY = 'province:list';
 const PROVINCE_DETAIL_CACHE_PREFIX = 'province:detail:';
@@ -115,11 +116,11 @@ async function ensureProvinceCountryChangeIsSafe(existingProvince, nextCountryId
 }
 
 async function ensureProvinceCanBeDisabled(existingProvince, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingProvince.idEstado) !== 1) {
+    if (isInactiveState(existingProvince.idEstado)) {
         return;
     }
 
@@ -133,7 +134,7 @@ async function ensureProvinceCanBeDisabled(existingProvince, nextState) {
 }
 
 async function ensureProvinceCanBeDeleted(existingProvince) {
-    if (Number(existingProvince.idEstado) !== 1) {
+    if (isInactiveState(existingProvince.idEstado)) {
         throw createHttpError('Province is already inactive', 409);
     }
 

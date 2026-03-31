@@ -2,6 +2,7 @@ const cloudinary = require('../config/cloudinary');
 const catalogService = require('./catalogService');
 const campaignRepository = require('../repositories/campaignRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const CAMPAIGN_LIST_CACHE_KEY = 'campaign:list';
 const CAMPAIGN_PUBLIC_LIST_CACHE_KEY = 'campaign:public:list';
@@ -234,11 +235,11 @@ async function ensureCampaignNameIsAvailable(nombre, { excludeId = null } = {}) 
 }
 
 async function ensureCampaignCanBeDisabled(existingCampaign, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingCampaign.idEstado) !== 1) {
+    if (isInactiveState(existingCampaign.idEstado)) {
         return;
     }
 
@@ -255,7 +256,7 @@ async function ensureCampaignCanBeDisabled(existingCampaign, nextState) {
 }
 
 async function ensureCampaignCanBeDeleted(existingCampaign) {
-    if (Number(existingCampaign.idEstado) !== 1) {
+    if (isInactiveState(existingCampaign.idEstado)) {
         throw createHttpError('Campaign is already inactive', 409);
     }
 

@@ -1,6 +1,7 @@
 const brandRepository = require('../repositories/brandRepository');
 const catalogService = require('./catalogService');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const BRAND_LIST_CACHE_KEY = 'brand:list';
 const BRAND_DETAIL_CACHE_PREFIX = 'brand:detail:';
@@ -70,11 +71,11 @@ async function ensureBrandNameIsAvailable(nombre, { excludeId = null } = {}) {
 }
 
 async function ensureBrandCanBeDisabled(existingBrand, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingBrand.idEstado) !== 1) {
+    if (isInactiveState(existingBrand.idEstado)) {
         return;
     }
 
@@ -91,7 +92,7 @@ async function ensureBrandCanBeDisabled(existingBrand, nextState) {
 }
 
 async function ensureBrandCanBeDeleted(existingBrand) {
-    if (Number(existingBrand.idEstado) !== 1) {
+    if (isInactiveState(existingBrand.idEstado)) {
         throw createHttpError('Brand is already inactive', 409);
     }
 

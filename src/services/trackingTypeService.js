@@ -1,6 +1,7 @@
 const catalogService = require('./catalogService');
 const trackingTypeRepository = require('../repositories/trackingTypeRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { isInactiveState } = require('../utils/stateIds');
 
 const TRACKING_TYPE_LIST_CACHE_KEY = 'tracking-type:list';
 const TRACKING_TYPE_DETAIL_CACHE_PREFIX = 'tracking-type:detail:';
@@ -72,11 +73,11 @@ async function ensureTrackingTypeNameIsAvailable(nombre, { excludeId = null } = 
 }
 
 async function ensureTrackingTypeCanBeDisabled(existingTrackingType, nextState) {
-    if (Number(nextState) === 1) {
+    if (!isInactiveState(nextState)) {
         return;
     }
 
-    if (Number(existingTrackingType.idEstado) !== 1) {
+    if (isInactiveState(existingTrackingType.idEstado)) {
         return;
     }
 
@@ -93,7 +94,7 @@ async function ensureTrackingTypeCanBeDisabled(existingTrackingType, nextState) 
 }
 
 async function ensureTrackingTypeCanBeDeleted(existingTrackingType) {
-    if (Number(existingTrackingType.idEstado) !== 1) {
+    if (isInactiveState(existingTrackingType.idEstado)) {
         throw createHttpError('Tracking type is already inactive', 409);
     }
 

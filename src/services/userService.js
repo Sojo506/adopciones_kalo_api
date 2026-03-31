@@ -10,6 +10,7 @@ const userRepository = require('../repositories/userRepository');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../config/jwt');
 const { sendVerificationEmail } = require('../config/email');
 const MemoryCache = require('../utils/memoryCache');
+const authEventHub = require('../utils/authEventHub');
 
 const USER_LIST_CACHE_KEY = 'user:list';
 const USER_DETAIL_CACHE_PREFIX = 'user:detail:';
@@ -189,6 +190,10 @@ function isAvailableAccountState(idEstado) {
     return isActiveState(idEstado) || isPendingState(idEstado);
 }
 
+function hasAvailableEmail(emailRows) {
+    return emailRows.some((email) => isAvailableEmailState(email.ID_ESTADO));
+}
+
 function isRefreshTokenRecordActive(refreshTokenRecord) {
     return (
         Number(refreshTokenRecord?.ID_ESTADO) === ACTIVE_STATE_ID &&
@@ -223,6 +228,20 @@ function buildRefreshTokenPayload(account) {
     };
 }
 
+async function ensureAccountHasAvailableEmail(account, { statusCode = 403 } = {}) {
+    if (!account?.IDENTIFICACION) {
+        return [];
+    }
+
+    const emails = await emailRepository.findEmailsByIdentification(account.IDENTIFICACION);
+
+    if (emails.length > 0 && !hasAvailableEmail(emails)) {
+        throw createHttpError('Account email is not available', statusCode);
+    }
+
+    return emails;
+}
+
 async function issueRefreshToken(account, requestMetadata = {}) {
     const refreshTokenPayload = buildRefreshTokenPayload(account);
     const refreshToken = generateRefreshToken(refreshTokenPayload);
@@ -242,16 +261,21 @@ async function issueRefreshToken(account, requestMetadata = {}) {
 
     return {
         refreshToken,
-        refreshTokenExpiresAt
+        refreshTokenExpiresAt,
+        sessionJti: refreshTokenPayload.jti
     };
 }
 
 async function buildSessionTokens(account, requestMetadata = {}) {
+    const { refreshToken, refreshTokenExpiresAt, sessionJti } = await issueRefreshToken(
+        account,
+        requestMetadata
+    );
     const accessToken = generateAccessToken({
         identificacion: account.IDENTIFICACION,
-        idCuenta: account.ID_CUENTA
+        idCuenta: account.ID_CUENTA,
+        sessionJti
     });
-    const { refreshToken, refreshTokenExpiresAt } = await issueRefreshToken(account, requestMetadata);
     const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
 
     return {
@@ -294,6 +318,14 @@ async function findStoredRefreshToken(rawRefreshToken) {
     throw createHttpError('Invalid refresh token', 401);
 }
 
+function findActiveRefreshTokenRecordByJti(refreshTokens, sessionJti) {
+    return refreshTokens.find(
+        (refreshTokenRecord) =>
+            isRefreshTokenRecordActive(refreshTokenRecord) &&
+            String(refreshTokenRecord.JTI || '') === String(sessionJti || '')
+    );
+}
+
 async function revokeStoredRefreshToken(refreshTokenRecord) {
     if (!refreshTokenRecord || Number(refreshTokenRecord.ID_ESTADO) !== ACTIVE_STATE_ID) {
         return;
@@ -310,6 +342,54 @@ async function revokeStoredRefreshToken(refreshTokenRecord) {
         fechaRevocacion: new Date(),
         idEstado: INACTIVE_STATE_ID
     });
+}
+
+async function ensureActiveAccessSession(idCuenta, sessionJti) {
+    if (!sessionJti) {
+        return null;
+    }
+
+    const refreshTokens = await refreshTokenRepository.findRefreshTokensByCuenta(idCuenta);
+    const activeSession = findActiveRefreshTokenRecordByJti(refreshTokens, sessionJti);
+
+    if (!activeSession) {
+        throw createHttpError('Session is no longer active', 401);
+    }
+
+    return activeSession;
+}
+
+async function forceLogoutAccountSessions(idCuenta, reason = 'session_revoked') {
+    const normalizedIdCuenta = Number(idCuenta);
+
+    if (!Number.isFinite(normalizedIdCuenta)) {
+        return {
+            revokedCount: 0,
+            notifiedDevices: 0
+        };
+    }
+
+    const refreshTokens = await refreshTokenRepository.findRefreshTokensByCuenta(normalizedIdCuenta);
+    let revokedCount = 0;
+
+    for (const refreshTokenRecord of refreshTokens) {
+        if (!isRefreshTokenRecordActive(refreshTokenRecord)) {
+            continue;
+        }
+
+        await revokeStoredRefreshToken(refreshTokenRecord);
+        revokedCount += 1;
+    }
+
+    const notifiedDevices = authEventHub.broadcastForceLogout(normalizedIdCuenta, {
+        reason,
+        forcedAt: new Date().toISOString()
+    });
+
+    return {
+        revokedCount,
+        notifiedDevices
+    };
 }
 
 async function getPrimaryEmailByIdentification(identificacion) {
@@ -371,8 +451,44 @@ async function getCurrentUser(idCuenta) {
         throw createHttpError('Account not found', 404);
     }
 
+    await ensureAccountHasAvailableEmail(account);
+
     const primaryEmail = await getPrimaryEmailByIdentification(account.IDENTIFICACION);
     return formatSessionUser(account, primaryEmail);
+}
+
+async function getAccountForAuthenticatedAccess(accessTokenPayload) {
+    if (!accessTokenPayload?.idCuenta) {
+        throw createHttpError('Invalid or expired token', 401);
+    }
+
+    const account = await userRepository.findAccountByIdCuenta(accessTokenPayload.idCuenta);
+
+    if (!account || !isAvailableAccountState(account.ID_ESTADO)) {
+        throw createHttpError('Session is no longer active', 401);
+    }
+
+    await ensureAccountHasAvailableEmail(account, { statusCode: 401 });
+    await ensureActiveAccessSession(accessTokenPayload.idCuenta, accessTokenPayload.sessionJti);
+
+    return account;
+}
+
+async function getAccountForActiveRefreshSession(rawRefreshToken) {
+    if (!rawRefreshToken) {
+        throw createHttpError('Refresh token is required', 401);
+    }
+
+    const { decodedRefreshToken, refreshTokenRecord } = await findStoredRefreshToken(rawRefreshToken);
+    const account = await userRepository.findAccountByIdCuenta(decodedRefreshToken.idCuenta);
+
+    if (!account || !isAvailableAccountState(account.ID_ESTADO)) {
+        await revokeStoredRefreshToken(refreshTokenRecord);
+        throw createHttpError('Session is no longer active', 401);
+    }
+
+    await ensureAccountHasAvailableEmail(account, { statusCode: 401 });
+    return account;
 }
 
 async function signUp(userData) {
@@ -598,6 +714,14 @@ async function updateDashboardUser(identificacion, userData, actorAccount) {
 
     ensureActiveAdminIsNotEditingSelf(actorAccount, existingUser);
 
+    const shouldForceLogout =
+        existingUser.ID_CUENTA &&
+        Number(userData.idEstado) === INACTIVE_STATE_ID &&
+        (
+            Number(existingUser.ID_ESTADO) !== INACTIVE_STATE_ID ||
+            Number(existingUser.ID_ESTADO_CUENTA) !== INACTIVE_STATE_ID
+        );
+
     const normalizedUsername = String(userData.usuario || '').trim();
     const normalizedEmail = String(userData.correo || '').trim();
     const accountWithSameUsername = await userRepository.findAccountByUsuario(normalizedUsername);
@@ -675,6 +799,10 @@ async function updateDashboardUser(identificacion, userData, actorAccount) {
         });
     }
 
+    if (shouldForceLogout) {
+        await forceLogoutAccountSessions(existingUser.ID_CUENTA, 'profile_inactivated');
+    }
+
     invalidateUserCache(identificacion);
     return getUserByIdentification(identificacion);
 }
@@ -686,6 +814,10 @@ async function deleteDashboardUser(identificacion, actorAccount) {
     }
 
     ensureActiveAdminIsNotEditingSelf(actorAccount, existingUser);
+
+    if (existingUser.ID_CUENTA) {
+        await forceLogoutAccountSessions(existingUser.ID_CUENTA, 'profile_deleted');
+    }
 
     await userRepository.deleteAccount(existingUser.ID_CUENTA);
     await userRepository.deleteUser(identificacion);
@@ -711,6 +843,8 @@ async function signIn(identifier, password, requestMetadata = {}) {
     if (!passwordValidation.isValid) {
         throw createHttpError('Invalid credentials', 401);
     }
+
+    await ensureAccountHasAvailableEmail(account);
 
     if (passwordValidation.needsMigration) {
         await userRepository.updateAccount({
@@ -793,6 +927,8 @@ async function refreshSession(rawRefreshToken, requestMetadata = {}) {
         throw createHttpError('Account is not available', 403);
     }
 
+    await ensureAccountHasAvailableEmail(account, { statusCode: 401 });
+
     await revokeStoredRefreshToken(refreshTokenRecord);
 
     return buildSessionTokens(account, requestMetadata);
@@ -819,6 +955,8 @@ module.exports = {
     getUsers,
     getUserByIdentification,
     getCurrentUser,
+    getAccountForAuthenticatedAccess,
+    getAccountForActiveRefreshSession,
     signUp,
     signIn,
     refreshSession,
@@ -828,5 +966,6 @@ module.exports = {
     createDashboardUser,
     updateDashboardUser,
     deleteDashboardUser,
+    forceLogoutAccountSessions,
     invalidateAllUserCaches: () => invalidateUserCache()
 };
