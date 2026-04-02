@@ -897,7 +897,7 @@ async function requestPasswordRecovery(identifier) {
     const emails = await emailRepository.findEmailsByIdentification(account.IDENTIFICACION);
     const recoverableEmail = pickRecoverableEmail(emails);
 
-    if (!recoverableEmail || !hasAvailableEmailState(recoverableEmail.ID_ESTADO)) {
+    if (!recoverableEmail || !isAvailableEmailState(recoverableEmail.ID_ESTADO)) {
         return { emailSent: false };
     }
 
