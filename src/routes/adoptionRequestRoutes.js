@@ -5,6 +5,11 @@ const { authenticateToken } = require('../middlewares/auth');
 const router = express.Router();
 
 router.get(
+    '/bootstrap',
+    adoptionRequestController.getPublicAdoptionFormBootstrap
+);
+
+router.get(
     '/check',
     authenticateToken,
     adoptionRequestController.checkPendingAdoptionValidation,

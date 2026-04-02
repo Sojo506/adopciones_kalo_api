@@ -76,6 +76,45 @@ async function getProducts(req, res, next) {
     }
 }
 
+async function getProductById(req, res, next) {
+    try {
+        const idProducto = Number(req.params.idProducto);
+
+        if (!Number.isInteger(idProducto) || idProducto < 1) {
+            return res.status(400).json({
+                ok: false,
+                message: 'ID Producto must be a positive number'
+            });
+        }
+
+        const forceRefresh = ['1', 'true'].includes(
+            String(req.query.force || '').trim().toLowerCase()
+        );
+        const product = await catalogService.getProductById(idProducto, {
+            force: forceRefresh
+        });
+        res.set('Cache-Control', forceRefresh ? NO_STORE_CACHE_CONTROL : PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: product });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function getStoreCatalog(req, res, next) {
+    try {
+        const forceRefresh = ['1', 'true'].includes(
+            String(req.query.force || '').trim().toLowerCase()
+        );
+        const storeCatalog = await catalogService.getStoreCatalog({
+            force: forceRefresh
+        });
+        res.set('Cache-Control', forceRefresh ? NO_STORE_CACHE_CONTROL : PUBLIC_CACHE_CONTROL);
+        res.status(200).json({ ok: true, data: storeCatalog });
+    } catch (error) {
+        next(error);
+    }
+}
+
 async function getCurrencies(req, res, next) {
     try {
         const currencies = await catalogService.getCurrencies();
@@ -164,6 +203,8 @@ module.exports = {
     getBrands,
     getMovementTypes,
     getProducts,
+    getProductById,
+    getStoreCatalog,
     getCurrencies,
     getBreeds,
     getSexes,

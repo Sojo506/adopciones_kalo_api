@@ -222,6 +222,29 @@ async function hasPendingAdoptionForDog(identificacion, idPerrito) {
     return !!blockingAdoption;
 }
 
+async function getPublicAdoptionFormBootstrap() {
+    const [dogs, idTipoSolicitud] = await Promise.all([
+        dogService.getAvailableDogs(),
+        getAdoptionRequestTypeId()
+    ]);
+    const questions = await requestQuestionService.getActiveQuestionsByRequestType(
+        idTipoSolicitud
+    );
+
+    if (questions.length === 0) {
+        throw createHttpError(
+            'The adoption form does not have active questions configured',
+            409
+        );
+    }
+
+    return {
+        requestTypeId: idTipoSolicitud,
+        dogs,
+        questions
+    };
+}
+
 async function createAdoptionRequest({ identificacion, idPerrito, respuestas }) {
     const normalizedIdentification = normalizeIdentification(identificacion);
 
@@ -279,6 +302,7 @@ async function createAdoptionRequest({ identificacion, idPerrito, respuestas }) 
 }
 
 module.exports = {
+    getPublicAdoptionFormBootstrap,
     createAdoptionRequest,
     hasPendingAdoptionForDog
 };
