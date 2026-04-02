@@ -8,7 +8,7 @@ const phoneRepository = require('../repositories/phoneRepository');
 const refreshTokenRepository = require('../repositories/refreshTokenRepository');
 const userRepository = require('../repositories/userRepository');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../config/jwt');
-const { sendVerificationEmail } = require('../config/email');
+const { sendVerificationEmail, sendPasswordRecoveryOtpEmail } = require('../config/email');
 const MemoryCache = require('../utils/memoryCache');
 const authEventHub = require('../utils/authEventHub');
 
@@ -20,7 +20,10 @@ const INACTIVE_STATE_ID = 2;
 const PENDING_STATE_ID = 3;
 const CLIENT_USER_TYPE_ID = 2;
 const EMAIL_VERIFICATION_OTP_TYPE_ID = 1;
+const PASSWORD_RECOVERY_OTP_TYPE_ID = 2;
 const EMAIL_VERIFICATION_OTP_NAME = 'Verificacion de correo';
+const PASSWORD_RECOVERY_OTP_NAME = 'Recuperacion de contrasena';
+const PASSWORD_RECOVERY_OTP_TTL_MINUTES = Number(process.env.PASSWORD_RECOVERY_OTP_TTL_MINUTES || 15);
 const userQueryCache = new MemoryCache({ defaultTtlMs: USER_CACHE_TTL_MS });
 
 function createHttpError(message, statusCode) {
@@ -136,6 +139,12 @@ async function getEmailVerificationOtpTypeId() {
     });
 }
 
+async function getPasswordRecoveryOtpTypeId() {
+    return getOtpTypeIdByName(PASSWORD_RECOVERY_OTP_NAME, {
+        fallbackId: PASSWORD_RECOVERY_OTP_TYPE_ID
+    });
+}
+
 async function generateAndSendVerificationOtp(account, { failOnEmailError = false } = {}) {
     const verificationOtpTypeId = await getEmailVerificationOtpTypeId();
     await userRepository.deactivateActiveOtpsByCuenta(account.ID_CUENTA, verificationOtpTypeId);
@@ -168,6 +177,16 @@ async function generateAndSendVerificationOtp(account, { failOnEmailError = fals
 function pickPrimaryEmail(emailRows) {
     const activeEmails = emailRows.filter((email) => Number(email.ID_ESTADO) === 1);
     return activeEmails[0] || emailRows[0] || null;
+}
+
+function pickRecoverableEmail(emailRows) {
+    const activeEmail = emailRows.find((email) => Number(email.ID_ESTADO) === ACTIVE_STATE_ID);
+    if (activeEmail) {
+        return activeEmail;
+    }
+
+    const pendingEmail = emailRows.find((email) => Number(email.ID_ESTADO) === PENDING_STATE_ID);
+    return pendingEmail || null;
 }
 
 function hasSameEmail(left, right) {
@@ -390,6 +409,10 @@ async function forceLogoutAccountSessions(idCuenta, reason = 'session_revoked') 
         revokedCount,
         notifiedDevices
     };
+}
+
+async function revokeAllRefreshTokensByAccount(idCuenta) {
+    return forceLogoutAccountSessions(idCuenta, 'password_recovery');
 }
 
 async function getPrimaryEmailByIdentification(identificacion) {
@@ -859,6 +882,93 @@ async function signIn(identifier, password, requestMetadata = {}) {
     return buildSessionTokens(account, requestMetadata);
 }
 
+async function requestPasswordRecovery(identifier) {
+    const normalizedIdentifier = String(identifier || '').trim();
+
+    if (!normalizedIdentifier) {
+        return { emailSent: false };
+    }
+
+    const account = await findAccountByLoginIdentifier(normalizedIdentifier);
+    if (!account || !isAvailableAccountState(account.ID_ESTADO)) {
+        return { emailSent: false };
+    }
+
+    const emails = await emailRepository.findEmailsByIdentification(account.IDENTIFICACION);
+    const recoverableEmail = pickRecoverableEmail(emails);
+
+    if (!recoverableEmail || !hasAvailableEmailState(recoverableEmail.ID_ESTADO)) {
+        return { emailSent: false };
+    }
+
+    const idTipoOtp = await getPasswordRecoveryOtpTypeId();
+    await userRepository.deactivateActiveOtpsByCuenta(account.ID_CUENTA, idTipoOtp);
+
+    const recoveryCode = crypto.randomInt(100000, 999999).toString();
+    const hashedCode = await bcrypt.hash(recoveryCode, 10);
+
+    await userRepository.createOTP({
+        idCuenta: account.ID_CUENTA,
+        idTipoOtp,
+        codigoHash: hashedCode,
+        fechaExpiracion: new Date(Date.now() + PASSWORD_RECOVERY_OTP_TTL_MINUTES * 60 * 1000),
+        fechaUso: null,
+        intentos: 0,
+        fechaCreacion: new Date(),
+        idEstado: ACTIVE_STATE_ID
+    });
+
+    await sendPasswordRecoveryOtpEmail(
+        recoverableEmail.CORREO,
+        recoveryCode,
+        PASSWORD_RECOVERY_OTP_TTL_MINUTES
+    );
+
+    return { emailSent: true };
+}
+
+async function confirmPasswordRecovery(identifier, code, newPassword) {
+    const normalizedIdentifier = String(identifier || '').trim();
+    const normalizedCode = String(code || '').trim();
+    const normalizedNewPassword = String(newPassword || '');
+
+    const account = await findAccountByLoginIdentifier(normalizedIdentifier);
+    if (!account || !isAvailableAccountState(account.ID_ESTADO)) {
+        throw createHttpError('Invalid or expired verification code', 400);
+    }
+
+    const passwordCheck = await verifyStoredPassword(normalizedNewPassword, account.PASSWORD_HASH);
+    if (passwordCheck.isValid) {
+        throw createHttpError('The new password must be different from the current password', 400);
+    }
+
+    const otp = await userRepository.findOTPByCodeAndCuenta(
+        normalizedCode,
+        account.ID_CUENTA,
+        await getPasswordRecoveryOtpTypeId()
+    );
+
+    if (!otp) {
+        throw createHttpError('Invalid or expired verification code', 400);
+    }
+
+    await userRepository.markOTPAsUsed(otp.ID_CODIGO_OTP);
+
+    await userRepository.updateAccount({
+        idCuenta: account.ID_CUENTA,
+        identificacion: account.IDENTIFICACION,
+        usuario: account.USUARIO,
+        passwordHash: await bcrypt.hash(normalizedNewPassword, 10),
+        idEstado: account.ID_ESTADO
+    });
+
+    await revokeAllRefreshTokensByAccount(account.ID_CUENTA);
+
+    return {
+        requiresReauth: true
+    };
+}
+
 async function verifyEmail(correo, code) {
     const normalizedEmail = String(correo || '').trim();
     const { account, emailRecord } = await findAccountContextByEmail(normalizedEmail);
@@ -959,6 +1069,8 @@ module.exports = {
     getAccountForActiveRefreshSession,
     signUp,
     signIn,
+    requestPasswordRecovery,
+    confirmPasswordRecovery,
     refreshSession,
     logout,
     verifyEmail,
@@ -967,5 +1079,6 @@ module.exports = {
     updateDashboardUser,
     deleteDashboardUser,
     forceLogoutAccountSessions,
+    revokeAllRefreshTokensByAccount,
     invalidateAllUserCaches: () => invalidateUserCache()
 };

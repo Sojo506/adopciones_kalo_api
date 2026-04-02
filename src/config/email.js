@@ -98,6 +98,19 @@ async function sendPasswordChangeOtpEmail(to, code, ttlMinutes) {
     });
 }
 
+async function sendPasswordRecoveryOtpEmail(to, code, ttlMinutes) {
+    return sendOtpEmail({
+        to,
+        subject: 'Recuperacion de contrasena - Adopciones KALO',
+        title: 'Recupera el acceso a tu cuenta',
+        headline: 'Recibimos una solicitud para restablecer tu contrasena.',
+        intro: 'Ingresa este codigo para crear una nueva contrasena. Si no fuiste tu, ignora este mensaje.',
+        code,
+        expiresInText: `${ttlMinutes} minutos`,
+        accentColor: '#c97a2b'
+    });
+}
+
 async function sendInvoiceEmail(to, pdfBuffer, invoiceId) {
     const mailOptions = {
         from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM}>`,
@@ -137,5 +150,6 @@ module.exports = {
     sendVerificationEmail,
     sendEmailChangeOtpEmail,
     sendPasswordChangeOtpEmail,
+    sendPasswordRecoveryOtpEmail,
     sendInvoiceEmail
 };
