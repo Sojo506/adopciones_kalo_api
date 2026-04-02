@@ -194,6 +194,23 @@ const signInValidation = [
     body('password').exists().withMessage('Password is required')
 ];
 
+const passwordRecoveryRequestValidation = [
+    body('identifier').trim().isLength({ min: 1 }).withMessage('Identifier is required')
+];
+
+const passwordRecoveryConfirmValidation = [
+    body('identifier').trim().isLength({ min: 1 }).withMessage('Identifier is required'),
+    body('codigo')
+        .trim()
+        .isLength({ min: 6, max: 6 })
+        .withMessage('Codigo must contain 6 digits')
+        .isNumeric()
+        .withMessage('Codigo must contain only digits'),
+    body('newPassword')
+        .isLength({ min: 8 })
+        .withMessage('New password must be at least 8 characters')
+];
+
 async function signIn(req, res, next) {
     try {
         const errors = validationResult(req);
@@ -221,6 +238,55 @@ async function signIn(req, res, next) {
                 user: result.user,
                 accessToken: result.accessToken
             }
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function requestPasswordRecovery(req, res, next) {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                ok: false,
+                message: 'Validation errors',
+                errors: errors.array()
+            });
+        }
+
+        await userService.requestPasswordRecovery(req.body.identifier);
+
+        res.status(200).json({
+            ok: true,
+            message: 'If the account is eligible, a verification code has been sent to the registered email'
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function confirmPasswordRecovery(req, res, next) {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                ok: false,
+                message: 'Validation errors',
+                errors: errors.array()
+            });
+        }
+
+        const result = await userService.confirmPasswordRecovery(
+            req.body.identifier,
+            req.body.codigo,
+            req.body.newPassword
+        );
+
+        res.status(200).json({
+            ok: true,
+            message: 'Password updated successfully',
+            data: result
         });
     } catch (error) {
         next(error);
@@ -355,6 +421,8 @@ module.exports = {
     updateDashboardUser,
     deleteDashboardUser,
     signIn,
+    requestPasswordRecovery,
+    confirmPasswordRecovery,
     refreshSession,
     sessionEvents,
     logout,
@@ -364,6 +432,8 @@ module.exports = {
     dashboardUserValidation,
     dashboardUserUpdateValidation,
     signInValidation,
+    passwordRecoveryRequestValidation,
+    passwordRecoveryConfirmValidation,
     verifyEmailValidation,
     resendVerificationEmailValidation
 };

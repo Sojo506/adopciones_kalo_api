@@ -44,6 +44,16 @@ router.get('/:identificacion', authenticateToken, requireAdmin, userController.g
 router.post('/', authenticateToken, requireAdmin, userController.dashboardUserValidation, userController.createDashboardUser);
 router.post('/register', userController.signUpValidation, userController.signUp);
 router.post('/login', userController.signInValidation, userController.signIn);
+router.post(
+    '/forgot-password/request',
+    userController.passwordRecoveryRequestValidation,
+    userController.requestPasswordRecovery
+);
+router.post(
+    '/forgot-password/confirm',
+    userController.passwordRecoveryConfirmValidation,
+    userController.confirmPasswordRecovery
+);
 router.post('/refresh', userController.refreshSession);
 router.post('/logout', userController.logout);
 router.post('/verify-email', userController.verifyEmailValidation, userController.verifyEmail);
