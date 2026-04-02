@@ -36,6 +36,19 @@ const submitAdoptionRequestValidation = [
         .withMessage('Respuesta is required')
 ];
 
+async function getPublicAdoptionFormBootstrap(req, res, next) {
+    try {
+        const bootstrap = await adoptionRequestService.getPublicAdoptionFormBootstrap();
+
+        res.status(200).json({
+            ok: true,
+            data: bootstrap
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 async function submitAdoptionRequest(req, res, next) {
     try {
         if (validationErrorResponse(req, res)) {
@@ -82,6 +95,7 @@ async function checkPendingAdoption(req, res, next) {
 }
 
 module.exports = {
+    getPublicAdoptionFormBootstrap,
     submitAdoptionRequest,
     submitAdoptionRequestValidation,
     checkPendingAdoption,

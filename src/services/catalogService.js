@@ -4,6 +4,40 @@ const MemoryCache = require('../utils/memoryCache');
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const catalogCache = new MemoryCache({ defaultTtlMs: ONE_HOUR_MS });
 
+function createHttpError(message, statusCode) {
+    const error = new Error(message);
+    error.statusCode = statusCode;
+    return error;
+}
+
+function sortCatalogItemsByName(left, right) {
+    return String(left.nombre || '').localeCompare(String(right.nombre || ''), 'es', {
+        sensitivity: 'base'
+    });
+}
+
+function buildUniqueCatalogItems(products, { idKey, nameKey }) {
+    const itemsById = new Map();
+
+    products.forEach((product) => {
+        const itemId = product[idKey];
+        const itemName = product[nameKey];
+
+        if (itemId === undefined || itemId === null || !itemName) {
+            return;
+        }
+
+        if (!itemsById.has(itemId)) {
+            itemsById.set(itemId, {
+                [idKey]: itemId,
+                nombre: itemName
+            });
+        }
+    });
+
+    return Array.from(itemsById.values()).sort(sortCatalogItemsByName);
+}
+
 async function getUserTypes() {
     return catalogCache.getOrSet('catalog:user-types', async () => {
         const userTypes = await catalogRepository.findUserTypes();
@@ -112,6 +146,35 @@ async function getProducts({ force = false } = {}) {
         const products = await catalogRepository.findProducts();
         return products.map(formatCatalogProduct);
     });
+}
+
+async function getProductById(idProducto, { force = false } = {}) {
+    const products = await getProducts({ force });
+    const product = products.find(
+        (currentProduct) => Number(currentProduct.idProducto) === Number(idProducto)
+    );
+
+    if (!product) {
+        throw createHttpError('Product not found', 404);
+    }
+
+    return product;
+}
+
+async function getStoreCatalog({ force = false } = {}) {
+    const products = await getProducts({ force });
+
+    return {
+        products,
+        categories: buildUniqueCatalogItems(products, {
+            idKey: 'idCategoria',
+            nameKey: 'categoria'
+        }),
+        brands: buildUniqueCatalogItems(products, {
+            idKey: 'idMarca',
+            nameKey: 'marca'
+        })
+    };
 }
 
 async function getCurrencies() {
@@ -274,6 +337,8 @@ module.exports = {
     getBrands,
     getMovementTypes,
     getProducts,
+    getProductById,
+    getStoreCatalog,
     getCurrencies,
     getBreeds,
     getSexes,
