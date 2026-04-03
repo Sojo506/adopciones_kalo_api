@@ -325,6 +325,7 @@ No es una lista exhaustiva del esquema completo, pero si del flujo real de negoc
 
 - `GET /api/catalogs/store`
 - `GET /api/catalogs/products/:idProducto`
+  - devuelve el detalle publico del producto, mantiene `imageUrl` y agrega `imagenes` con las imagenes activas de `FIDE_PRODUCTO_IMAGEN_TB`
 - `POST /api/store-checkout/orders`
 - `POST /api/store-checkout/capture`
 
@@ -407,24 +408,25 @@ Reglas que vale la pena conocer:
 ### 4. Checkout de tienda, factura PDF y correo
 
 1. El usuario autenticado arma el carrito en el frontend.
-2. El frontend envia `POST /api/store-checkout/orders` con el total calculado.
-3. El backend convierte CRC a USD usando `CRC_USD_RATE` y crea la orden PayPal.
-4. Tras aprobar el pago, el frontend llama `POST /api/store-checkout/capture` con `orderId` e items.
-5. El backend vuelve a validar contra BD cada producto:
+2. Cuando el usuario abre `GET /api/catalogs/products/:idProducto`, la API puede devolver `imagenes` activas para que el frontend arme una galeria sin consultar otra ruta publica.
+3. El frontend envia `POST /api/store-checkout/orders` con el total calculado.
+4. El backend convierte CRC a USD usando `CRC_USD_RATE` y crea la orden PayPal.
+5. Tras aprobar el pago, el frontend llama `POST /api/store-checkout/capture` con `orderId` e items.
+6. El backend vuelve a validar contra BD cada producto:
    - existencia
    - estado activo
    - inventario disponible
    - cantidad solicitada
-6. Se captura la orden PayPal.
-7. Se crea la venta.
-8. Se crean las lineas venta-producto.
-9. Se generan movimientos de inventario de egreso.
-10. Se crea la factura.
-11. Se enlaza venta-factura.
-12. Se registra el pago PayPal.
-13. Se genera el PDF de factura con PDFKit.
-14. Si el usuario tiene correo activo, se envia la factura por email.
-15. La respuesta incluye `pdfBase64` para descarga inmediata en el frontend.
+7. Se captura la orden PayPal.
+8. Se crea la venta.
+9. Se crean las lineas venta-producto.
+10. Se generan movimientos de inventario de egreso.
+11. Se crea la factura.
+12. Se enlaza venta-factura.
+13. Se registra el pago PayPal.
+14. Se genera el PDF de factura con PDFKit.
+15. Si el usuario tiene correo activo, se envia la factura por email.
+16. La respuesta incluye `pdfBase64` para descarga inmediata en el frontend.
 
 Este flujo es especialmente sensible porque mezcla pasarela de pago, inventario, facturacion y correo en una sola operacion.
 

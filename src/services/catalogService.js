@@ -1,5 +1,7 @@
 const catalogRepository = require('../repositories/catalogRepository');
+const productImageRepository = require('../repositories/productImageRepository');
 const MemoryCache = require('../utils/memoryCache');
+const { ACTIVE_STATE_ID } = require('../utils/stateIds');
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const catalogCache = new MemoryCache({ defaultTtlMs: ONE_HOUR_MS });
@@ -158,7 +160,20 @@ async function getProductById(idProducto, { force = false } = {}) {
         throw createHttpError('Product not found', 404);
     }
 
-    return product;
+    const productImages = await productImageRepository.findProductImagesByProductId(idProducto);
+    const imagenes = productImages
+        .filter((productImage) => Number(productImage.ID_ESTADO) === ACTIVE_STATE_ID)
+        .map((productImage) => ({
+            idImagen: productImage.ID_IMAGEN,
+            imageUrl: productImage.IMAGE_URL || null
+        }))
+        .filter((productImage) => productImage.imageUrl);
+
+    return {
+        ...product,
+        imageUrl: product.imageUrl || imagenes[0]?.imageUrl || null,
+        imagenes
+    };
 }
 
 async function getStoreCatalog({ force = false } = {}) {
