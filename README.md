@@ -13,6 +13,7 @@ La API es la capa que conecta el frontend con la base de datos y con los servici
 - Cloudinary para imagenes de perritos, campanas, productos, evidencias y detalles de eventos.
 - PDFKit para facturas y reportes administrativos.
 - Nodemailer para envio de codigos y facturas.
+- Oracle Scheduler para tareas operativas sobre seguimientos vencidos.
 
 ## Stack tecnico
 
@@ -127,6 +128,7 @@ Si estas creando una base nueva, primero debes aplicar manualmente los SQL de `s
 - `procedures.sql`
 - `package.sql`
 - `package_body.sql`
+- `jobs.sql`
 - `views.sql`
 - `indexes.sql`
 - `triggers.sql`
@@ -313,6 +315,8 @@ No es una lista exhaustiva del esquema completo, pero si del flujo real de negoc
 - `GET /api/auth/profile/follow-ups`
 - `GET /api/evidences/follow-up/:idSeguimiento`
 - `POST /api/evidences`
+- `PUT /api/evidences/:idEvidencia`
+- `DELETE /api/evidences/:idEvidencia`
 
 ### Campanas y donaciones
 
@@ -453,15 +457,25 @@ Importante: en este proyecto, enviar el formulario no solo crea la solicitud; ta
 ### 6. Seguimiento y evidencias
 
 1. El usuario autenticado consulta `GET /api/auth/profile/follow-ups`.
-2. El frontend muestra seguimientos por perrito adoptado.
-3. Para un seguimiento especifico se consultan evidencias con `GET /api/evidences/follow-up/:idSeguimiento`.
-4. El usuario puede subir nueva evidencia con `POST /api/evidences` usando `multipart/form-data`.
-5. El backend valida:
+2. La API solo devuelve seguimientos activos y no vencidos para la vista publica.
+3. El payload publico del seguimiento no expone comentarios administrativos ni estados internos.
+4. Para un seguimiento especifico se consultan evidencias con `GET /api/evidences/follow-up/:idSeguimiento`.
+5. El usuario final puede subir nueva evidencia con `POST /api/evidences` usando `multipart/form-data`.
+6. El backend valida:
    - acceso a ese seguimiento
    - fecha dentro del rango del seguimiento
-   - existencia de comentarios o imagen
-6. Si hay imagen, se sube a Cloudinary.
-7. La evidencia queda disponible para usuario y administracion.
+   - imagen obligatoria en el formulario publico
+7. Si hay imagen, se sube a Cloudinary.
+8. La evidencia creada por usuario final queda forzada a estado `Pendiente`.
+9. Los comentarios quedan reservados para administracion y no se aceptan desde el formulario publico.
+10. `PUT /api/evidences/:idEvidencia` y `DELETE /api/evidences/:idEvidencia` quedan restringidos a administradores.
+11. En respuestas publicas, la API solo mantiene visibles estados de evidencia aptos para usuario final, como `Pendiente` y `Aprobado`.
+
+Complemento operativo de BD:
+
+- `FIDE_DESACTIVAR_SEGUIMIENTOS_VENCIDOS_SP` desactiva seguimientos cuya `FECHA_FIN` ya paso.
+- `FIDE_DESACTIVAR_SEGUIMIENTOS_VENCIDOS_JOB` ejecuta ese proceso cada 5 minutos mediante `DBMS_SCHEDULER`.
+- El dashboard administrativo puede seguir viendo y gestionando esos registros segun las reglas del modulo.
 
 ### 7. Reportes PDF administrativos
 
@@ -482,6 +496,8 @@ Importante: en este proyecto, enviar el formulario no solo crea la solicitud; ta
 ### Oracle
 
 Toda la aplicacion asume que Oracle es la fuente de verdad. Los repositorios usan cursores, funciones y procedures; no hay ORM.
+
+Ademas del package `KALO.FIDE_KALO_PKG`, el proyecto usa jobs de `DBMS_SCHEDULER` para tareas operativas como la desactivacion automatica de seguimientos vencidos.
 
 ### SMTP
 
