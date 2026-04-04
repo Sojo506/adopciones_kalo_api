@@ -3,6 +3,7 @@ const {
     executeCursorFunctionWithConnection,
     getCurrentSequenceValue
 } = require('./repositoryUtils');
+const { isInactiveState } = require('../utils/stateIds');
 
 async function findAllFollowUpsForAdmin() {
     let connection;
@@ -48,7 +49,7 @@ async function countActiveEvidencesByFollowUp(idSeguimiento) {
             'KALO.FIDE_KALO_PKG.FIDE_OBTENER_EVIDENCIAS_POR_SEGUIMIENTO_FN(:idSeguimiento)',
             { idSeguimiento }
         );
-        return evidences.filter((evidence) => Number(evidence.ID_ESTADO) === 1).length;
+        return evidences.filter((evidence) => !isInactiveState(evidence.ID_ESTADO)).length;
     } finally {
         if (connection) {
             await connection.close();

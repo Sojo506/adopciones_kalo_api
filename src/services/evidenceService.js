@@ -4,12 +4,16 @@ const evidenceRepository = require('../repositories/evidenceRepository');
 const followUpService = require('./followUpService');
 const catalogService = require('./catalogService');
 const MemoryCache = require('../utils/memoryCache');
+const { ACTIVE_STATE_ID } = require('../utils/stateIds');
 
 const EVIDENCE_LIST_ADMIN_CACHE_KEY = 'evidence:list:admin';
 const EVIDENCE_LIST_ACCOUNT_CACHE_PREFIX = 'evidence:list:account:';
 const EVIDENCE_DETAIL_CACHE_PREFIX = 'evidence:detail:';
 const EVIDENCE_FOLLOW_UP_CACHE_PREFIX = 'evidence:follow-up:';
 const EVIDENCE_CACHE_TTL_MS = Number(process.env.EVIDENCE_CACHE_TTL_MS || 15000);
+const PENDING_STATE_NAME = 'Pendiente';
+const APPROVED_STATE_NAME = 'Aprobado';
+const INACTIVE_STATE_NAME = 'Inactivo';
 const evidenceQueryCache = new MemoryCache({
     defaultTtlMs: EVIDENCE_CACHE_TTL_MS
 });
@@ -18,6 +22,14 @@ function createHttpError(message, statusCode) {
     const error = new Error(message);
     error.statusCode = statusCode;
     return error;
+}
+
+function normalizeCatalogName(value) {
+    return String(value || '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
 }
 
 function getAccountListCacheKey(idCuenta) {
@@ -121,6 +133,109 @@ function normalizeOptionalText(value) {
     return normalizedValue || null;
 }
 
+function findStateByName(states, expectedName) {
+    const normalizedExpectedName = normalizeCatalogName(expectedName);
+    return (
+        states.find(
+            (state) => normalizeCatalogName(state.nombre) === normalizedExpectedName
+        ) || null
+    );
+}
+
+async function getEvidenceWorkflowStates() {
+    const states = await catalogService.getStates();
+    const pendingState = findStateByName(states, PENDING_STATE_NAME);
+    const approvedState = findStateByName(states, APPROVED_STATE_NAME);
+    const inactiveState = findStateByName(states, INACTIVE_STATE_NAME);
+
+    if (!pendingState || !approvedState || !inactiveState) {
+        throw createHttpError(
+            'Evidence workflow states are not configured correctly',
+            500
+        );
+    }
+
+    return {
+        pendingState,
+        approvedState,
+        inactiveState
+    };
+}
+
+function ensureEvidenceWorkflowStateAllowed(idEstado, workflowStates) {
+    const allowedStateIds = new Set([
+        Number(workflowStates.pendingState.idEstado),
+        Number(workflowStates.approvedState.idEstado),
+        Number(workflowStates.inactiveState.idEstado)
+    ]);
+
+    if (!allowedStateIds.has(Number(idEstado))) {
+        throw createHttpError(
+            'Evidence state must be Pendiente, Aprobado or Inactivo',
+            400
+        );
+    }
+}
+
+function isNonInactiveEvidenceState(idEstado, workflowStates) {
+    return Number(idEstado) !== Number(workflowStates.inactiveState.idEstado);
+}
+
+function sanitizeEvidenceForActor(evidence, actorAccount) {
+    if (isAdminAccount(actorAccount)) {
+        return evidence;
+    }
+
+    const normalizedState = normalizeCatalogName(evidence?.estado);
+    const isPublicState = normalizedState === 'pendiente' || normalizedState === 'aprobado';
+
+    return {
+        ...evidence,
+        comentarios: '',
+        idEstado: isPublicState ? evidence.idEstado : null,
+        estado: isPublicState ? evidence.estado : null
+    };
+}
+
+function ensureEvidenceVisibleToActor(evidence, actorAccount, workflowStates) {
+    if (isAdminAccount(actorAccount)) {
+        return;
+    }
+
+    if (!isNonInactiveEvidenceState(evidence.idEstado, workflowStates)) {
+        throw createHttpError('Evidence not found', 404);
+    }
+}
+
+function ensurePublicEvidenceRequiresImage(file) {
+    if (!file?.buffer) {
+        throw createHttpError(
+            'An image is required to submit evidence from the public follow-up form',
+            400
+        );
+    }
+}
+
+function ensureFollowUpWindowIsOpenForPublicSubmission(followUp) {
+    const today = serializeDateOnly(new Date());
+    const startDate = serializeDateOnly(followUp?.fechaInicio);
+    const endDate = serializeDateOnly(followUp?.fechaFin);
+
+    if (startDate && today < startDate) {
+        throw createHttpError(
+            'This follow-up is not available yet',
+            409
+        );
+    }
+
+    if (endDate && today > endDate) {
+        throw createHttpError(
+            'This follow-up has already expired',
+            409
+        );
+    }
+}
+
 function sanitizeFileName(fileName) {
     return String(fileName || 'evidence')
         .replace(/\.[^.]+$/, '')
@@ -220,15 +335,6 @@ async function loadActorAccount(idCuenta) {
     return account;
 }
 
-async function ensureStateExists(idEstado) {
-    const states = await catalogService.getStates();
-    const stateExists = states.some((state) => Number(state.idEstado) === Number(idEstado));
-
-    if (!stateExists) {
-        throw createHttpError('State not found', 400);
-    }
-}
-
 function ensureActorCanAccessFollowUp(actorAccount, followUp) {
     if (isAdminAccount(actorAccount)) {
         return;
@@ -245,14 +351,14 @@ async function getAccessibleFollowUp(idSeguimiento, actorAccount) {
     return followUp;
 }
 
-function ensureEvidenceCanRemainActive({ followUp, nextState }) {
-    if (Number(nextState) !== 1) {
+function ensureEvidenceCanRemainAvailable({ followUp, nextState, workflowStates }) {
+    if (!isNonInactiveEvidenceState(nextState, workflowStates)) {
         return;
     }
 
-    if (Number(followUp.idEstado) !== 1) {
+    if (Number(followUp.idEstado) !== ACTIVE_STATE_ID) {
         throw createHttpError(
-            'Cannot keep an evidence active under an inactive follow-up',
+            'Cannot keep an evidence available under an inactive follow-up',
             409
         );
     }
@@ -334,6 +440,7 @@ async function destroyCloudinaryAsset(publicId) {
 
 async function getEvidenceById(idEvidencia, idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
+    const workflowStates = await getEvidenceWorkflowStates();
     const evidence = await evidenceQueryCache.getOrSet(
         getEvidenceDetailCacheKey(idEvidencia),
         async () => {
@@ -349,11 +456,13 @@ async function getEvidenceById(idEvidencia, idCuenta) {
     );
 
     ensureActorCanAccessFollowUp(actorAccount, evidence);
-    return evidence;
+    ensureEvidenceVisibleToActor(evidence, actorAccount, workflowStates);
+    return sanitizeEvidenceForActor(evidence, actorAccount);
 }
 
 async function getEvidences(idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
+    const workflowStates = await getEvidenceWorkflowStates();
 
     if (isAdminAccount(actorAccount)) {
         return evidenceQueryCache.getOrSet(EVIDENCE_LIST_ADMIN_CACHE_KEY, async () => {
@@ -380,7 +489,12 @@ async function getEvidences(idCuenta) {
             const evidences = await evidenceRepository.findEvidencesByAccountId(
                 actorAccount.ID_CUENTA
             );
-            return evidences.map((evidence) => formatEvidence(evidence));
+            return evidences
+                .map((evidence) => formatEvidence(evidence))
+                .filter((evidence) =>
+                    isNonInactiveEvidenceState(evidence.idEstado, workflowStates)
+                )
+                .map((evidence) => sanitizeEvidenceForActor(evidence, actorAccount));
         }
     );
 }
@@ -388,41 +502,60 @@ async function getEvidences(idCuenta) {
 async function getEvidencesByFollowUp(idSeguimiento, idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
     const followUp = await getAccessibleFollowUp(idSeguimiento, actorAccount);
+    const workflowStates = await getEvidenceWorkflowStates();
 
-    return evidenceQueryCache.getOrSet(
+    const evidences = await evidenceQueryCache.getOrSet(
         getFollowUpEvidenceCacheKey(idSeguimiento),
         async () => {
-            const evidences = await evidenceRepository.findEvidencesByFollowUpId(idSeguimiento);
-            return evidences.map((evidence) => formatEvidence(evidence, followUp));
+            const evidenceRows = await evidenceRepository.findEvidencesByFollowUpId(idSeguimiento);
+            return evidenceRows.map((evidence) =>
+                formatEvidence(evidence, followUp)
+            );
         }
     );
+
+    if (isAdminAccount(actorAccount)) {
+        return evidences;
+    }
+
+    return evidences
+        .filter((evidence) =>
+            isNonInactiveEvidenceState(evidence.idEstado, workflowStates)
+        )
+        .map((evidence) => sanitizeEvidenceForActor(evidence, actorAccount));
 }
 
 async function createEvidence(evidenceData, file, idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
-    const requestedState =
-        evidenceData.idEstado === undefined ||
-        evidenceData.idEstado === null ||
-        evidenceData.idEstado === ''
-            ? 1
-            : Number(evidenceData.idEstado);
-
-    if (requestedState !== 1) {
-        throw createHttpError('New evidences must start in active state', 400);
-    }
+    const workflowStates = await getEvidenceWorkflowStates();
+    const isAdmin = isAdminAccount(actorAccount);
+    const requestedState = isAdmin
+        ? evidenceData.idEstado === undefined ||
+          evidenceData.idEstado === null ||
+          evidenceData.idEstado === ''
+            ? Number(workflowStates.approvedState.idEstado)
+            : Number(evidenceData.idEstado)
+        : Number(workflowStates.pendingState.idEstado);
 
     const payload = {
         idSeguimiento: Number(evidenceData.idSeguimiento),
-        comentarios: normalizeOptionalText(evidenceData.comentarios),
+        comentarios: isAdmin ? normalizeOptionalText(evidenceData.comentarios) : null,
         fechaEvidencia: parseDateValue(evidenceData.fechaEvidencia, 'Evidence date'),
         idEstado: requestedState
     };
 
-    await ensureStateExists(payload.idEstado);
+    ensureEvidenceWorkflowStateAllowed(payload.idEstado, workflowStates);
     const followUp = await getAccessibleFollowUp(payload.idSeguimiento, actorAccount);
-    ensureEvidenceCanRemainActive({
+
+    if (!isAdmin) {
+        ensurePublicEvidenceRequiresImage(file);
+        ensureFollowUpWindowIsOpenForPublicSubmission(followUp);
+    }
+
+    ensureEvidenceCanRemainAvailable({
         followUp,
-        nextState: payload.idEstado
+        nextState: payload.idEstado,
+        workflowStates
     });
     ensureEvidenceDateFitsFollowUp(followUp, payload.fechaEvidencia);
 
@@ -434,10 +567,12 @@ async function createEvidence(evidenceData, file, idCuenta) {
         imageUrl = uploadedImage.secure_url;
     }
 
-    ensureEvidenceHasContent({
-        imageUrl,
-        comentarios: payload.comentarios
-    });
+    if (isAdmin) {
+        ensureEvidenceHasContent({
+            imageUrl,
+            comentarios: payload.comentarios
+        });
+    }
 
     try {
         const result = await evidenceRepository.createEvidence({
@@ -455,6 +590,15 @@ async function createEvidence(evidenceData, file, idCuenta) {
 
 async function updateEvidence(idEvidencia, evidenceData, file, idCuenta) {
     const actorAccount = await loadActorAccount(idCuenta);
+    const workflowStates = await getEvidenceWorkflowStates();
+
+    if (!isAdminAccount(actorAccount)) {
+        throw createHttpError(
+            'Only administrators can update evidences in this module',
+            403
+        );
+    }
+
     const existingEvidence = await getEvidenceById(idEvidencia, idCuenta);
     const payload = {
         idEvidencia: Number(idEvidencia),
@@ -464,11 +608,12 @@ async function updateEvidence(idEvidencia, evidenceData, file, idCuenta) {
         idEstado: Number(evidenceData.idEstado)
     };
 
-    await ensureStateExists(payload.idEstado);
+    ensureEvidenceWorkflowStateAllowed(payload.idEstado, workflowStates);
     const followUp = await getAccessibleFollowUp(payload.idSeguimiento, actorAccount);
-    ensureEvidenceCanRemainActive({
+    ensureEvidenceCanRemainAvailable({
         followUp,
-        nextState: payload.idEstado
+        nextState: payload.idEstado,
+        workflowStates
     });
     ensureEvidenceDateFitsFollowUp(followUp, payload.fechaEvidencia);
 
@@ -507,9 +652,19 @@ async function updateEvidence(idEvidencia, evidenceData, file, idCuenta) {
 }
 
 async function deleteEvidence(idEvidencia, idCuenta) {
+    const actorAccount = await loadActorAccount(idCuenta);
+    const workflowStates = await getEvidenceWorkflowStates();
+
+    if (!isAdminAccount(actorAccount)) {
+        throw createHttpError(
+            'Only administrators can delete evidences in this module',
+            403
+        );
+    }
+
     const existingEvidence = await getEvidenceById(idEvidencia, idCuenta);
 
-    if (Number(existingEvidence.idEstado) !== 1) {
+    if (Number(existingEvidence.idEstado) === Number(workflowStates.inactiveState.idEstado)) {
         throw createHttpError('Evidence is already inactive', 409);
     }
 

@@ -15,6 +15,10 @@ function validationErrorResponse(req, res) {
     });
 }
 
+function isAdminRequest(req) {
+    return Number(req.authenticatedAccount?.ID_TIPO_USUARIO) === 1;
+}
+
 const evidenceIdValidation = [
     param('idEvidencia')
         .isInt({ min: 1 })
@@ -32,8 +36,16 @@ const evidenceContentValidation = () =>
         const comentarios = String(req.body?.comentarios || '').trim();
         const hasImageFile = Boolean(req.file?.buffer);
 
-        if (!comentarios && !hasImageFile) {
-            throw new Error('An evidence must include comments or an image');
+        if (isAdminRequest(req)) {
+            if (!comentarios && !hasImageFile) {
+                throw new Error('An evidence must include comments or an image');
+            }
+
+            return true;
+        }
+
+        if (!hasImageFile) {
+            throw new Error('An image is required for the public follow-up form');
         }
 
         return true;

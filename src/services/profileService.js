@@ -85,6 +85,16 @@ function serializeDateOnly(value) {
     ).padStart(2, '0')}`;
 }
 
+function isDateOnOrAfterToday(value) {
+    const serializedDate = serializeDateOnly(value);
+
+    if (!serializedDate) {
+        return true;
+    }
+
+    return serializedDate >= serializeDateOnly(new Date());
+}
+
 function roundMoney(value) {
     return Math.round(Number(value || 0) * 100) / 100;
 }
@@ -358,33 +368,34 @@ function buildFosterHomes({ fosterHomes, fosterDogs }) {
 }
 
 function buildProfileFollowUps(followUpRows) {
-    return followUpRows.map((followUp) => ({
-        idSeguimiento: Number(followUp.ID_SEGUIMIENTO),
-        idAdopcion:
-            followUp.ID_ADOPCION === null || followUp.ID_ADOPCION === undefined
-                ? null
-                : Number(followUp.ID_ADOPCION),
-        idPerrito:
-            followUp.ID_PERRITO === null || followUp.ID_PERRITO === undefined
-                ? null
-                : Number(followUp.ID_PERRITO),
-        nombrePerrito: followUp.NOMBRE_PERRITO || null,
-        idTipoSeguimiento:
-            followUp.ID_TIPO_SEGUIMIENTO === null || followUp.ID_TIPO_SEGUIMIENTO === undefined
-                ? null
-                : Number(followUp.ID_TIPO_SEGUIMIENTO),
-        tipoSeguimiento: followUp.TIPO_SEGUIMIENTO || null,
-        fechaInicio: serializeDateOnly(followUp.FECHA_INICIO),
-        fechaFin: serializeDateOnly(followUp.FECHA_FIN),
-        comentarios: followUp.COMENTARIOS || '',
-        idEstado:
-            followUp.ID_ESTADO === null || followUp.ID_ESTADO === undefined
-                ? null
-                : Number(followUp.ID_ESTADO),
-        estado: followUp.ESTADO || null,
-        cantidadEvidencias: Number(followUp.CANTIDAD_EVIDENCIAS || 0),
-        ultimaFechaEvidencia: serializeDateOnly(followUp.ULTIMA_FECHA_EVIDENCIA)
-    }));
+    return followUpRows
+        .filter(
+            (followUp) =>
+                Number(followUp.ID_ESTADO) === ACTIVE_STATE_ID &&
+                isDateOnOrAfterToday(followUp.FECHA_FIN)
+        )
+        .map((followUp) => ({
+            idSeguimiento: Number(followUp.ID_SEGUIMIENTO),
+            idAdopcion:
+                followUp.ID_ADOPCION === null || followUp.ID_ADOPCION === undefined
+                    ? null
+                    : Number(followUp.ID_ADOPCION),
+            idPerrito:
+                followUp.ID_PERRITO === null || followUp.ID_PERRITO === undefined
+                    ? null
+                    : Number(followUp.ID_PERRITO),
+            nombrePerrito: followUp.NOMBRE_PERRITO || null,
+            idTipoSeguimiento:
+                followUp.ID_TIPO_SEGUIMIENTO === null ||
+                followUp.ID_TIPO_SEGUIMIENTO === undefined
+                    ? null
+                    : Number(followUp.ID_TIPO_SEGUIMIENTO),
+            tipoSeguimiento: followUp.TIPO_SEGUIMIENTO || null,
+            fechaInicio: serializeDateOnly(followUp.FECHA_INICIO),
+            fechaFin: serializeDateOnly(followUp.FECHA_FIN),
+            cantidadEvidencias: Number(followUp.CANTIDAD_EVIDENCIAS || 0),
+            ultimaFechaEvidencia: serializeDateOnly(followUp.ULTIMA_FECHA_EVIDENCIA)
+        }));
 }
 
 async function buildProfileOverview(idCuenta) {

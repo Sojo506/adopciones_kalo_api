@@ -1,7 +1,7 @@
 const express = require('express');
 const evidenceController = require('../controllers/evidenceController');
 const evidenceImageUpload = require('../middlewares/evidenceImageUpload');
-const { authenticateToken } = require('../middlewares/auth');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -26,6 +26,7 @@ router.post(
 );
 router.put(
     '/:idEvidencia',
+    requireAdmin,
     evidenceImageUpload.single('image'),
     [
         ...evidenceController.evidenceIdValidation,
@@ -35,6 +36,7 @@ router.put(
 );
 router.delete(
     '/:idEvidencia',
+    requireAdmin,
     evidenceController.evidenceIdValidation,
     evidenceController.deleteEvidence
 );

@@ -208,7 +208,7 @@ async function ensureFollowUpCanBeDisabled(existingFollowUp, nextState) {
 
     if (activeEvidencesCount > 0) {
         throw createHttpError(
-            'Cannot deactivate a follow-up that still has active evidences',
+            'Cannot deactivate a follow-up that still has registered evidences',
             409
         );
     }
@@ -234,7 +234,7 @@ async function ensureStructuralChangesAreAllowed(existingFollowUp, payload) {
 
     if (adoptionChanged || trackingTypeChanged || startDateChanged || endDateChanged) {
         throw createHttpError(
-            'Cannot change adoption, tracking type or schedule for a follow-up that already has active evidences',
+            'Cannot change adoption, tracking type or schedule for a follow-up that already has registered evidences',
             409
         );
     }
@@ -250,7 +250,7 @@ async function ensureFollowUpCanBeDeleted(existingFollowUp) {
 
     if (activeEvidencesCount > 0) {
         throw createHttpError(
-            'Cannot delete a follow-up that still has active evidences',
+            'Cannot delete a follow-up that still has registered evidences',
             409
         );
     }
