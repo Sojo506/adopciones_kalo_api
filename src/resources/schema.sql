@@ -13,8 +13,9 @@ GRANT RESOURCE TO KALO;
 ALTER USER KALO QUOTA 500M ON USERS;
 /
 
-*/
+GRANT CREATE ANY JOB TO KALO;  
 
+*/
 -- ============================================================
 -- TABLAS BASE (SOLO DEPENDEN DE FIDE_ESTADO_TB)
 -- ============================================================
