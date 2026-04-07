@@ -1625,6 +1625,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
                     I.ID_PRODUCTO,
                     P.NOMBRE AS PRODUCTO,
                     I.CANTIDAD,
+                    I.STOCK_MINIMO,
                     I.ID_ESTADO,
                     E.NOMBRE_ESTADO AS ESTADO
             FROM FIDE_INVENTARIO_TB I
@@ -1655,6 +1656,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
                     I.ID_PRODUCTO,
                     P.NOMBRE AS PRODUCTO,
                     I.CANTIDAD,
+                    I.STOCK_MINIMO,
                     I.ID_ESTADO,
                     E.NOMBRE_ESTADO AS ESTADO
             FROM FIDE_INVENTARIO_TB I
@@ -3432,6 +3434,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
                     I.ID_PRODUCTO,
                     P.NOMBRE AS PRODUCTO,
                     I.CANTIDAD,
+                    I.STOCK_MINIMO,
                     I.ID_ESTADO,
                     E.NOMBRE_ESTADO AS ESTADO
             FROM FIDE_INVENTARIO_TB I
@@ -5750,7 +5753,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
                         SELECT COUNT(*)
                         FROM FIDE_INVENTARIO_TB I
                         WHERE I.ID_ESTADO = 1
-                          AND NVL(I.CANTIDAD, 0) <= 10
+                          AND NVL(I.CANTIDAD, 0) <= NVL(I.STOCK_MINIMO, 10)
                     ), 0) AS PRODUCTOS_STOCK_BAJO,
                     NVL((
                         SELECT COUNT(*)
@@ -5934,6 +5937,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
                     C.NOMBRE AS CATEGORIA,
                     M.NOMBRE AS MARCA,
                     I.CANTIDAD,
+                    I.STOCK_MINIMO,
                     P.PRECIO,
                     NVL(I.CANTIDAD, 0) * NVL(P.PRECIO, 0) AS VALOR_ESTIMADO,
                     I.ID_ESTADO,
@@ -5945,7 +5949,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             JOIN FIDE_ESTADO_TB E ON I.ID_ESTADO = E.ID_ESTADO
             WHERE I.ID_ESTADO = 1
               AND P.ID_ESTADO = 1
-              AND NVL(I.CANTIDAD, 0) <= NVL(P_STOCK_MINIMO, 10)
+              AND NVL(I.CANTIDAD, 0) <= NVL(I.STOCK_MINIMO, 10)
             ORDER BY I.CANTIDAD ASC, P.NOMBRE ASC;
 
         RETURN V_CURSOR_RESULTADO;
@@ -8478,14 +8482,24 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
     PROCEDURE FIDE_INVENTARIO_INSERT_SP(
         P_ID_PRODUCTO   IN FIDE_INVENTARIO_TB.ID_PRODUCTO%TYPE,
         P_CANTIDAD      IN FIDE_INVENTARIO_TB.CANTIDAD%TYPE,
-        P_ID_ESTADO     IN FIDE_INVENTARIO_TB.ID_ESTADO%TYPE
+        P_ID_ESTADO     IN FIDE_INVENTARIO_TB.ID_ESTADO%TYPE,
+        P_STOCK_MINIMO  IN FIDE_INVENTARIO_TB.STOCK_MINIMO%TYPE DEFAULT 10
     )
     IS
         V_EXISTE_INVENTARIO NUMBER;
         V_ID_ESTADO_PRODUCTO FIDE_PRODUCTO_TB.ID_ESTADO%TYPE;
+        V_STOCK_MINIMO FIDE_INVENTARIO_TB.STOCK_MINIMO%TYPE := NVL(P_STOCK_MINIMO, 10);
     BEGIN
         IF NVL(P_CANTIDAD, 0) < 0 THEN
             RAISE_APPLICATION_ERROR(-20006, 'La cantidad del inventario no puede ser negativa.');
+        END IF;
+
+        IF V_STOCK_MINIMO < 0 THEN
+            RAISE_APPLICATION_ERROR(-20010, 'El stock minimo no puede ser negativo.');
+        END IF;
+
+        IF V_STOCK_MINIMO != TRUNC(V_STOCK_MINIMO) THEN
+            RAISE_APPLICATION_ERROR(-20011, 'El stock minimo debe ser un numero entero.');
         END IF;
 
         IF P_ID_ESTADO != 1 AND NVL(P_CANTIDAD, 0) > 0 THEN
@@ -8513,11 +8527,13 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
         INSERT INTO FIDE_INVENTARIO_TB(
             ID_PRODUCTO,
             CANTIDAD,
+            STOCK_MINIMO,
             ID_ESTADO
         )
         VALUES(
             P_ID_PRODUCTO,
             P_CANTIDAD,
+            V_STOCK_MINIMO,
             P_ID_ESTADO
         );
 
@@ -8544,12 +8560,15 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
         P_ID_INVENTARIO IN FIDE_INVENTARIO_TB.ID_INVENTARIO%TYPE,
         P_ID_PRODUCTO   IN FIDE_INVENTARIO_TB.ID_PRODUCTO%TYPE,
         P_CANTIDAD      IN FIDE_INVENTARIO_TB.CANTIDAD%TYPE,
-        P_ID_ESTADO     IN FIDE_INVENTARIO_TB.ID_ESTADO%TYPE
+        P_ID_ESTADO     IN FIDE_INVENTARIO_TB.ID_ESTADO%TYPE,
+        P_STOCK_MINIMO  IN FIDE_INVENTARIO_TB.STOCK_MINIMO%TYPE DEFAULT NULL
     )
     IS
         V_HAY_UPDATE NUMBER;
         V_ID_PRODUCTO_ACTUAL FIDE_INVENTARIO_TB.ID_PRODUCTO%TYPE;
         V_ID_ESTADO_PRODUCTO FIDE_PRODUCTO_TB.ID_ESTADO%TYPE;
+        V_STOCK_MINIMO_ACTUAL FIDE_INVENTARIO_TB.STOCK_MINIMO%TYPE;
+        V_STOCK_MINIMO_NUEVO FIDE_INVENTARIO_TB.STOCK_MINIMO%TYPE;
     BEGIN
         IF NVL(P_CANTIDAD, 0) < 0 THEN
             RAISE_APPLICATION_ERROR(-20006, 'La cantidad del inventario no puede ser negativa.');
@@ -8559,13 +8578,23 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
             RAISE_APPLICATION_ERROR(-20007, 'Un inventario inactivo debe tener cantidad 0.');
         END IF;
 
-        SELECT ID_PRODUCTO
-        INTO V_ID_PRODUCTO_ACTUAL
+        SELECT ID_PRODUCTO, STOCK_MINIMO
+        INTO V_ID_PRODUCTO_ACTUAL, V_STOCK_MINIMO_ACTUAL
         FROM FIDE_INVENTARIO_TB
         WHERE ID_INVENTARIO = P_ID_INVENTARIO;
 
         IF V_ID_PRODUCTO_ACTUAL != P_ID_PRODUCTO THEN
             RAISE_APPLICATION_ERROR(-20008, 'No se puede cambiar el producto asociado al inventario.');
+        END IF;
+
+        V_STOCK_MINIMO_NUEVO := NVL(P_STOCK_MINIMO, V_STOCK_MINIMO_ACTUAL);
+
+        IF V_STOCK_MINIMO_NUEVO < 0 THEN
+            RAISE_APPLICATION_ERROR(-20010, 'El stock minimo no puede ser negativo.');
+        END IF;
+
+        IF V_STOCK_MINIMO_NUEVO != TRUNC(V_STOCK_MINIMO_NUEVO) THEN
+            RAISE_APPLICATION_ERROR(-20011, 'El stock minimo debe ser un numero entero.');
         END IF;
 
         SELECT ID_ESTADO
@@ -8581,6 +8610,7 @@ CREATE OR REPLACE PACKAGE BODY FIDE_KALO_PKG IS
         SET
             ID_PRODUCTO = P_ID_PRODUCTO,
             CANTIDAD = P_CANTIDAD,
+            STOCK_MINIMO = V_STOCK_MINIMO_NUEVO,
             ID_ESTADO = P_ID_ESTADO
         WHERE ID_INVENTARIO = P_ID_INVENTARIO;
 
