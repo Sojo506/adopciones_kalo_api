@@ -74,7 +74,8 @@ async function createInventory(inventoryData) {
         KALO.FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(
           :idProducto,
           :cantidad,
-          :idEstado
+          :idEstado,
+          :stockMinimo
         );
       END;
     `;
@@ -84,7 +85,8 @@ async function createInventory(inventoryData) {
             {
                 idProducto: inventoryData.idProducto,
                 cantidad: inventoryData.cantidad,
-                idEstado: inventoryData.idEstado
+                idEstado: inventoryData.idEstado,
+                stockMinimo: inventoryData.stockMinimo
             },
             { autoCommit: true }
         );
@@ -115,7 +117,8 @@ async function updateInventory(inventoryData) {
           :idInventario,
           :idProducto,
           :cantidad,
-          :idEstado
+          :idEstado,
+          :stockMinimo
         );
       END;
     `;
@@ -126,7 +129,8 @@ async function updateInventory(inventoryData) {
                 idInventario: inventoryData.idInventario,
                 idProducto: inventoryData.idProducto,
                 cantidad: inventoryData.cantidad,
-                idEstado: inventoryData.idEstado
+                idEstado: inventoryData.idEstado,
+                stockMinimo: inventoryData.stockMinimo
             },
             { autoCommit: true }
         );

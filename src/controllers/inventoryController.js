@@ -28,6 +28,10 @@ const inventoryValidation = [
     body('cantidad')
         .isInt({ min: 0 })
         .withMessage('Cantidad must be a non-negative integer'),
+    body('stockMinimo')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('Stock minimo must be a non-negative integer'),
     body('idEstado')
         .isInt({ min: 1 })
         .withMessage('ID Estado must be a positive number')

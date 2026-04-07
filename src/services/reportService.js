@@ -2,7 +2,6 @@ const MemoryCache = require('../utils/memoryCache');
 const reportRepository = require('../repositories/reportRepository');
 
 const ADMIN_REPORT_CACHE_TTL_MS = Number(process.env.ADMIN_REPORT_CACHE_TTL_MS || 15000);
-const LOW_STOCK_THRESHOLD = Number(process.env.ADMIN_LOW_STOCK_THRESHOLD || 10);
 
 const SUMMARY_CACHE_KEY = 'admin-report:summary';
 const REPORT_CACHE_PREFIX = 'admin-report:pdf:';
@@ -146,6 +145,7 @@ function formatLowInventoryReportRow(row) {
         categoria: row.CATEGORIA || null,
         marca: row.MARCA || null,
         cantidad: toInteger(row.CANTIDAD),
+        stockMinimo: toInteger(row.STOCK_MINIMO),
         precio: roundMoney(row.PRECIO),
         valorEstimado: roundMoney(row.VALOR_ESTIMADO),
         idEstado: toInteger(row.ID_ESTADO),
@@ -288,12 +288,13 @@ function buildLowInventoryReportDefinition(rows) {
     return {
         filename: 'reporte-inventario-bajo-admin.pdf',
         title: 'Reporte de inventario bajo',
-        subtitle: `Productos con existencias menores o iguales a ${LOW_STOCK_THRESHOLD} unidades.`,
+        subtitle: 'Productos con existencias menores o iguales a su stock minimo configurado.',
         columns: [
             { header: 'Producto', key: 'producto', width: 2.5 },
             { header: 'Categoria', key: 'categoria', width: 1.5 },
             { header: 'Marca', key: 'marca', width: 1.4 },
             { header: 'Cantidad', key: 'cantidad', width: 0.9, align: 'right' },
+            { header: 'Stock min.', key: 'stockMinimo', width: 1, align: 'right' },
             { header: 'Precio', key: 'precio', width: 1, align: 'right' },
             { header: 'Valor', key: 'valorEstimado', width: 1.2, align: 'right' },
             { header: 'Estado', key: 'estado', width: 1 }
@@ -302,8 +303,7 @@ function buildLowInventoryReportDefinition(rows) {
         summary: [
             { label: 'Productos afectados', value: rows.length },
             { label: 'Unidades en riesgo', value: totalUnidades },
-            { label: 'Valor estimado', value: roundMoney(valorComprometido) },
-            { label: 'Umbral de stock', value: LOW_STOCK_THRESHOLD }
+            { label: 'Valor estimado', value: roundMoney(valorComprometido) }
         ]
     };
 }
@@ -312,7 +312,7 @@ async function getAdminDashboardSummary() {
     return reportCache.getOrSet(SUMMARY_CACHE_KEY, async () => {
         const [summaryRow, inventoryRows, followUpRows, invoiceRows] = await Promise.all([
             reportRepository.findAdminDashboardSummary(),
-            reportRepository.findLowInventoryReport(LOW_STOCK_THRESHOLD),
+            reportRepository.findLowInventoryReport(),
             reportRepository.findFollowUpAlerts(),
             reportRepository.findInvoiceReport()
         ]);
@@ -323,7 +323,7 @@ async function getAdminDashboardSummary() {
 
         return {
             generatedAt: new Date().toISOString(),
-            stockThreshold: LOW_STOCK_THRESHOLD,
+            stockThreshold: null,
             metrics: formatSummaryMetrics(summaryRow),
             lowStockProducts: inventoryRows.slice(0, 5).map(formatLowInventoryReportRow),
             followUpAlerts: followUpRows.slice(0, 5).map(formatFollowUpAlertRow),
@@ -356,7 +356,7 @@ async function getAdminReportPdfDefinition(reportType) {
             return buildAdoptionReportDefinition(rows);
         }
         case 'inventario-bajo': {
-            const rows = (await reportRepository.findLowInventoryReport(LOW_STOCK_THRESHOLD)).map(
+            const rows = (await reportRepository.findLowInventoryReport()).map(
                 formatLowInventoryReportRow
             );
             return buildLowInventoryReportDefinition(rows);

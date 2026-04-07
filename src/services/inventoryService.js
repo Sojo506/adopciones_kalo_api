@@ -47,6 +47,7 @@ function formatInventory(inventory) {
         idProducto: inventory.ID_PRODUCTO,
         producto: inventory.PRODUCTO || null,
         cantidad: Number(inventory.CANTIDAD || 0),
+        stockMinimo: Number(inventory.STOCK_MINIMO ?? 10),
         idEstado: inventory.ID_ESTADO,
         estado: inventory.ESTADO || null
     };
@@ -71,6 +72,12 @@ function isMovementTypeForDirection(movementTypeName, direction) {
 function ensureValidQuantity(cantidad) {
     if (!Number.isInteger(cantidad) || cantidad < 0) {
         throw createHttpError('Quantity must be a non-negative integer', 400);
+    }
+}
+
+function ensureValidMinimumStock(stockMinimo) {
+    if (!Number.isInteger(stockMinimo) || stockMinimo < 0) {
+        throw createHttpError('Minimum stock must be a non-negative integer', 400);
     }
 }
 
@@ -207,10 +214,15 @@ async function createInventory(inventoryData) {
     const payload = {
         idProducto: Number(inventoryData.idProducto),
         cantidad: Number(inventoryData.cantidad),
+        stockMinimo:
+            inventoryData.stockMinimo === undefined
+                ? 10
+                : Number(inventoryData.stockMinimo),
         idEstado: Number(inventoryData.idEstado)
     };
 
     ensureValidQuantity(payload.cantidad);
+    ensureValidMinimumStock(payload.stockMinimo);
     ensureQuantityMatchesState(payload.cantidad, payload.idEstado);
     await ensureStateExists(payload.idEstado);
     const product = await ensureProductExists(payload.idProducto);
@@ -239,10 +251,15 @@ async function updateInventory(idInventario, inventoryData) {
         idInventario: Number(idInventario),
         idProducto: Number(inventoryData.idProducto),
         cantidad: Number(inventoryData.cantidad),
+        stockMinimo:
+            inventoryData.stockMinimo === undefined
+                ? Number(existingInventory.stockMinimo ?? 10)
+                : Number(inventoryData.stockMinimo),
         idEstado: Number(inventoryData.idEstado)
     };
 
     ensureValidQuantity(payload.cantidad);
+    ensureValidMinimumStock(payload.stockMinimo);
     ensureQuantityMatchesState(payload.cantidad, payload.idEstado);
     await ensureStateExists(payload.idEstado);
 

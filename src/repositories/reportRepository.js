@@ -42,10 +42,9 @@ async function findAdoptionReport() {
     );
 }
 
-async function findLowInventoryReport(stockThreshold) {
+async function findLowInventoryReport() {
     return executeCursorFunction(
-        `${PACKAGE_NAME}.FIDE_REPORTE_INVENTARIO_BAJO_FN(:stockThreshold)`,
-        { stockThreshold }
+        `${PACKAGE_NAME}.FIDE_REPORTE_INVENTARIO_BAJO_FN()`
     );
 }
 

@@ -132,6 +132,7 @@ Si estas creando una base nueva, primero debes aplicar manualmente los SQL de `s
 - `views.sql`
 - `indexes.sql`
 - `triggers.sql`
+- `stock_minimo_migration.sql` para agregar `STOCK_MINIMO` y backfillear inventarios existentes
 
 Despues de que la estructura exista, puedes cargar datos base con:
 
@@ -278,7 +279,6 @@ Observacion: `npm test` no esta implementado; el `package.json` actual solo devu
 
 | Variable | Uso |
 | --- | --- |
-| `ADMIN_LOW_STOCK_THRESHOLD` | Umbral para el reporte de inventario bajo. |
 | `ADMIN_REPORT_CACHE_TTL_MS` | TTL del resumen y reportes administrativos. |
 | `*_CACHE_TTL_MS` | Muchos servicios exponen su propio TTL de cache en memoria, por ejemplo `USER_CACHE_TTL_MS`, `DOG_CACHE_TTL_MS`, `PRODUCT_CACHE_TTL_MS`, `REQUEST_CACHE_TTL_MS`, `DONATION_CACHE_TTL_MS`, `EVIDENCE_CACHE_TTL_MS`, `FOLLOW_UP_CACHE_TTL_MS`, `SALE_CACHE_TTL_MS`, `INVOICE_CACHE_TTL_MS`, etc. |
 
@@ -484,12 +484,13 @@ Complemento operativo de BD:
    - facturas recientes
    - productos con stock bajo
    - seguimientos proximos o vencidos
-3. `GET /api/reports/:reportType/pdf` genera reportes PDF tabulares para:
+3. El stock bajo ahora se define por `FIDE_INVENTARIO_TB.STOCK_MINIMO`; los endpoints de inventario exponen `stockMinimo` y usan `10` por defecto si no se envia.
+4. `GET /api/reports/:reportType/pdf` genera reportes PDF tabulares para:
    - `facturas`
    - `donaciones`
    - `adopciones`
    - `inventario-bajo`
-4. La generacion usa consultas agregadas desde `reportRepository` y `PDFKit`.
+5. La generacion usa consultas agregadas desde `reportRepository` y `PDFKit`.
 
 ## Integraciones externas
 
