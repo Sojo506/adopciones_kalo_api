@@ -173,8 +173,11 @@ function ensureDonationDateFitsCampaign(campaign, fechaDonacion) {
         throw createHttpError('Donation date cannot be earlier than campaign start date', 409);
     }
 
-    if (campaign.fechaFin && donationDate > campaign.fechaFin) {
-        throw createHttpError('Donation date cannot be later than campaign end date', 409);
+    if (campaign.fechaFin && donationDate >= campaign.fechaFin) {
+        throw createHttpError(
+            'Donation date cannot be on or after campaign end date',
+            409
+        );
     }
 }
 

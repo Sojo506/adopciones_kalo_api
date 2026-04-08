@@ -247,12 +247,7 @@ async function ensureCampaignCanBeDisabled(existingCampaign, nextState) {
         existingCampaign.idCampania
     );
 
-    if (activeDonationsCount > 0) {
-        throw createHttpError(
-            'Cannot deactivate a campaign that still has active donations',
-            409
-        );
-    }
+
 }
 
 async function ensureCampaignCanBeDeleted(existingCampaign) {
