@@ -58,7 +58,7 @@ BEGIN
         job_type => 'STORED_PROCEDURE',
         job_action => 'KALO.FIDE_KALO_PKG.FIDE_DESACTIVAR_CAMPANIAS_VENCIDAS_SP',
         start_date => SYSTIMESTAMP,
-        repeat_interval => 'FREQ=DAILY;BYHOUR=0;BYMINUTE=5;BYSECOND=0',
+        repeat_interval => 'FREQ=MINUTELY;INTERVAL=5',
         enabled => FALSE,
         auto_drop => FALSE,
         comments => 'Desactiva campañas activas cuya fecha de fin ya vencio.'
