@@ -1,3 +1,21 @@
+DECLARE
+    V_FAC_KALO_2026_001 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_FAC_KALO_2026_002 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_FAC_KALO_2026_003 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_FAC_KALO_2026_004 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_FAC_KALO_2026_005 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_FAC_KALO_2026_006 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_FAC_KALO_2026_007 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_FAC_KALO_2026_008 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_001 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_002 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_003 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_004 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_005 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_006 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_007 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+    V_DON_KALO_2026_008 FIDE_FACTURA_TB.ID_FACTURA%TYPE;
+
 BEGIN
 
     -- ============================================================
@@ -603,61 +621,61 @@ BEGIN
     -- ============================================================
     -- FIDE_PERRITO_IMAGEN_TB
     -- ============================================================
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (1, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Max', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (2, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Luna', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (3, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Rocky', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (4, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Coco', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (5, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Beto', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (6, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Nala', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (7, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Simba', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (8, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Lola', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (9, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Toby', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (10, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Mia', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (11, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Canelo', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (12, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Princesa', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (13, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Thor', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (14, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Bella', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (15, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Rex', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (16, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Chispa', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (17, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Bruno', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (18, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Azul', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (19, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Pepe', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (20, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Kira', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (21, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Zeus', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (22, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Perla', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (23, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Duke', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (24, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Nina', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (25, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Sparky', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (26, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Hulk', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (27, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Daisy', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (28, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Cleo', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (29, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Titan', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (30, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Nube', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (31, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Sombra', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (32, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Mochi', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (33, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Kaiser', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (34, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Frida', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (35, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Apolo', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (36, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Mora', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (37, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Pinto', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (38, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Estrella', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (39, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Oso', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (40, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Roc%C3%ADo', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (41, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Loki', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (42, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Cinta', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (43, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Rayo', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (44, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Paloma', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (45, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Rufus', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (46, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Violeta', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (47, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Draco', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (48, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Dulce', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (49, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+H%C3%A9rcules', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (50, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Bambi', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (51, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Atlas', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (52, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Copas', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (53, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Trueno', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (54, 'https://placehold.co/1200x900/FFF4E5/8D5524/png?text=Perrito+Isis', 1);
-    INSERT INTO FIDE_PERRITO_IMAGEN_TB (ID_PERRITO, IMAGE_URL, ID_ESTADO) VALUES (55, 'https://placehold.co/1200x900/E8F5E9/1B5E20/png?text=Perrito+Olaf', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(1, 'https://images.dog.ceo/breeds/dachshund/dachshund-123503_640.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(2, 'https://images.dog.ceo/breeds/terrier-andalusian/ratoner-bodeguero-andaluz.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(3, 'https://images.dog.ceo/breeds/labradoodle/labradoodle-forrest.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(4, 'https://images.dog.ceo/breeds/cotondetulear/100_2013.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(5, 'https://images.dog.ceo/breeds/setter-irish/n02100877_722.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(6, 'https://images.dog.ceo/breeds/spaniel-welsh/n02102177_1472.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(7, 'https://images.dog.ceo/breeds/lhasa/n02098413_7358.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(8, 'https://images.dog.ceo/breeds/poodle-medium/WhatsApp_Image_2022-08-06_at_4.48.38_PM.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(9, 'https://images.dog.ceo/breeds/ridgeback-rhodesian/n02087394_2427.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(10, 'https://images.dog.ceo/breeds/chippiparai-indian/Indian-Chippiparai.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(11, 'https://images.dog.ceo/breeds/rough-collie/collie-chatter-rough-collie-gus-posing.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(12, 'https://images.dog.ceo/breeds/labrador/n02099712_5261.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(13, 'https://images.dog.ceo/breeds/dachshund/tina.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(14, 'https://images.dog.ceo/breeds/spaniel-sussex/n02102480_2385.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(15, 'https://images.dog.ceo/breeds/dingo/n02115641_9067.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(16, 'https://images.dog.ceo/breeds/setter-gordon/n02101006_2703.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(17, 'https://images.dog.ceo/breeds/spitz-indian/Indian_Spitz.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(18, 'https://images.dog.ceo/breeds/hound-walker/n02089867_712.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(19, 'https://images.dog.ceo/breeds/cavapoo/doggo4.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(20, 'https://images.dog.ceo/breeds/labradoodle/Cali.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(21, 'https://images.dog.ceo/breeds/terrier-tibetan/n02097474_5140.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(22, 'https://images.dog.ceo/breeds/retriever-flatcoated/n02099267_1547.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(23, 'https://images.dog.ceo/breeds/frise-bichon/2.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(24, 'https://images.dog.ceo/breeds/chihuahua/n02085620_3593.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(25, 'https://images.dog.ceo/breeds/kuvasz/n02104029_4704.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(26, 'https://images.dog.ceo/breeds/frise-bichon/stevebaxter_bichon_frise.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(27, 'https://images.dog.ceo/breeds/dachshund/kaninchen-dachshund-953699_640.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(28, 'https://images.dog.ceo/breeds/poodle-medium/PXL_20210220_100624962.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(29, 'https://images.dog.ceo/breeds/dane-great/n02109047_21589.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(30, 'https://images.dog.ceo/breeds/dalmatian/cooper1.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(31, 'https://images.dog.ceo/breeds/german-shepherd/n02106662_1841.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(32, 'https://images.dog.ceo/breeds/whippet/n02091134_14094.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(33, 'https://images.dog.ceo/breeds/mastiff-tibetan/n02108551_2611.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(34, 'https://images.dog.ceo/breeds/newfoundland/n02111277_3206.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(35, 'https://images.dog.ceo/breeds/terrier-norfolk/n02094114_694.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(36, 'https://images.dog.ceo/breeds/beagle/n02088364_14779.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(37, 'https://images.dog.ceo/breeds/beagle/n02088364_7324.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(38, 'https://images.dog.ceo/breeds/cotondetulear/IMG_20160830_202631573.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(39, 'https://images.dog.ceo/breeds/sheepdog-shetland/n02105855_8378.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(40, 'https://images.dog.ceo/breeds/borzoi/n02090622_10281.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(41, 'https://images.dog.ceo/breeds/german-shepherd/n02106662_21094.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(42, 'https://images.dog.ceo/breeds/pariah-indian/The_Indian_Pariah_Dog.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(43, 'https://images.dog.ceo/breeds/cockapoo/Guri3.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(44, 'https://images.dog.ceo/breeds/hound-walker/n02089867_1412.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(45, 'https://images.dog.ceo/breeds/retriever-curly/n02099429_3516.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(46, 'https://images.dog.ceo/breeds/appenzeller/n02107908_2543.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(47, 'https://images.dog.ceo/breeds/mix/gordo.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(48, 'https://images.dog.ceo/breeds/cattledog-australian/IMG_7506.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(49, 'https://images.dog.ceo/breeds/spaniel-sussex/n02102480_1676.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(50, 'https://images.dog.ceo/breeds/malinois/n02105162_9995.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(51, 'https://images.dog.ceo/breeds/stbernard/n02109525_12392.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(52, 'https://images.dog.ceo/breeds/bouvier/n02106382_241.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(53, 'https://images.dog.ceo/breeds/weimaraner/n02092339_4650.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(54, 'https://images.dog.ceo/breeds/australian-kelpie/IMG_2599.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PERRITO_IMAGEN_INSERT_SP(55, 'https://images.dog.ceo/breeds/mastiff-bull/n02108422_2207.jpg', 1);
 
     -- ============================================================
     -- FIDE_TIPO_RESPUESTA_TB
@@ -988,16 +1006,16 @@ BEGIN
     -- ============================================================
     -- FIDE_EVIDENCIA_TB
     -- ============================================================
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (1, 'https://placehold.co/1200x900/E3F2FD/1E3A8A/png?text=Seguimiento+Max+Visita+1', 'Fotografía de Max descansando en su nueva sala durante la visita inicial.', TO_DATE('2025-02-15','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (2, 'https://placehold.co/1200x900/F3E8FF/6B21A8/png?text=Seguimiento+Max+Llamada', 'Captura enviada por la familia mostrando a Max en su paseo matutino.', TO_DATE('2025-03-01','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (3, 'https://placehold.co/1200x900/E8F5E9/166534/png?text=Seguimiento+Luna+Gato', 'Imagen compartida donde Luna convive tranquila con el gato del hogar.', TO_DATE('2025-03-01','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (5, 'https://placehold.co/1200x900/FEF3C7/92400E/png?text=Seguimiento+Rocky+Familia', 'La familia compartió una foto de Rocky jugando en el patio con los niños.', TO_DATE('2025-04-05','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (8, 'https://placehold.co/1200x900/ECFCCB/3F6212/png?text=Seguimiento+Simba+Chequeo', 'Registro fotográfico del control veterinario y la condición corporal de Simba.', TO_DATE('2025-05-20','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (12, 'https://placehold.co/1200x900/FCE7F3/9D174D/png?text=Seguimiento+Canelo+Jardin', 'Canelo aparece corriendo en el jardín con muy buen nivel de energía.', TO_DATE('2025-07-30','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (17, 'https://placehold.co/1200x900/DBEAFE/1D4ED8/png?text=Seguimiento+Rex+Parque', 'Foto de Rex durante un paseo familiar en el parque de barrio.', TO_DATE('2025-10-20','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (25, 'https://placehold.co/1200x900/FAE8FF/86198F/png?text=Seguimiento+Daisy+Videollamada', 'Captura de videollamada donde Daisy responde bien al contacto con su familia.', TO_DATE('2026-02-01','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (30, 'https://placehold.co/1200x900/F0FDF4/15803D/png?text=Seguimiento+Pinto+Encuesta', 'Imagen enviada junto con la encuesta digital mostrando a Pinto en su cama.', TO_DATE('2026-03-01','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_EVIDENCIA_TB (ID_SEGUIMIENTO, IMAGEN_URL, COMENTARIOS, FECHA_EVIDENCIA, ID_ESTADO) VALUES (37, 'https://placehold.co/1200x900/EEF2FF/3730A3/png?text=Seguimiento+Atlas+Hogar', 'Atlas aparece relajado y bien integrado con la rutina diaria del hogar.', TO_DATE('2026-03-11','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(1, 'https://placehold.co/1200x900/E3F2FD/1E3A8A/png?text=Seguimiento+Max+Visita+1', 'Fotografía de Max descansando en su nueva sala durante la visita inicial.', TO_DATE('2025-02-15','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(2, 'https://placehold.co/1200x900/F3E8FF/6B21A8/png?text=Seguimiento+Max+Llamada', 'Captura enviada por la familia mostrando a Max en su paseo matutino.', TO_DATE('2025-03-01','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(3, 'https://placehold.co/1200x900/E8F5E9/166534/png?text=Seguimiento+Luna+Gato', 'Imagen compartida donde Luna convive tranquila con el gato del hogar.', TO_DATE('2025-03-01','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(5, 'https://placehold.co/1200x900/FEF3C7/92400E/png?text=Seguimiento+Rocky+Familia', 'La familia compartió una foto de Rocky jugando en el patio con los niños.', TO_DATE('2025-04-05','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(8, 'https://placehold.co/1200x900/ECFCCB/3F6212/png?text=Seguimiento+Simba+Chequeo', 'Registro fotográfico del control veterinario y la condición corporal de Simba.', TO_DATE('2025-05-20','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(12, 'https://placehold.co/1200x900/FCE7F3/9D174D/png?text=Seguimiento+Canelo+Jardin', 'Canelo aparece corriendo en el jardín con muy buen nivel de energía.', TO_DATE('2025-07-30','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(17, 'https://placehold.co/1200x900/DBEAFE/1D4ED8/png?text=Seguimiento+Rex+Parque', 'Foto de Rex durante un paseo familiar en el parque de barrio.', TO_DATE('2025-10-20','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(25, 'https://placehold.co/1200x900/FAE8FF/86198F/png?text=Seguimiento+Daisy+Videollamada', 'Captura de videollamada donde Daisy responde bien al contacto con su familia.', TO_DATE('2026-02-01','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(30, 'https://placehold.co/1200x900/F0FDF4/15803D/png?text=Seguimiento+Pinto+Encuesta', 'Imagen enviada junto con la encuesta digital mostrando a Pinto en su cama.', TO_DATE('2026-03-01','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_EVIDENCIA_INSERT_SP(37, 'https://placehold.co/1200x900/EEF2FF/3730A3/png?text=Seguimiento+Atlas+Hogar', 'Atlas aparece relajado y bien integrado con la rutina diaria del hogar.', TO_DATE('2026-03-11','YYYY-MM-DD'), 1);
 
     -- ============================================================
     -- FIDE_TIPO_EVENTO_TB  
@@ -1133,248 +1151,355 @@ BEGIN
     -- ============================================================
     -- FIDE_CAMPANIA_TB
     -- ============================================================
-    INSERT INTO FIDE_CAMPANIA_TB (NOMBRE, DESCRIPCION, IMAGE_URL, FECHA_INICIO, FECHA_FIN, ID_ESTADO)
-    VALUES ('Operacion Patitas Sanas 2026', 'Campana para cubrir vacunas, desparasitacion y consultas basicas de perritos recien rescatados.', 'https://placehold.co/1400x800/FFF3E0/8D5524/png?text=Operacion+Patitas+Sanas+2026', TO_DATE('2026-01-01','YYYY-MM-DD'), TO_DATE('2026-04-30','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_CAMPANIA_TB (NOMBRE, DESCRIPCION, IMAGE_URL, FECHA_INICIO, FECHA_FIN, ID_ESTADO)
-    VALUES ('Red de Hogares Temporales Guanacaste', 'Recaudacion destinada a alimento, transportes y apoyo veterinario para casas cuna en Guanacaste.', 'https://placehold.co/1400x800/F3E8FF/6B21A8/png?text=Hogares+Temporales+Guanacaste', TO_DATE('2026-01-15','YYYY-MM-DD'), TO_DATE('2026-05-31','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_CAMPANIA_TB (NOMBRE, DESCRIPCION, IMAGE_URL, FECHA_INICIO, FECHA_FIN, ID_ESTADO)
-    VALUES ('Vacunacion Solidaria Cartago', 'Jornada especial para completar esquemas de vacunacion en perritos listos para adopcion.', 'https://placehold.co/1400x800/E8F5E9/166534/png?text=Vacunacion+Solidaria+Cartago', TO_DATE('2026-02-01','YYYY-MM-DD'), TO_DATE('2026-03-31','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_CAMPANIA_TB (NOMBRE, DESCRIPCION, IMAGE_URL, FECHA_INICIO, FECHA_FIN, ID_ESTADO)
-    VALUES ('Kit de Bienvenida Adoptante', 'Campana para financiar kits con alimento, collar y guia de cuidados para adopciones responsables.', 'https://placehold.co/1400x800/E3F2FD/1E3A8A/png?text=Kit+de+Bienvenida+Adoptante', TO_DATE('2026-02-10','YYYY-MM-DD'), TO_DATE('2026-06-30','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_CAMPANIA_INSERT_SP('Operacion Patitas Sanas 2026', 'Campana para cubrir vacunas, desparasitacion y consultas basicas de perritos recien rescatados.', 'https://placehold.co/1400x800/FFF3E0/8D5524/png?text=Operacion+Patitas+Sanas+2026', TO_DATE('2026-01-01','YYYY-MM-DD'), TO_DATE('2026-04-30','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_CAMPANIA_INSERT_SP('Red de Hogares Temporales Guanacaste', 'Recaudacion destinada a alimento, transportes y apoyo veterinario para casas cuna en Guanacaste.', 'https://placehold.co/1400x800/F3E8FF/6B21A8/png?text=Hogares+Temporales+Guanacaste', TO_DATE('2026-01-15','YYYY-MM-DD'), TO_DATE('2026-05-31','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_CAMPANIA_INSERT_SP('Vacunacion Solidaria Cartago', 'Jornada especial para completar esquemas de vacunacion en perritos listos para adopcion.', 'https://placehold.co/1400x800/E8F5E9/166534/png?text=Vacunacion+Solidaria+Cartago', TO_DATE('2026-02-01','YYYY-MM-DD'), TO_DATE('2026-03-31','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_CAMPANIA_INSERT_SP('Kit de Bienvenida Adoptante', 'Campana para financiar kits con alimento, collar y guia de cuidados para adopciones responsables.', 'https://placehold.co/1400x800/E3F2FD/1E3A8A/png?text=Kit+de+Bienvenida+Adoptante', TO_DATE('2026-02-10','YYYY-MM-DD'), TO_DATE('2026-06-30','YYYY-MM-DD'), 1);
 
     -- ============================================================
     -- FIDE_CATEGORIA_TB
     -- ============================================================
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Alimentos', 1);
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Accesorios', 1);
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Medicamentos', 1);
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Juguetes', 1);
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Higiene y cuidado', 1);
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Camas y descanso', 1);
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Transporte', 1);
-    INSERT INTO FIDE_CATEGORIA_TB (NOMBRE, ID_ESTADO) VALUES ('Entrenamiento', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Alimentos', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Accesorios', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Medicamentos', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Juguetes', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Higiene y cuidado', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Camas y descanso', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Transporte', 1);
+    FIDE_KALO_PKG.FIDE_CATEGORIA_INSERT_SP('Entrenamiento', 1);
 
     -- ============================================================
     -- FIDE_MARCA_TB
     -- ============================================================
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Purina Pro Plan', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Royal Canin', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Zee.Dog', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Frontline', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Elanco', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Kong', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Outward Hound', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Burts Bees Pets', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('FurHaven', 1);
-    INSERT INTO FIDE_MARCA_TB (NOMBRE, ID_ESTADO) VALUES ('Petmate', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Purina Pro Plan', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Royal Canin', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Zee.Dog', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Frontline', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Elanco', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Kong', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Outward Hound', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Burts Bees Pets', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('FurHaven', 1);
+    FIDE_KALO_PKG.FIDE_MARCA_INSERT_SP('Petmate', 1);
 
     -- ============================================================
     -- FIDE_PRODUCTO_TB
     -- ============================================================
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Alimento premium adulto 15kg', 'Saco premium para perros adultos de actividad media con proteina de pollo y arroz.', 18900, 1, 1, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Alimento cachorro 4kg', 'Formula para crecimiento con DHA y refuerzo digestivo para cachorros.', 9800, 1, 2, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Collar reflectivo talla M', 'Collar con broche de seguridad y costuras reflectivas para paseos nocturnos.', 3200, 2, 3, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Arnes ergonomico talla L', 'Arnes acolchado con agarre superior para perritos medianos y grandes.', 8900, 2, 3, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Pipeta antipulgas 10-20kg', 'Proteccion mensual contra pulgas y garrapatas para perros medianos.', 6500, 3, 4, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Desparasitante interno x2', 'Tabletas de amplio espectro para control interno en perros adultos.', 3800, 3, 5, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Kong clasico talla M', 'Juguete rellenable para enriquecimiento y reduccion de ansiedad.', 6200, 4, 6, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Pelota dental pack x2', 'Pelotas texturizadas que ayudan a limpiar dientes mientras juegan.', 2600, 4, 7, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Shampoo hipoalergenico 500ml', 'Shampoo suave sin sulfatos para pieles sensibles y banos frecuentes.', 4900, 5, 8, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Cepillo deslanador premium', 'Cepillo para retirar pelo muerto y reducir muda en capas dobles.', 12900, 5, 8, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Cama ortopedica talla L', 'Cama de espuma de soporte para perros senior o en recuperacion.', 24500, 6, 9, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Transportadora rigida talla M', 'Transportadora ventilada con cierre seguro para visitas veterinarias.', 28900, 7, 10, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Clicker de entrenamiento', 'Clicker de respuesta suave para rutinas de refuerzo positivo.', 1800, 8, 7, 1);
-    INSERT INTO FIDE_PRODUCTO_TB (NOMBRE, DESCRIPCION, PRECIO, ID_CATEGORIA, ID_MARCA, ID_ESTADO) VALUES ('Bolsita para premios', 'Bolso compacto con clip para llevar snacks en sesiones de obediencia.', 3500, 8, 7, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Alimento premium adulto 15kg', 'Saco premium para perros adultos de actividad media con proteina de pollo y arroz.', 18900, 1, 1, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Alimento cachorro 4kg', 'Formula para crecimiento con DHA y refuerzo digestivo para cachorros.', 9800, 1, 2, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Collar reflectivo talla M', 'Collar con broche de seguridad y costuras reflectivas para paseos nocturnos.', 3200, 2, 3, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Arnes ergonomico talla L', 'Arnes acolchado con agarre superior para perritos medianos y grandes.', 8900, 2, 3, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Pipeta antipulgas 10-20kg', 'Proteccion mensual contra pulgas y garrapatas para perros medianos.', 6500, 3, 4, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Desparasitante interno x2', 'Tabletas de amplio espectro para control interno en perros adultos.', 3800, 3, 5, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Kong clasico talla M', 'Juguete rellenable para enriquecimiento y reduccion de ansiedad.', 6200, 4, 6, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Pelota dental pack x2', 'Pelotas texturizadas que ayudan a limpiar dientes mientras juegan.', 2600, 4, 7, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Shampoo hipoalergenico 500ml', 'Shampoo suave sin sulfatos para pieles sensibles y banos frecuentes.', 4900, 5, 8, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Cepillo deslanador premium', 'Cepillo para retirar pelo muerto y reducir muda en capas dobles.', 12900, 5, 8, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Cama ortopedica talla L', 'Cama de espuma de soporte para perros senior o en recuperacion.', 24500, 6, 9, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Transportadora rigida talla M', 'Transportadora ventilada con cierre seguro para visitas veterinarias.', 28900, 7, 10, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Clicker de entrenamiento', 'Clicker de respuesta suave para rutinas de refuerzo positivo.', 1800, 8, 7, 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_INSERT_SP('Bolsita para premios', 'Bolso compacto con clip para llevar snacks en sesiones de obediencia.', 3500, 8, 7, 1);
 
     -- ============================================================
     -- FIDE_PRODUCTO_IMAGEN_TB
     -- ============================================================
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (1, 'https://placehold.co/1200x1200/F7F1E8/5B4636/png?text=Alimento+premium+adulto+15kg', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (2, 'https://placehold.co/1200x1200/F7F1E8/5B4636/png?text=Alimento+cachorro+4kg', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (3, 'https://placehold.co/1200x1200/EAF2F8/1F3A5F/png?text=Collar+reflectivo+talla+M', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (4, 'https://placehold.co/1200x1200/EAF2F8/1F3A5F/png?text=Arnes+ergonomico+talla+L', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (5, 'https://placehold.co/1200x1200/FDECEC/7B241C/png?text=Pipeta+antipulgas+10-20kg', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (6, 'https://placehold.co/1200x1200/FDECEC/7B241C/png?text=Desparasitante+interno+x2', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (7, 'https://placehold.co/1200x1200/FCF3CF/7D6608/png?text=Kong+clasico+talla+M', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (8, 'https://placehold.co/1200x1200/FCF3CF/7D6608/png?text=Pelota+dental+pack+x2', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (9, 'https://placehold.co/1200x1200/EBF5FB/21618C/png?text=Shampoo+hipoalergenico+500ml', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (10, 'https://placehold.co/1200x1200/EBF5FB/21618C/png?text=Cepillo+deslanador+premium', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (11, 'https://placehold.co/1200x1200/F4ECF7/6C3483/png?text=Cama+ortopedica+talla+L', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (12, 'https://placehold.co/1200x1200/F0F3F4/424949/png?text=Transportadora+rigida+talla+M', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (13, 'https://placehold.co/1200x1200/E8F8F5/117864/png?text=Clicker+de+entrenamiento', 1);
-    INSERT INTO FIDE_PRODUCTO_IMAGEN_TB (ID_PRODUCTO, IMAGE_URL, ID_ESTADO) VALUES (14, 'https://placehold.co/1200x1200/E8F8F5/117864/png?text=Bolsita+para+premios', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(1, 'https://images.pexels.com/photos/8434633/pexels-photo-8434633.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(1, 'https://images.pexels.com/photos/12928244/pexels-photo-12928244.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(2, 'https://images.pexels.com/photos/8434635/pexels-photo-8434635.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(2, 'https://images.pexels.com/photos/8473516/pexels-photo-8473516.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(3, 'https://images.pexels.com/photos/7564108/pexels-photo-7564108.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(3, 'https://images.pexels.com/photos/16339607/pexels-photo-16339607.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(4, 'https://images.pexels.com/photos/10289621/pexels-photo-10289621.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(4, 'https://images.pexels.com/photos/12395776/pexels-photo-12395776.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(5, 'https://images.pexels.com/photos/6693978/pexels-photo-6693978.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(5, 'https://images.pexels.com/photos/6914610/pexels-photo-6914610.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(6, 'https://images.pexels.com/photos/13779114/pexels-photo-13779114.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(6, 'https://images.pexels.com/photos/20140024/pexels-photo-20140024.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(7, 'https://images.pexels.com/photos/15356245/pexels-photo-15356245.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(7, 'https://images.pexels.com/photos/4119784/pexels-photo-4119784.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(8, 'https://images.pexels.com/photos/16362983/pexels-photo-16362983.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(8, 'https://images.pexels.com/photos/13446973/pexels-photo-13446973.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(9, 'https://images.pexels.com/photos/19021958/pexels-photo-19021958.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(9, 'https://images.pexels.com/photos/12943750/pexels-photo-12943750.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(10, 'https://images.pexels.com/photos/8498547/pexels-photo-8498547.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(10, 'https://images.pexels.com/photos/8498539/pexels-photo-8498539.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(11, 'https://images.pexels.com/photos/19027991/pexels-photo-19027991.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(11, 'https://images.pexels.com/photos/5420821/pexels-photo-5420821.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(12, 'https://images.pexels.com/photos/8473661/pexels-photo-8473661.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(12, 'https://images.pexels.com/photos/8473657/pexels-photo-8473657.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(13, 'https://commons.wikimedia.org/wiki/Special:FilePath/Dog_clicker_training.jpg', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(13, 'https://images.pexels.com/photos/5482808/pexels-photo-5482808.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(14, 'https://images.pexels.com/photos/7309474/pexels-photo-7309474.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
+    FIDE_KALO_PKG.FIDE_PRODUCTO_IMAGEN_INSERT_SP(14, 'https://images.pexels.com/photos/7309455/pexels-photo-7309455.jpeg?auto=compress&cs=tinysrgb&w=1200', 1);
 
     -- ============================================================
     -- FIDE_TIPO_MOVIMIENTO_TB
     -- ============================================================
-    INSERT INTO FIDE_TIPO_MOVIMIENTO_TB (NOMBRE, ID_ESTADO) VALUES ('Entrada inicial', 1);
-    INSERT INTO FIDE_TIPO_MOVIMIENTO_TB (NOMBRE, ID_ESTADO) VALUES ('Salida por venta', 1);
-    INSERT INTO FIDE_TIPO_MOVIMIENTO_TB (NOMBRE, ID_ESTADO) VALUES ('Ajuste positivo', 1);
-    INSERT INTO FIDE_TIPO_MOVIMIENTO_TB (NOMBRE, ID_ESTADO) VALUES ('Ajuste por merma', 1);
-    INSERT INTO FIDE_TIPO_MOVIMIENTO_TB (NOMBRE, ID_ESTADO) VALUES ('Salida por donacion interna', 1);
+    FIDE_KALO_PKG.FIDE_TIPO_MOVIMIENTO_INSERT_SP('Entrada inicial', 1);
+    FIDE_KALO_PKG.FIDE_TIPO_MOVIMIENTO_INSERT_SP('Salida por venta', 1);
+    FIDE_KALO_PKG.FIDE_TIPO_MOVIMIENTO_INSERT_SP('Ajuste positivo', 1);
+    FIDE_KALO_PKG.FIDE_TIPO_MOVIMIENTO_INSERT_SP('Ajuste por merma', 1);
+    FIDE_KALO_PKG.FIDE_TIPO_MOVIMIENTO_INSERT_SP('Salida por donacion interna', 1);
 
     -- ============================================================
     -- FIDE_INVENTARIO_TB
     -- ============================================================
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (1, 24, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (2, 17, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (3, 38, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (4, 21, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (5, 28, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (6, 26, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (7, 17, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (8, 33, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (9, 24, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (10, 11, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (11, 7, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (12, 5, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (13, 14, 1);
-    INSERT INTO FIDE_INVENTARIO_TB (ID_PRODUCTO, CANTIDAD, ID_ESTADO) VALUES (14, 19, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(1, 24, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(2, 17, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(3, 38, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(4, 21, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(5, 28, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(6, 26, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(7, 17, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(8, 33, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(9, 24, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(10, 11, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(11, 7, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(12, 5, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(13, 14, 1);
+    FIDE_KALO_PKG.FIDE_INVENTARIO_INSERT_SP(14, 19, 1);
 
     -- ============================================================
     -- FIDE_MOVIMIENTO_INVENTARIO_TB
     -- ============================================================
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (1, 1, 25, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (2, 1, 18, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (3, 1, 40, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (4, 1, 22, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (5, 1, 30, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (6, 1, 28, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (7, 1, 18, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (8, 1, 35, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (9, 1, 26, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (10, 1, 12, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (11, 1, 8, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (12, 1, 6, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (13, 1, 15, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (14, 1, 20, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (1, 2, 1, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (2, 2, 1, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (3, 2, 2, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (4, 2, 1, TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (5, 2, 2, TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (6, 2, 2, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (7, 2, 1, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (8, 2, 2, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (9, 2, 2, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (10, 2, 1, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (11, 2, 1, TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (12, 2, 1, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (13, 2, 1, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_MOVIMIENTO_INVENTARIO_TB (ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, FECHA_MOVIMIENTO, ID_ESTADO) VALUES (14, 2, 1, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(1, 1, 25, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(2, 1, 18, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(3, 1, 40, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(4, 1, 22, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(5, 1, 30, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(6, 1, 28, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(7, 1, 18, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(8, 1, 35, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(9, 1, 26, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(10, 1, 12, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(11, 1, 8, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(12, 1, 6, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(13, 1, 15, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(14, 1, 20, TO_DATE('2026-01-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(1, 2, 1, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(2, 2, 1, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(3, 2, 2, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(4, 2, 1, TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(5, 2, 2, TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(6, 2, 2, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(7, 2, 1, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(8, 2, 2, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(9, 2, 2, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(10, 2, 1, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(11, 2, 1, TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(12, 2, 1, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(13, 2, 1, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_MOVIMIENTO_INVENTARIO_INSERT_SP(14, 2, 1, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
 
     -- ============================================================
     -- FIDE_MONEDA_TB
     -- ============================================================
-    INSERT INTO FIDE_MONEDA_TB (NOMBRE, SIMBOLO, ID_ESTADO) VALUES ('Colon costarricense', 'CRC', 1);
-    INSERT INTO FIDE_MONEDA_TB (NOMBRE, SIMBOLO, ID_ESTADO) VALUES ('Dolar estadounidense', 'USD', 1);
+    FIDE_KALO_PKG.FIDE_MONEDA_INSERT_SP('Colon costarricense', 'CRC', 1);
+    FIDE_KALO_PKG.FIDE_MONEDA_INSERT_SP('Dolar estadounidense', 'USD', 1);
 
     -- ============================================================
     -- FIDE_VENTA_TB
     -- ============================================================
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (302560178, 24100, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (205870341, 12100, TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (401230984, 16000, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (504120678, 17900, TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (309890234, 24500, TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (509010122, 32100, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (118890123, 12900, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_VENTA_TB (IDENTIFICACION, TOTAL_VENTA, FECHA_VENTA, ID_ESTADO) VALUES (421047115, 17800, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(302560178, 24100, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(205870341, 12100, TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(401230984, 16000, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(504120678, 17900, TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(309890234, 24500, TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(509010122, 32100, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(118890123, 12900, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_VENTA_INSERT_SP(421047115, 17800, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
 
     -- ============================================================
     -- FIDE_VENTA_PRODUCTO_TB
     -- ============================================================
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (1, 1, 2, 1, 18900, 18900, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (1, 8, 2, 2, 2600, 5200, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (2, 4, 2, 1, 8900, 8900, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (2, 3, 2, 1, 3200, 3200, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (3, 2, 2, 1, 9800, 9800, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (3, 7, 2, 1, 6200, 6200, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (4, 9, 2, 1, 4900, 4900, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (4, 5, 2, 2, 6500, 13000, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (5, 11, 2, 1, 24500, 24500, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (6, 12, 2, 1, 28900, 28900, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (6, 3, 2, 1, 3200, 3200, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (7, 6, 2, 2, 3800, 7600, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (7, 13, 2, 1, 1800, 1800, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (7, 14, 2, 1, 3500, 3500, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (8, 10, 2, 1, 12900, 12900, 1);
-    INSERT INTO FIDE_VENTA_PRODUCTO_TB (ID_VENTA, ID_PRODUCTO, ID_TIPO_MOVIMIENTO, CANTIDAD, PRECIO_UNITARIO, TOTAL, ID_ESTADO) VALUES (8, 9, 2, 1, 4900, 4900, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(1, 1, 2, 1, 18900, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(1, 8, 2, 2, 2600, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(2, 4, 2, 1, 8900, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(2, 3, 2, 1, 3200, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(3, 2, 2, 1, 9800, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(3, 7, 2, 1, 6200, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(4, 9, 2, 1, 4900, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(4, 5, 2, 2, 6500, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(5, 11, 2, 1, 24500, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(6, 12, 2, 1, 28900, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(6, 3, 2, 1, 3200, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(7, 6, 2, 2, 3800, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(7, 13, 2, 1, 1800, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(7, 14, 2, 1, 3500, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(8, 10, 2, 1, 12900, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_PRODUCTO_INSERT_SP(8, 9, 2, 1, 4900, 1);
 
     -- ============================================================
     -- FIDE_DONACION_TB
     -- ============================================================
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (107340892, 1, 25000, TO_DATE('2026-01-18','YYYY-MM-DD'), 'Para vacunas y chequeos medicos de rescates recientes.', 1);
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (603780234, 2, 15000, TO_DATE('2026-01-28','YYYY-MM-DD'), 'Apoyo para hogares temporales que reciben perritos grandes.', 1);
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (110234567, 1, 40000, TO_DATE('2026-02-06','YYYY-MM-DD'), 'Donacion para cubrir tratamientos veterinarios prioritarios.', 1);
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (207891023, 3, 12000, TO_DATE('2026-02-14','YYYY-MM-DD'), 'Quiero aportar a la jornada de vacunacion en Cartago.', 1);
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (113780621, 1, 30000, TO_DATE('2026-02-21','YYYY-MM-DD'), 'Para mantener al dia desparasitaciones y controles clinicos.', 1);
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (316203452, 2, 20000, TO_DATE('2026-03-01','YYYY-MM-DD'), 'Aporte para alimento y traslados de casas cuna en Guanacaste.', 1);
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (418285783, 4, 18000, TO_DATE('2026-03-11','YYYY-MM-DD'), 'Espero que cada adopcion salga con un kit completo de bienvenida.', 1);
-    INSERT INTO FIDE_DONACION_TB (IDENTIFICACION, ID_CAMPANIA, MONTO, FECHA_DONACION, MENSAJE, ID_ESTADO) VALUES (321487448, 1, 50000, TO_DATE('2026-03-18','YYYY-MM-DD'), 'Aporte especial para casos medicos y esterilizaciones.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(107340892, 1, 25000, TO_DATE('2026-01-18','YYYY-MM-DD'), 'Para vacunas y chequeos medicos de rescates recientes.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(603780234, 2, 15000, TO_DATE('2026-01-28','YYYY-MM-DD'), 'Apoyo para hogares temporales que reciben perritos grandes.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(110234567, 1, 40000, TO_DATE('2026-02-06','YYYY-MM-DD'), 'Donacion para cubrir tratamientos veterinarios prioritarios.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(207891023, 3, 12000, TO_DATE('2026-02-14','YYYY-MM-DD'), 'Quiero aportar a la jornada de vacunacion en Cartago.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(113780621, 1, 30000, TO_DATE('2026-02-21','YYYY-MM-DD'), 'Para mantener al dia desparasitaciones y controles clinicos.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(316203452, 2, 20000, TO_DATE('2026-03-01','YYYY-MM-DD'), 'Aporte para alimento y traslados de casas cuna en Guanacaste.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(418285783, 4, 18000, TO_DATE('2026-03-11','YYYY-MM-DD'), 'Espero que cada adopcion salga con un kit completo de bienvenida.', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_INSERT_SP(321487448, 1, 50000, TO_DATE('2026-03-18','YYYY-MM-DD'), 'Aporte especial para casos medicos y esterilizaciones.', 1);
 
     -- ============================================================
     -- FIDE_FACTURA_TB
     -- ============================================================
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-001', 1, 0.1300, 3133, 24100, 27233, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-002', 1, 0.1300, 1573, 12100, 13673, TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-003', 1, 0.1300, 2080, 16000, 18080, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-004', 1, 0.1300, 2327, 17900, 20227, TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-005', 1, 0.1300, 3185, 24500, 27685, TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-006', 1, 0.1300, 4173, 32100, 36273, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-007', 1, 0.1300, 1677, 12900, 14577, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('FAC-KALO-2026-008', 1, 0.1300, 2314, 17800, 20114, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-001', 1, 0.0000, 0, 25000, 25000, TO_DATE('2026-01-18','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-002', 1, 0.0000, 0, 15000, 15000, TO_DATE('2026-01-28','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-003', 1, 0.0000, 0, 40000, 40000, TO_DATE('2026-02-06','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-004', 1, 0.0000, 0, 12000, 12000, TO_DATE('2026-02-14','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-005', 1, 0.0000, 0, 30000, 30000, TO_DATE('2026-02-21','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-006', 1, 0.0000, 0, 20000, 20000, TO_DATE('2026-03-01','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-007', 1, 0.0000, 0, 18000, 18000, TO_DATE('2026-03-11','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_FACTURA_TB (ID_FACTURA, ID_MONEDA, TASA_IMPUESTO_APLICADA, IMPUESTO, SUBTOTAL, TOTAL, FECHA_FACTURA, ID_ESTADO) VALUES ('DON-KALO-2026-008', 1, 0.0000, 0, 50000, 50000, TO_DATE('2026-03-18','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.1300, TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-01-18','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-01-28','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-02-06','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-02-14','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-02-21','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-03-01','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-03-11','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_FACTURA_INSERT_SP(1, 0.0000, TO_DATE('2026-03-18','YYYY-MM-DD'), 1);
+
+    -- Resolver IDs alfanumericos generados para las facturas seed
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_001
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-01-08','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_002
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-01-15','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_003
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-01-22','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_004
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-02-05','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_005
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-02-12','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_006
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-02-20','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_007
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-03-03','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_FAC_KALO_2026_008
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-03-10','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.1300
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_001
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-01-18','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_002
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-01-28','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_003
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-02-06','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_004
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-02-14','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_005
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-02-21','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_006
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-03-01','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_007
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-03-11','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
+
+    SELECT ID_FACTURA INTO V_DON_KALO_2026_008
+    FROM FIDE_FACTURA_TB
+    WHERE FECHA_FACTURA = TO_DATE('2026-03-18','YYYY-MM-DD')
+      AND TASA_IMPUESTO_APLICADA = 0.0000
+      AND ID_ESTADO = 1;
 
     -- ============================================================
     -- FIDE_VENTA_FACTURA_TB
     -- ============================================================
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (1, 'FAC-KALO-2026-001', 1);
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (2, 'FAC-KALO-2026-002', 1);
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (3, 'FAC-KALO-2026-003', 1);
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (4, 'FAC-KALO-2026-004', 1);
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (5, 'FAC-KALO-2026-005', 1);
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (6, 'FAC-KALO-2026-006', 1);
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (7, 'FAC-KALO-2026-007', 1);
-    INSERT INTO FIDE_VENTA_FACTURA_TB (ID_VENTA, ID_FACTURA, ID_ESTADO) VALUES (8, 'FAC-KALO-2026-008', 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(1, V_FAC_KALO_2026_001, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(2, V_FAC_KALO_2026_002, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(3, V_FAC_KALO_2026_003, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(4, V_FAC_KALO_2026_004, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(5, V_FAC_KALO_2026_005, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(6, V_FAC_KALO_2026_006, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(7, V_FAC_KALO_2026_007, 1);
+    FIDE_KALO_PKG.FIDE_VENTA_FACTURA_INSERT_SP(8, V_FAC_KALO_2026_008, 1);
 
     -- ============================================================
     -- FIDE_DONACION_FACTURA_TB
     -- ============================================================
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (1, 'DON-KALO-2026-001', 1);
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (2, 'DON-KALO-2026-002', 1);
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (3, 'DON-KALO-2026-003', 1);
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (4, 'DON-KALO-2026-004', 1);
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (5, 'DON-KALO-2026-005', 1);
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (6, 'DON-KALO-2026-006', 1);
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (7, 'DON-KALO-2026-007', 1);
-    INSERT INTO FIDE_DONACION_FACTURA_TB (ID_DONACION, ID_FACTURA, ID_ESTADO) VALUES (8, 'DON-KALO-2026-008', 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(1, V_DON_KALO_2026_001, 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(2, V_DON_KALO_2026_002, 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(3, V_DON_KALO_2026_003, 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(4, V_DON_KALO_2026_004, 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(5, V_DON_KALO_2026_005, 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(6, V_DON_KALO_2026_006, 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(7, V_DON_KALO_2026_007, 1);
+    FIDE_KALO_PKG.FIDE_DONACION_FACTURA_INSERT_SP(8, V_DON_KALO_2026_008, 1);
 
     -- ============================================================
     -- FIDE_PAGO_PAYPAL_TB
     -- ============================================================
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-001', 'PP-ORDER-2026-001', 'PP-CAP-2026-001', TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-002', 'PP-ORDER-2026-002', 'PP-CAP-2026-002', TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-003', 'PP-ORDER-2026-003', 'PP-CAP-2026-003', TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-004', 'PP-ORDER-2026-004', 'PP-CAP-2026-004', TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-005', 'PP-ORDER-2026-005', 'PP-CAP-2026-005', TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-006', 'PP-ORDER-2026-006', 'PP-CAP-2026-006', TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-007', 'PP-ORDER-2026-007', 'PP-CAP-2026-007', TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('FAC-KALO-2026-008', 'PP-ORDER-2026-008', 'PP-CAP-2026-008', TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-001', 'PP-ORDER-2026-101', 'PP-CAP-2026-101', TO_DATE('2026-01-18','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-002', 'PP-ORDER-2026-102', 'PP-CAP-2026-102', TO_DATE('2026-01-28','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-003', 'PP-ORDER-2026-103', 'PP-CAP-2026-103', TO_DATE('2026-02-06','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-004', 'PP-ORDER-2026-104', 'PP-CAP-2026-104', TO_DATE('2026-02-14','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-005', 'PP-ORDER-2026-105', 'PP-CAP-2026-105', TO_DATE('2026-02-21','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-006', 'PP-ORDER-2026-106', 'PP-CAP-2026-106', TO_DATE('2026-03-01','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-007', 'PP-ORDER-2026-107', 'PP-CAP-2026-107', TO_DATE('2026-03-11','YYYY-MM-DD'), 1);
-    INSERT INTO FIDE_PAGO_PAYPAL_TB (ID_FACTURA, PAYPAL_ORDER_ID, PAYPAL_CAPTURE_ID, FECHA_PAGO, ID_ESTADO) VALUES ('DON-KALO-2026-008', 'PP-ORDER-2026-108', 'PP-CAP-2026-108', TO_DATE('2026-03-18','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_001, 'PP-ORDER-2026-001', 'PP-CAP-2026-001', TO_DATE('2026-01-08','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_002, 'PP-ORDER-2026-002', 'PP-CAP-2026-002', TO_DATE('2026-01-15','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_003, 'PP-ORDER-2026-003', 'PP-CAP-2026-003', TO_DATE('2026-01-22','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_004, 'PP-ORDER-2026-004', 'PP-CAP-2026-004', TO_DATE('2026-02-05','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_005, 'PP-ORDER-2026-005', 'PP-CAP-2026-005', TO_DATE('2026-02-12','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_006, 'PP-ORDER-2026-006', 'PP-CAP-2026-006', TO_DATE('2026-02-20','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_007, 'PP-ORDER-2026-007', 'PP-CAP-2026-007', TO_DATE('2026-03-03','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_FAC_KALO_2026_008, 'PP-ORDER-2026-008', 'PP-CAP-2026-008', TO_DATE('2026-03-10','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_001, 'PP-ORDER-2026-101', 'PP-CAP-2026-101', TO_DATE('2026-01-18','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_002, 'PP-ORDER-2026-102', 'PP-CAP-2026-102', TO_DATE('2026-01-28','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_003, 'PP-ORDER-2026-103', 'PP-CAP-2026-103', TO_DATE('2026-02-06','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_004, 'PP-ORDER-2026-104', 'PP-CAP-2026-104', TO_DATE('2026-02-14','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_005, 'PP-ORDER-2026-105', 'PP-CAP-2026-105', TO_DATE('2026-02-21','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_006, 'PP-ORDER-2026-106', 'PP-CAP-2026-106', TO_DATE('2026-03-01','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_007, 'PP-ORDER-2026-107', 'PP-CAP-2026-107', TO_DATE('2026-03-11','YYYY-MM-DD'), 1);
+    FIDE_KALO_PKG.FIDE_PAGO_PAYPAL_INSERT_SP(V_DON_KALO_2026_008, 'PP-ORDER-2026-108', 'PP-CAP-2026-108', TO_DATE('2026-03-18','YYYY-MM-DD'), 1);
 END;
 /
