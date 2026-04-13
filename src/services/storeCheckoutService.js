@@ -307,8 +307,7 @@ async function captureAndRecord({ orderId, items, identificacion }) {
         subtotal: subtotalSinIva,
         impuesto,
         total,
-        items: enrichedItems,
-        paypalOrderId: orderId
+        items: enrichedItems
     });
 
     // 11) Send invoice email (non-blocking – don't fail checkout if email fails)
