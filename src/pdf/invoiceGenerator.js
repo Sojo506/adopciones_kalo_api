@@ -27,7 +27,6 @@ function formatCurrency(value, symbol = '₡') {
  * @param {number} data.impuesto
  * @param {number} data.total
  * @param {Array}  data.items         – [{ nombre, cantidad, precioUnitario, total }]
- * @param {string} data.paypalOrderId
  * @returns {Promise<Buffer>}
  */
 function generateInvoicePdf(data) {
@@ -80,17 +79,10 @@ function generateInvoicePdf(data) {
         doc.font('Helvetica').fillColor('#1c2733');
         doc.text(data.correo || '-', 120, metaTop + 48);
 
-        if (data.paypalOrderId) {
-            doc.font('Helvetica-Bold').fillColor('#11253d');
-            doc.text('PayPal Order', rightCol, metaTop);
-            doc.font('Helvetica').fillColor('#1c2733');
-            doc.text(data.paypalOrderId, rightCol + 80, metaTop);
-        }
-
         doc.font('Helvetica-Bold').fillColor('#11253d');
-        doc.text('Moneda', rightCol, metaTop + 16);
+        doc.text('Moneda', rightCol, metaTop);
         doc.font('Helvetica').fillColor('#1c2733');
-        doc.text(data.moneda || '-', rightCol + 80, metaTop + 16);
+        doc.text(data.moneda || '-', rightCol + 80, metaTop);
 
         doc.y = metaTop + 76;
         doc.moveDown(0.5);
