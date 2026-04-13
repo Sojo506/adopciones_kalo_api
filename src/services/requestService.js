@@ -37,15 +37,19 @@ function formatRequest(request) {
         idSolicitud: Number(request.ID_SOLICITUD),
         identificacion: request.IDENTIFICACION,
         solicitante: request.SOLICITANTE || null,
-        idPerrito:
-            request.ID_PERRITO === null || request.ID_PERRITO === undefined
-                ? null
-                : Number(request.ID_PERRITO),
-        nombrePerrito: request.NOMBRE_PERRITO || null,
         idTipoSolicitud: Number(request.ID_TIPO_SOLICITUD),
         tipoSolicitud: request.TIPO_SOLICITUD || null,
         idEstado: Number(request.ID_ESTADO),
         estado: request.ESTADO_SOLICITUD || null
+    };
+}
+
+function withDependencySummary(request, dependencySummary = {}) {
+    return {
+        ...request,
+        activeResponses: Number(dependencySummary.activeResponses || 0),
+        activeAdoptions: Number(dependencySummary.activeAdoptions || 0),
+        activeFosterHomes: Number(dependencySummary.activeFosterHomes || 0)
     };
 }
 
@@ -93,10 +97,6 @@ function joinDependencyLabels(labels) {
 function createDependencyErrorMessage(action, dependencySummary) {
     const labels = [];
 
-    if (dependencySummary.activeAssignments > 0) {
-        labels.push('question assignments');
-    }
-
     if (dependencySummary.activeResponses > 0) {
         labels.push('responses');
     }
@@ -110,6 +110,14 @@ function createDependencyErrorMessage(action, dependencySummary) {
     }
 
     return `Cannot ${action} a request that still has active ${joinDependencyLabels(labels)}`;
+}
+
+function hasBlockingDependencies(dependencySummary) {
+    return (
+        Number(dependencySummary.activeResponses || 0) > 0 ||
+        Number(dependencySummary.activeAdoptions || 0) > 0 ||
+        Number(dependencySummary.activeFosterHomes || 0) > 0
+    );
 }
 
 async function ensureRequestCanRemainActive(user, requestType, nextState) {
@@ -142,12 +150,7 @@ async function ensureRequestCanBeDisabled(existingRequest, nextState) {
         existingRequest.idSolicitud
     );
 
-    if (
-        dependencySummary.activeAssignments > 0 ||
-        dependencySummary.activeResponses > 0 ||
-        dependencySummary.activeAdoptions > 0 ||
-        dependencySummary.activeFosterHomes > 0
-    ) {
+    if (hasBlockingDependencies(dependencySummary)) {
         throw createHttpError(
             createDependencyErrorMessage('deactivate', dependencySummary),
             409
@@ -164,14 +167,33 @@ async function ensureRequestCanBeDeleted(existingRequest) {
         existingRequest.idSolicitud
     );
 
-    if (
-        dependencySummary.activeAssignments > 0 ||
-        dependencySummary.activeResponses > 0 ||
-        dependencySummary.activeAdoptions > 0 ||
-        dependencySummary.activeFosterHomes > 0
-    ) {
+    if (hasBlockingDependencies(dependencySummary)) {
         throw createHttpError(createDependencyErrorMessage('delete', dependencySummary), 409);
     }
+}
+
+async function ensureRequestCoreFieldsCanBeChanged(existingRequest, payload) {
+    const identificationChanged =
+        String(existingRequest.identificacion) !== String(payload.identificacion);
+    const requestTypeChanged =
+        Number(existingRequest.idTipoSolicitud) !== Number(payload.idTipoSolicitud);
+
+    if (!identificationChanged && !requestTypeChanged) {
+        return;
+    }
+
+    const dependencySummary = await requestRepository.getActiveDependencySummaryByRequest(
+        existingRequest.idSolicitud
+    );
+
+    if (!hasBlockingDependencies(dependencySummary)) {
+        return;
+    }
+
+    throw createHttpError(
+        'Cannot change the applicant or request type while the request has active responses, adoptions, or foster-home records',
+        409
+    );
 }
 
 async function getRequests() {
@@ -189,7 +211,11 @@ async function getRequestById(idSolicitud) {
             throw createHttpError('Request not found', 404);
         }
 
-        return formatRequest(request);
+        const dependencySummary = await requestRepository.getActiveDependencySummaryByRequest(
+            idSolicitud
+        );
+
+        return withDependencySummary(formatRequest(request), dependencySummary);
     });
 }
 
@@ -227,6 +253,7 @@ async function updateRequest(idSolicitud, requestData) {
         ensureUserExists(payload.identificacion),
         ensureRequestTypeExists(payload.idTipoSolicitud)
     ]);
+    await ensureRequestCoreFieldsCanBeChanged(existingRequest, payload);
     await ensureRequestCanRemainActive(user, requestType, payload.idEstado);
     await ensureRequestCanBeDisabled(existingRequest, payload.idEstado);
 

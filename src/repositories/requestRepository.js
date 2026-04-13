@@ -98,7 +98,6 @@ async function getActiveDependencySummaryByRequest(idSolicitud) {
         );
 
         return {
-            activeAssignments: 0,
             activeResponses: responses.filter(
                 (response) =>
                     Number(response.ID_SOLICITUD) === Number(idSolicitud) &&
