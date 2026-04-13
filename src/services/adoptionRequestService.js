@@ -9,15 +9,6 @@ const ACTIVE_STATE_ID = 1;
 const PENDING_STATE_ID = 3;
 const ADOPTION_REQUEST_TYPE_NAME = 'Adopcion';
 
-const CLOSED_REQUEST_STATES = new Set([
-    'inactivo',
-    'rechazado',
-    'cancelado',
-    'archivado',
-    'completado',
-    'finalizado'
-]);
-
 const CLOSED_ADOPTION_STATES = new Set([
     'inactivo',
     'rechazado',
@@ -99,10 +90,6 @@ function normalizeAnswerByQuestion(question, rawAnswer) {
     }
 
     return normalizeFreeTextAnswer(rawAnswer);
-}
-
-function isRequestClosed(stateName) {
-    return CLOSED_REQUEST_STATES.has(normalizeText(stateName));
 }
 
 async function getAdoptionRequestTypeId() {
@@ -190,14 +177,14 @@ async function ensureResponsesAreValid(respuestas, idTipoSolicitud) {
 }
 
 async function ensureNoOpenRequestForDog(identificacion, idPerrito) {
+    const adoptions = await adoptionRequestRepository.findAllAdoptions();
     const normalizedIdentification = normalizeIdentification(identificacion);
-    const requests = await adoptionRequestRepository.findAllRequests();
 
-    const duplicatedRequest = requests.find(
-        (request) =>
-            normalizeIdentification(request.IDENTIFICACION) === normalizedIdentification &&
-            Number(request.ID_PERRITO) === Number(idPerrito) &&
-            !isRequestClosed(request.ESTADO_SOLICITUD)
+    const duplicatedRequest = adoptions.find(
+        (adoption) =>
+            normalizeIdentification(adoption.IDENTIFICACION) === normalizedIdentification &&
+            Number(adoption.ID_PERRITO) === Number(idPerrito) &&
+            !CLOSED_ADOPTION_STATES.has(normalizeText(adoption.ESTADO))
     );
 
     if (duplicatedRequest) {

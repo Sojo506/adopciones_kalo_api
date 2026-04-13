@@ -218,6 +218,19 @@ function ensureFosterHomeCanRemainActive({ address, manager, request, nextState 
     }
 }
 
+function ensureRequestOwnershipMatchesManager(identificacion, request) {
+    if (!request) {
+        return;
+    }
+
+    if (String(request.identificacion) !== String(identificacion)) {
+        throw createHttpError(
+            'The selected request does not belong to the selected foster-home manager',
+            409
+        );
+    }
+}
+
 async function getActiveDogAssignmentsCount(idCasaCuna) {
     return fosterHomeRepository.countActiveDogAssignmentsByFosterHome(idCasaCuna);
 }
@@ -296,6 +309,7 @@ async function createFosterHome(fosterHomeData) {
     ]);
 
     await ensureRequestCanBeAssignedToFosterHome(request);
+    ensureRequestOwnershipMatchesManager(payload.identificacion, request);
     await ensureRequestIsAvailable(payload.idSolicitud);
     ensureFosterHomeCanRemainActive({
         address,
@@ -329,6 +343,7 @@ async function updateFosterHome(idCasaCuna, fosterHomeData) {
     ]);
 
     await ensureRequestCanBeAssignedToFosterHome(request);
+    ensureRequestOwnershipMatchesManager(payload.identificacion, request);
     await ensureRequestIsAvailable(payload.idSolicitud, {
         excludeId: payload.idCasaCuna
     });

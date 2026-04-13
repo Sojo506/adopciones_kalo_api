@@ -35,14 +35,6 @@ async function executeCursorQuery(sql, binds = {}) {
     }
 }
 
-async function findAllRequests() {
-    return executeCursorQuery(`
-      BEGIN
-        :${OUT_CURSOR_BIND_NAME} := KALO.FIDE_KALO_PKG.FIDE_OBTENER_SOLICITUDES_FN();
-      END;
-    `);
-}
-
 async function findAllAdoptions() {
     return executeCursorQuery(`
       BEGIN
@@ -141,7 +133,6 @@ async function createResponse(responseData) {
 }
 
 module.exports = {
-    findAllRequests,
     findAllAdoptions,
     findApplicantEligibility,
     createRequest,
