@@ -207,6 +207,8 @@ function buildInvoiceReportDefinition(rows) {
         filename: 'reporte-facturas-admin.pdf',
         title: 'Reporte administrativo de facturas',
         subtitle: 'Consolidado financiero de facturas emitidas en el sistema.',
+        // Los rows pueden conservar ids internos para uso backend, pero el PDF solo renderiza
+        // referencias administrativas visibles y nunca ids de venta o PayPal.
         columns: [
             { header: 'Fecha', key: 'fechaFactura', width: 1.2 },
             { header: 'Moneda', key: 'moneda', width: 1.5 },
@@ -236,6 +238,7 @@ function buildDonationReportDefinition(rows) {
         filename: 'reporte-donaciones-admin.pdf',
         title: 'Reporte administrativo de donaciones',
         subtitle: 'Detalle de donaciones, campanias y trazabilidad de facturas relacionadas.',
+        // El PDF omite ids internos aunque el dataset conserve claves auxiliares para backend.
         columns: [
             { header: 'Fecha', key: 'fechaDonacion', width: 1.1 },
             { header: 'Donador', key: 'donador', width: 2.5 },
@@ -262,6 +265,7 @@ function buildAdoptionReportDefinition(rows) {
         filename: 'reporte-adopciones-admin.pdf',
         title: 'Reporte administrativo de adopciones',
         subtitle: 'Seguimiento general del proceso de adopcion y su carga operativa.',
+        // El administrador ve nombres y conteos operativos, no ids internos del proceso.
         columns: [
             { header: 'Fecha', key: 'fechaAdopcion', width: 1.1 },
             { header: 'Adoptante', key: 'adoptante', width: 2.5 },
@@ -289,6 +293,7 @@ function buildLowInventoryReportDefinition(rows) {
         filename: 'reporte-inventario-bajo-admin.pdf',
         title: 'Reporte de inventario bajo',
         subtitle: 'Productos con existencias menores o iguales a su stock minimo configurado.',
+        // El PDF muestra solo datos operativos legibles; no expone ids internos de inventario.
         columns: [
             { header: 'Producto', key: 'producto', width: 2.5 },
             { header: 'Categoria', key: 'categoria', width: 1.5 },
